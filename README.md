@@ -26,6 +26,20 @@ dependencies:
     - akmaru/dotagents/skills/grill-me
 ```
 
+### User scope (全プロジェクトで使用)
+
+```bash
+apm marketplace add akmaru/dotagents
+apm install -g grill-me@dotagents
+```
+
+### Project scope (特定プロジェクトのみ)
+
+```bash
+apm marketplace add akmaru/dotagents
+apm install grill-me@dotagents
+```
+
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` following the [agentskills.io spec](https://agentskills.io/specification):
