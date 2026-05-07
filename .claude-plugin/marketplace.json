@@ -12,7 +12,7 @@
       "description": "Interview the user relentlessly about a plan or design until reaching shared understanding",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/akmaru/dotagents.git",
+        "repo": "akmaru/dotagents",
         "path": "skills/grill-me",
         "ref": "main"
       }
