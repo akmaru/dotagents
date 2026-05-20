@@ -1,0 +1,13 @@
+lockfile_version: '1'
+generated_at: '2026-05-20T10:56:24.073707+00:00'
+apm_version: 0.9.1
+dependencies:
+- repo_url: akmaru/dotagents
+  host: github.com
+  resolved_commit: ac717a90ced64b07f2954483262b10ed52458eff
+  virtual_path: plugins/beads
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .github/skills/beads
+  content_hash: sha256:f2785d636e517c4598c7e1e5d839a00da22377b0e6582cc66539db63fd5630b4

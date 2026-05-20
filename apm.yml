@@ -3,22 +3,24 @@ version: 0.1.0
 description: Personal AI agent skills for Claude Code and OpenCode
 author: akmaru
 license: MIT
-
 marketplace:
   owner:
     name: akmaru
     url: https://github.com/akmaru
   plugins:
-    - name: grill-me
-      source: ./plugins/grill-me
-      description: Interview the user relentlessly about a plan or design until reaching shared understanding
-    - name: beads
-      source: ./plugins/beads
-      description: Beads issue tracking workflow — create/update/close issues around every task
-    - name: beads-sync
-      source: ./plugins/beads-sync
-      description: Sync beads issues to GitHub or GitLab Issues for human-readable task visibility
-
+  - name: grill-me
+    source: ./plugins/grill-me
+    description: Interview the user relentlessly about a plan or design until reaching
+      shared understanding
+  - name: beads
+    source: ./plugins/beads
+    description: Beads issue tracking workflow — create/update/close issues around
+      every task
+  - name: beads-sync
+    source: ./plugins/beads-sync
+    description: 'Sync beads issues to GitHub or GitLab Issues (also install beads: apm install beads@dotagents)'
 dependencies:
-  apm: []
+  apm:
+  - akmaru/dotagents/plugins/beads
+  - akmaru/dotagents/plugins/beads-sync
   mcp: []

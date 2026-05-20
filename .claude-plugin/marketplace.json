@@ -19,7 +19,7 @@
     {
       "name": "beads-sync",
       "source": "./plugins/beads-sync",
-      "description": "Sync beads issues to GitHub or GitLab Issues for human-readable task visibility"
+      "description": "Sync beads issues to GitHub or GitLab Issues (also install beads: apm install beads@dotagents)"
     }
   ]
 }

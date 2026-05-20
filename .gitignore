@@ -3,3 +3,7 @@ __pycache__/
 .pytest_cache/
 .beads/sync_config.yaml
 plugins/beads-sync/.venv/
+
+
+# APM dependencies
+apm_modules/
