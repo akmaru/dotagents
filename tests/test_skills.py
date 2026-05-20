@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-SKILLS_DIR = Path(__file__).parent.parent / "skills"
+SKILLS_DIR = Path(__file__).parent.parent / "plugins"
 NAME_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
@@ -60,11 +60,11 @@ class TestSkillStructure:
 
 
 def test_skills_dir_exists():
-    assert SKILLS_DIR.exists() and SKILLS_DIR.is_dir(), "skills/ directory must exist"
+    assert SKILLS_DIR.exists() and SKILLS_DIR.is_dir(), "plugins/ directory must exist"
 
 
 def test_at_least_one_skill():
-    assert len(skill_dirs()) >= 1, "skills/ must contain at least one skill"
+    assert len(skill_dirs()) >= 1, "plugins/ must contain at least one skill"
 
 
 def _frontmatter(skill_dir: Path) -> dict:

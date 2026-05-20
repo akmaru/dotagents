@@ -9,15 +9,15 @@
 dotagents/
 ├── apm.yml              # APM パッケージマニフェスト
 ├── CLAUDE.md            # このファイル（Claude Code 向けプロジェクト説明）
-└── skills/
+└── plugins/
     └── <name>/
         └── SKILL.md     # スキル定義（agentskills.io spec 準拠）
 ```
 
 ## スキルの追加
 
-1. `skills/<name>/` ディレクトリを作成（`name` は lowercase + ハイフンのみ）
-2. `skills/<name>/SKILL.md` を [agentskills.io spec](https://agentskills.io/specification) に従って作成
+1. `plugins/<name>/` ディレクトリを作成（`name` は lowercase + ハイフンのみ）
+2. `plugins/<name>/SKILL.md` を [agentskills.io spec](https://agentskills.io/specification) に従って作成
 
 ```markdown
 ---
@@ -35,7 +35,7 @@ compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
 
 | スキル | 説明 |
 |--------|------|
-| [grill-me](skills/grill-me/SKILL.md) | プランや設計をリレントレスに質問して検証する |
+| [grill-me](plugins/grill-me/SKILL.md) | プランや設計をリレントレスに質問して検証する |
 
 ## 利用方法
 
@@ -51,21 +51,21 @@ apm install grill-me@dotagents
 ```yaml
 dependencies:
   apm:
-    - akmaru/dotagents/skills/grill-me
+    - akmaru/dotagents/plugins/grill-me
 ```
 
 ### 手動インストール（Claude Code）
 
 ```bash
 mkdir -p ~/.claude/skills/grill-me
-cp skills/grill-me/SKILL.md ~/.claude/skills/grill-me/
+cp plugins/grill-me/SKILL.md ~/.claude/skills/grill-me/
 ```
 
 ### 手動インストール（OpenCode）
 
 ```bash
 mkdir -p ~/.config/opencode/skills/grill-me
-cp skills/grill-me/SKILL.md ~/.config/opencode/skills/grill-me/
+cp plugins/grill-me/SKILL.md ~/.config/opencode/skills/grill-me/
 ```
 
 <!-- br-agent-instructions-v1 -->

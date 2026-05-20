@@ -6,7 +6,7 @@ Personal AI agent skills managed as an [APM](https://github.com/microsoft/apm) m
 
 | Skill | Description |
 |-------|-------------|
-| [grill-me](skills/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
+| [grill-me](plugins/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
 
 ## Usage
 
@@ -23,7 +23,7 @@ apm install grill-me@dotagents
 # apm.yml
 dependencies:
   apm:
-    - akmaru/dotagents/skills/grill-me
+    - akmaru/dotagents/plugins/grill-me
 ```
 
 ### User scope (全プロジェクトで使用)
@@ -42,7 +42,7 @@ apm install grill-me@dotagents
 
 ## Adding a skill
 
-1. Create `skills/<name>/SKILL.md` following the [agentskills.io spec](https://agentskills.io/specification):
+1. Create `plugins/<name>/SKILL.md` following the [agentskills.io spec](https://agentskills.io/specification):
 
 ```markdown
 ---
@@ -60,13 +60,11 @@ description: <what it does and when to use it, max 1024 chars>
 marketplace:
   plugins:
     - name: <name>
-      source: ./skills/<name>
+      source: ./plugins/<name>
       description: <short description>
 ```
 
-3. Update `.claude-plugin/marketplace.json` to match (or run `apm pack` if you have the CLI).
-
-4. Add the skill to the table in this README and in `CLAUDE.md`.
+3. Add the skill to the table in this README and in `CLAUDE.md`.
 
 ## Development
 
