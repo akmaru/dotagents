@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.beads/sync_config.yaml
+plugins/beads-sync/.venv/

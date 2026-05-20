@@ -10,8 +10,11 @@ marketplace:
     url: https://github.com/akmaru
   plugins:
     - name: grill-me
-      source: ./skills/grill-me
+      source: ./plugins/grill-me
       description: Interview the user relentlessly about a plan or design until reaching shared understanding
+    - name: beads-sync
+      source: ./plugins/beads-sync
+      description: Sync beads issues to GitHub or GitLab Issues for human-readable task visibility
 
 dependencies:
   apm: []

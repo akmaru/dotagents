@@ -1,0 +1,8 @@
+name: beads-sync
+version: 0.1.0
+description: Sync beads issues to GitHub or GitLab Issues for human-readable task visibility
+author: akmaru
+license: MIT
+
+scripts:
+  install: "uv tool install ."

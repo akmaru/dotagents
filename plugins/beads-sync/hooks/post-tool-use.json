@@ -1,0 +1,13 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '\\bbr\\s+(update|close|reopen|create|q)\\b' && beads-sync sync --quiet || true"
+        }
+      ]
+    }
+  ]
+}
