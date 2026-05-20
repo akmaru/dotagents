@@ -5,7 +5,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '\\bbr\\s+(update|close|reopen|create|q)\\b' && beads-sync sync --quiet || true"
+          "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '\\bbr\\s+(update|close|reopen|create|q)\\b' && beads-sync sync --quiet || { command -v beads-sync > /dev/null || echo '[beads-sync] not installed. Run: uv tool install <path-to-beads-sync>' >&2; true; }"
         }
       ]
     }
