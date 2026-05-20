@@ -12,6 +12,9 @@ marketplace:
     - name: grill-me
       source: ./plugins/grill-me
       description: Interview the user relentlessly about a plan or design until reaching shared understanding
+    - name: beads
+      source: ./plugins/beads
+      description: Beads issue tracking workflow — create/update/close issues around every task
     - name: beads-sync
       source: ./plugins/beads-sync
       description: Sync beads issues to GitHub or GitLab Issues for human-readable task visibility
