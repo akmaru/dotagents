@@ -4,6 +4,16 @@ description: Sync beads issues to GitHub or GitLab Issues for human-readable vis
 compatibility: Designed for Claude Code
 ---
 
+## Workflow
+
+This skill being installed means **beads is the issue tracker for this project**. Follow this workflow for every task:
+
+1. **Task start**: Create a beads issue with `br create` before doing any work
+2. **In progress**: Update the issue to `in_progress` with `br update <id> --status=in_progress`
+3. **Task end**: Close the issue with `br close <id>` and sync with `br sync --flush-only`
+
+Never start implementation without a corresponding beads issue.
+
 ## Prerequisite: CLI install
 
 Before using this skill, verify `beads-sync` is available:
