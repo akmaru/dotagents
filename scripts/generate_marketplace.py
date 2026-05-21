@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate .claude-plugin/marketplace.json from apm.yml marketplace block."""
+"""Generate marketplace.json from apm.yml marketplace block."""
 
 import json
 from pathlib import Path
@@ -8,7 +8,7 @@ import yaml
 
 ROOT = Path(__file__).parent.parent
 APM_YML = ROOT / "apm.yml"
-OUT = ROOT / ".claude-plugin" / "marketplace.json"
+OUT = ROOT / "marketplace.json"
 
 
 def main():
@@ -22,7 +22,6 @@ def main():
         "plugins": mp["plugins"],
     }
 
-    OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
     print(f"Generated {OUT}")
 

@@ -22,7 +22,7 @@ jobs:
       - name: Check marketplace.json is up to date
         run: |
           python3 scripts/generate_marketplace.py
-          git diff --exit-code .claude-plugin/marketplace.json || \
+          git diff --exit-code marketplace.json || \
             (echo "marketplace.json is out of sync with apm.yml. Run: uv run --with pyyaml python3 scripts/generate_marketplace.py" && exit 1)
 
       - name: Run tests
