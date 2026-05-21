@@ -1,6 +1,9 @@
 {
   "name": "dotagents",
+  "version": "0.1.0",
   "description": "Personal AI agent skills for Claude Code and OpenCode",
+  "author": "akmaru",
+  "license": "MIT",
   "owner": {
     "name": "akmaru",
     "url": "https://github.com/akmaru"
