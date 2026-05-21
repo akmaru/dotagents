@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-20T10:56:24.073707+00:00'
+generated_at: '2026-05-20T10:59:43.931914+00:00'
 apm_version: 0.9.1
 dependencies:
 - repo_url: akmaru/dotagents
@@ -11,3 +11,17 @@ dependencies:
   deployed_files:
   - .github/skills/beads
   content_hash: sha256:f2785d636e517c4598c7e1e5d839a00da22377b0e6582cc66539db63fd5630b4
+- repo_url: akmaru/dotagents
+  host: github.com
+  resolved_commit: fa802e5d47e441c1ada1c36cdec89565b05337ce
+  virtual_path: plugins/beads-sync
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .github/hooks/beads-sync-post-tool-use.json
+  - .github/skills/beads-sync
+  deployed_file_hashes:
+    .github/hooks/beads-sync-post-tool-use.json: sha256:2ecc71659680cb629696bb6eb4c0a6979f0cb3d8005752556ab24949ca067251
+  content_hash: sha256:125da4b51e0082d1a592a30175b700af46479715977bddf360b97d9059dd26db
+  discovered_via: dotagents
+  marketplace_plugin_name: beads-sync

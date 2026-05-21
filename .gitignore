@@ -7,3 +7,7 @@ plugins/beads-sync/.venv/
 
 # APM dependencies
 apm_modules/
+
+# APM installed outputs (this repo is the source; installed files are redundant)
+.github/hooks/
+.github/skills/
