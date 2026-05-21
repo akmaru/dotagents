@@ -8,7 +8,7 @@ compatibility: Designed for Claude Code
 
 This skill being installed means **beads is the issue tracker for this project**. Follow this workflow for every task:
 
-1. **Task start**: Create a beads issue with `br create` before doing any work
+1. **Task start**: Create a beads issue with `br create --label=beads` before doing any work
 2. **In progress**: Update the issue to `in_progress` with `br update <id> --status=in_progress`
 3. **Task end**: Close the issue with `br close <id>` and sync with `br sync --flush-only`
 
@@ -20,8 +20,8 @@ Never start implementation without a corresponding beads issue.
 # View actionable work
 br ready
 
-# Create an issue
-br create --title="..." --description="..." --type=task --priority=2
+# Create an issue (always add the "beads" label)
+br create --title="..." --description="..." --type=task --priority=2 --label=beads
 
 # Update status
 br update <id> --status=in_progress
