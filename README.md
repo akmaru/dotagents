@@ -7,6 +7,9 @@ Personal AI agent skills managed as an [APM](https://github.com/microsoft/apm) m
 | Skill | Description |
 |-------|-------------|
 | [grill-me](plugins/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
+| [beads](plugins/beads/SKILL.md) | Beads issue tracking workflow — create/update/close issues around every task |
+| [beads-sync](plugins/beads-sync/SKILL.md) | Sync beads issues to GitHub or GitLab Issues for human-readable task visibility |
+| [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | Create new skills, improve existing skills, and measure skill performance |
 
 ## Usage
 

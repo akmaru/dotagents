@@ -23,6 +23,15 @@
       "name": "beads-sync",
       "source": "./plugins/beads-sync",
       "description": "Sync beads issues to GitHub or GitLab Issues (also install beads: apm install beads@dotagents)"
+    },
+    {
+      "name": "skill-creator",
+      "source": {
+        "source": "git-subdir",
+        "repo": "anthropics/claude-plugins-official",
+        "path": "plugins/skill-creator"
+      },
+      "description": "Create new skills, improve existing skills, and measure skill performance"
     }
   ]
 }

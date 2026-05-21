@@ -46,7 +46,7 @@ class TestPlugin:
     def test_each_plugin_source_exists(self, marketplace):
         for p in marketplace["plugins"]:
             source = p.get("source", "")
-            if source.startswith("./"):
+            if isinstance(source, str) and source.startswith("./"):
                 path = ROOT / source[2:]
                 assert path.exists(), (
                     f"plugin '{p['name']}' source '{source}' does not exist"
