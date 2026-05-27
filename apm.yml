@@ -4,4 +4,5 @@ dependencies:
   apm:
   - akmaru/dotagents/plugins/beads
   - akmaru/dotagents/plugins/beads-sync
+  - akmaru/dotagents/plugins/rust
   mcp: []

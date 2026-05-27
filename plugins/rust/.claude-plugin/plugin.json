@@ -1,0 +1,10 @@
+{
+  "id": "rust",
+  "name": "rust",
+  "version": "1.0.0",
+  "description": "Rust development workflow with rust-analyzer LSP integration",
+  "author": "akmaru",
+  "repository": "akmaru/dotagents",
+  "license": "MIT",
+  "tags": ["rust", "lsp", "development"]
+}
