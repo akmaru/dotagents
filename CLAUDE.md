@@ -1,23 +1,31 @@
 # dotagents
 
-個人用 AI エージェントの SKILL/AGENTS をまとめた APM パッケージ。
+個人用 AI エージェントの SKILL/AGENTS をまとめた APM マーケットプレイス。
 [APM (Agent Package Manager)](https://github.com/microsoft/apm) で管理し、Claude Code と OpenCode の両方で使用できる。
 
 ## 構造
 
+標準の APM マーケットプレイス構成に従う。
+
 ```
 dotagents/
-├── apm.yml              # APM パッケージマニフェスト
-├── CLAUDE.md            # このファイル（Claude Code 向けプロジェクト説明）
-└── plugins/
+├── apm.yml                          # marketplace: マニフェスト
+├── .claude-plugin/marketplace.json  # apm pack で生成（コミット対象）
+├── CLAUDE.md                        # このファイル（Claude Code 向けプロジェクト説明）
+└── packages/
     └── <name>/
-        └── SKILL.md     # スキル定義（agentskills.io spec 準拠）
+        ├── apm.yml                  # パッケージマニフェスト
+        ├── README.md
+        ├── LICENSE
+        └── .apm/skills/<name>/SKILL.md  # スキル定義（agentskills.io spec 準拠）
 ```
+
+各プリミティブは必ず `.apm/<type>/` 配下に置くこと。パッケージルート直下に置くと `apm pack` は通るが `apm install` 時に黙って欠落する。
 
 ## スキルの追加
 
-1. `plugins/<name>/` ディレクトリを作成（`name` は lowercase + ハイフンのみ）
-2. `plugins/<name>/SKILL.md` を [agentskills.io spec](https://agentskills.io/specification) に従って作成
+1. `packages/<name>/` を作成（`name` は lowercase + ハイフンのみ）
+2. `packages/<name>/.apm/skills/<name>/SKILL.md` を [agentskills.io spec](https://agentskills.io/specification) に従って作成
 
 ```markdown
 ---
@@ -29,13 +37,16 @@ compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
 ## スキルの指示（Markdown）
 ```
 
-3. `name` フィールドはディレクトリ名と一致させること
+3. `packages/<name>/apm.yml`（name / version / description / author / license / `includes: auto`）を作成。`name` はディレクトリ名・スキルディレクトリ名と一致させること
+4. ルート `apm.yml` の `marketplace.packages` にエントリを追加し、`apm pack` で `.claude-plugin/marketplace.json` を再生成する
 
 ## スキル一覧
 
 | スキル | 説明 |
 |--------|------|
-| [grill-me](plugins/grill-me/SKILL.md) | プランや設計をリレントレスに質問して検証する |
+| [grill-me](packages/grill-me/.apm/skills/grill-me/SKILL.md) | プランや設計をリレントレスに質問して検証する |
+| [beads](packages/beads/.apm/skills/beads/SKILL.md) | タスクごとに beads issue を作成・更新・クローズするワークフロー |
+| [rust](packages/rust/.apm/skills/rust/SKILL.md) | rust-analyzer LSP を用いた Rust 開発ワークフロー |
 
 ## 利用方法
 
@@ -51,21 +62,21 @@ apm install grill-me@dotagents
 ```yaml
 dependencies:
   apm:
-    - akmaru/dotagents/plugins/grill-me
+    - akmaru/dotagents/packages/grill-me
 ```
 
 ### 手動インストール（Claude Code）
 
 ```bash
 mkdir -p ~/.claude/skills/grill-me
-cp plugins/grill-me/SKILL.md ~/.claude/skills/grill-me/
+cp packages/grill-me/.apm/skills/grill-me/SKILL.md ~/.claude/skills/grill-me/
 ```
 
 ### 手動インストール（OpenCode）
 
 ```bash
 mkdir -p ~/.config/opencode/skills/grill-me
-cp plugins/grill-me/SKILL.md ~/.config/opencode/skills/grill-me/
+cp packages/grill-me/.apm/skills/grill-me/SKILL.md ~/.config/opencode/skills/grill-me/
 ```
 
 <!-- br-agent-instructions-v1 -->

@@ -1,6 +1,8 @@
 """
-Validate each skill in skills/ against the agentskills.io specification.
+Validate each skill under packages/ against the agentskills.io specification.
 https://agentskills.io/specification
+
+Skills live at packages/<pkg>/.apm/skills/<skill>/SKILL.md (standard APM layout).
 """
 
 import re
@@ -9,18 +11,20 @@ from pathlib import Path
 import pytest
 import yaml
 
-SKILLS_DIR = Path(__file__).parent.parent / "plugins"
+PACKAGES_DIR = Path(__file__).parent.parent / "packages"
 NAME_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
 def skill_dirs():
-    return sorted(SKILLS_DIR.iterdir()) if SKILLS_DIR.exists() else []
+    if not PACKAGES_DIR.exists():
+        return []
+    return sorted(PACKAGES_DIR.glob("*/.apm/skills/*"))
 
 
 @pytest.mark.parametrize("skill_dir", skill_dirs(), ids=lambda d: d.name)
 class TestSkillStructure:
     def test_skill_md_exists(self, skill_dir):
-        assert (skill_dir / "SKILL.md").exists(), f"SKILL.md not found in {skill_dir.name}/"
+        assert (skill_dir / "SKILL.md").exists(), f"SKILL.md not found in {skill_dir}/"
 
     def test_frontmatter_is_valid_yaml(self, skill_dir):
         content = (skill_dir / "SKILL.md").read_text()
@@ -35,7 +39,7 @@ class TestSkillStructure:
     def test_name_matches_directory(self, skill_dir):
         fm = _frontmatter(skill_dir)
         assert fm.get("name") == skill_dir.name, (
-            f"name '{fm.get('name')}' must match directory name '{skill_dir.name}'"
+            f"name '{fm.get('name')}' must match skill directory name '{skill_dir.name}'"
         )
 
     def test_name_format(self, skill_dir):
@@ -59,12 +63,12 @@ class TestSkillStructure:
         assert len(parts) == 3 and parts[2].strip(), "SKILL.md body must not be empty"
 
 
-def test_skills_dir_exists():
-    assert SKILLS_DIR.exists() and SKILLS_DIR.is_dir(), "plugins/ directory must exist"
+def test_packages_dir_exists():
+    assert PACKAGES_DIR.exists() and PACKAGES_DIR.is_dir(), "packages/ directory must exist"
 
 
 def test_at_least_one_skill():
-    assert len(skill_dirs()) >= 1, "plugins/ must contain at least one skill"
+    assert len(skill_dirs()) >= 1, "packages/ must contain at least one skill"
 
 
 def _frontmatter(skill_dir: Path) -> dict:

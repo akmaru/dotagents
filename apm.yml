@@ -1,8 +1,22 @@
 name: dotagents
 version: 0.1.0
-dependencies:
-  apm:
-  - akmaru/dotagents/plugins/beads
-  - akmaru/dotagents/plugins/beads-sync
-  - akmaru/dotagents/plugins/rust
-  mcp: []
+description: Personal AI agent skills for Claude Code and OpenCode
+license: MIT
+
+marketplace:
+  owner:
+    name: akmaru
+    url: https://github.com/akmaru
+  versioning:
+    strategy: per_package
+  packages:
+  - name: grill-me
+    source: ./packages/grill-me
+  - name: beads
+    source: ./packages/beads
+  - name: rust
+    source: ./packages/rust
+  - name: skill-creator
+    source: anthropics/claude-plugins-official
+    ref: f9cb226d81172f53a1787cc3ba90dc9ab51aa169
+    subdir: plugins/skill-creator

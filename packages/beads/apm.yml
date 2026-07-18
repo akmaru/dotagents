@@ -1,0 +1,9 @@
+name: beads
+version: 1.0.0
+description: Beads issue tracking workflow for Claude Code. Always create a beads issue before starting any task, update it during work, and close it on completion.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []

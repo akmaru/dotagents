@@ -1,0 +1,10 @@
+name: rust
+version: 1.0.0
+description: Rust development workflow with rust-analyzer LSP integration
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm:
+    - anthropics/claude-plugins-official/plugins/rust-analyzer-lsp
+  mcp: []

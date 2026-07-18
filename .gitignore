@@ -1,13 +1,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-.beads/sync_config.yaml
-plugins/beads-sync/.venv/
-
+.venv/
 
 # APM dependencies
 apm_modules/
-
-# APM installed outputs (this repo is the source; installed files are redundant)
-.github/hooks/
-.github/skills/

@@ -1,5 +1,5 @@
 """
-Validate marketplace.json structure and plugin references.
+Validate the generated .claude-plugin/marketplace.json (produced by `apm pack`).
 """
 
 import json
@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).parent.parent
-MARKETPLACE_JSON = ROOT / "marketplace.json"
+MARKETPLACE_JSON = ROOT / ".claude-plugin" / "marketplace.json"
 
 
 @pytest.fixture(scope="module")
@@ -17,7 +17,7 @@ def marketplace():
 
 
 def test_marketplace_json_exists():
-    assert MARKETPLACE_JSON.exists()
+    assert MARKETPLACE_JSON.exists(), "run `apm pack` to generate .claude-plugin/marketplace.json"
 
 
 def test_marketplace_json_is_valid_json():
@@ -25,7 +25,7 @@ def test_marketplace_json_is_valid_json():
 
 
 def test_required_fields(marketplace):
-    for field in ("name", "version", "description", "author", "license", "owner", "plugins"):
+    for field in ("name", "owner", "plugins"):
         assert field in marketplace, f"marketplace.json must have '{field}' field"
 
 
@@ -40,10 +40,10 @@ def test_at_least_one_plugin(marketplace):
 class TestPlugin:
     def test_each_plugin_has_required_fields(self, marketplace):
         for p in marketplace["plugins"]:
-            for field in ("name", "source", "description"):
+            for field in ("name", "source"):
                 assert field in p, f"plugin '{p.get('name')}' must have '{field}'"
 
-    def test_each_plugin_source_exists(self, marketplace):
+    def test_each_local_plugin_source_exists(self, marketplace):
         for p in marketplace["plugins"]:
             source = p.get("source", "")
             if isinstance(source, str) and source.startswith("./"):

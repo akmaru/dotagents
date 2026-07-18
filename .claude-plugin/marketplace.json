@@ -1,0 +1,37 @@
+{
+  "name": "dotagents",
+  "owner": {
+    "name": "akmaru",
+    "url": "https://github.com/akmaru"
+  },
+  "plugins": [
+    {
+      "name": "grill-me",
+      "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree.",
+      "version": "1.0.0",
+      "source": "./packages/grill-me"
+    },
+    {
+      "name": "beads",
+      "description": "Beads issue tracking workflow for Claude Code. Always create a beads issue before starting any task, update it during work, and close it on completion.",
+      "version": "1.0.0",
+      "source": "./packages/beads"
+    },
+    {
+      "name": "rust",
+      "description": "Rust development workflow with rust-analyzer LSP integration",
+      "version": "1.0.0",
+      "source": "./packages/rust"
+    },
+    {
+      "name": "skill-creator",
+      "source": {
+        "source": "git-subdir",
+        "url": "anthropics/claude-plugins-official",
+        "path": "plugins/skill-creator",
+        "ref": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169",
+        "sha": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169"
+      }
+    }
+  ]
+}

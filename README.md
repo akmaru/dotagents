@@ -6,9 +6,9 @@ Personal AI agent skills managed as an [APM](https://github.com/microsoft/apm) m
 
 | Skill | Description |
 |-------|-------------|
-| [grill-me](plugins/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
-| [beads](plugins/beads/SKILL.md) | Beads issue tracking workflow — create/update/close issues around every task |
-| [beads-sync](plugins/beads-sync/SKILL.md) | Sync beads issues to GitHub or GitLab Issues for human-readable task visibility |
+| [grill-me](packages/grill-me/.apm/skills/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
+| [beads](packages/beads/.apm/skills/beads/SKILL.md) | Beads issue tracking workflow — create/update/close issues around every task |
+| [rust](packages/rust/.apm/skills/rust/SKILL.md) | Rust development workflow with rust-analyzer LSP integration |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | Create new skills, improve existing skills, and measure skill performance |
 
 ## Usage
@@ -20,32 +20,22 @@ apm marketplace add akmaru/dotagents
 apm install grill-me@dotagents
 ```
 
-### Add as APM dependency
-
-```yaml
-# apm.yml
-dependencies:
-  apm:
-    - akmaru/dotagents/plugins/grill-me
-```
-
 ### User scope (全プロジェクトで使用)
 
 ```bash
-apm marketplace add akmaru/dotagents
 apm install -g grill-me@dotagents
 ```
 
 ### Project scope (特定プロジェクトのみ)
 
 ```bash
-apm marketplace add akmaru/dotagents
 apm install grill-me@dotagents
 ```
 
 ## Adding a skill
 
-1. Create `plugins/<name>/SKILL.md` following the [agentskills.io spec](https://agentskills.io/specification):
+1. Create the package under `packages/<name>/` with the skill at `.apm/skills/<name>/SKILL.md`,
+   following the [agentskills.io spec](https://agentskills.io/specification):
 
 ```markdown
 ---
@@ -57,17 +47,34 @@ description: <what it does and when to use it, max 1024 chars>
 ...
 ```
 
-2. Add an entry to the `marketplace.plugins` block in `apm.yml`:
+2. Add a package manifest `packages/<name>/apm.yml`:
+
+```yaml
+name: <name>
+version: 0.1.0
+description: <short description>
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []
+```
+
+3. Register the package in the root `apm.yml` `marketplace.packages` block:
 
 ```yaml
 marketplace:
-  plugins:
+  packages:
     - name: <name>
-      source: ./plugins/<name>
-      description: <short description>
+      source: ./packages/<name>
 ```
 
-3. Add the skill to the table in this README and in `CLAUDE.md`.
+4. Regenerate the marketplace index, then add the skill to the tables in this README and `CLAUDE.md`:
+
+```bash
+apm pack
+```
 
 ## Development
 
