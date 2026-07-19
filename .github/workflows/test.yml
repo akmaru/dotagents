@@ -14,6 +14,13 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
+      # Put the apm CLI on PATH so the marketplace e2e test (test_e2e_marketplace.py)
+      # runs in CI; it is skipped when apm is absent.
+      - name: Install apm CLI
+        uses: microsoft/apm-action@v1
+        with:
+          setup-only: "true"
+
       - name: Sync dev tools
         run: uv sync
 

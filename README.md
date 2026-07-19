@@ -115,4 +115,10 @@ uv run pytest tests/ -v
 
 The pre-commit hook runs `apm pack --check-clean` to verify the checked-in
 `.claude-plugin/marketplace.json` matches `apm.yml` (see [docs/adr/0003](docs/adr/0003-marketplace-source-of-truth.md)),
-so it requires `apm` on `PATH`. Tests run automatically on push and pull requests via GitHub Actions.
+so it requires `apm` on `PATH`.
+
+`tests/test_e2e_marketplace.py` drives the real consumer UX end-to-end
+(`apm marketplace add` → `apm install <pkg>@dotagents` → skill deployed) in an isolated `HOME`.
+It is skipped when `apm` is not on `PATH`. CI installs `apm` via
+[microsoft/apm-action](https://github.com/microsoft/apm-action) so it runs there; tests run
+automatically on push and pull requests via GitHub Actions.
