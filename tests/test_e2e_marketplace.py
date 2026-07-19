@@ -38,7 +38,10 @@ def test_marketplace_add_then_install_deploys_skill(tmp_path):
     home.mkdir()
     consumer.mkdir()
 
-    add = _apm(["marketplace", "add", str(ROOT)], home)
+    # A local path is a git-backed source; apm reads marketplace.json at a ref
+    # (default "main"). Use HEAD so this works on a detached-HEAD CI checkout and
+    # reads the current commit's marketplace.json rather than whatever "main" holds.
+    add = _apm(["marketplace", "add", str(ROOT), "--ref", "HEAD"], home)
     assert add.returncode == 0, f"marketplace add failed:\n{add.stderr or add.stdout}"
 
     install = _apm(
