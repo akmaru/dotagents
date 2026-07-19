@@ -12,15 +12,19 @@ dotagents/
 ├── apm.yml                          # marketplace: マニフェスト
 ├── .claude-plugin/marketplace.json  # apm pack で生成（コミット対象）
 ├── CLAUDE.md                        # このファイル（Claude Code 向けプロジェクト説明）
-└── packages/
-    └── <name>/
-        ├── apm.yml                  # パッケージマニフェスト
-        ├── README.md
-        ├── LICENSE
-        └── .apm/skills/<name>/SKILL.md  # スキル定義（agentskills.io spec 準拠）
+├── packages/
+│   └── <name>/
+│       ├── apm.yml                  # パッケージマニフェスト
+│       ├── README.md
+│       ├── LICENSE
+│       └── .apm/skills/<name>/SKILL.md  # スキル定義（agentskills.io spec 準拠）
+├── user/                            # 個人ユーザースコープ設定（非 APM・symlink 配布）
+└── docs/adr/                        # Architecture Decision Records
 ```
 
 各プリミティブは必ず `.apm/<type>/` 配下に置くこと。パッケージルート直下に置くと `apm pack` は通るが `apm install` 時に黙って欠落する。
+
+`user/` は marketplace とは別概念の個人ユーザーレベル設定（グローバルプロンプト・rules・settings）で、`apm compile` ではなくネイティブ symlink で `~/.claude` / `~/.config/opencode` へ配布する。詳細は [docs/adr/](docs/adr/) 参照。
 
 ## スキルの追加
 

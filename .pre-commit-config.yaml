@@ -1,0 +1,12 @@
+# Setup: pip install pre-commit && pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: marketplace-json-in-sync
+        name: marketplace.json is in sync with apm.yml
+        # apm.yml を source of truth とし marketplace.json は apm pack で生成する（docs/adr/0003）。
+        # checked-in の marketplace.json が apm.yml と一致しない（apm pack 忘れ）と exit 4 で弾く。
+        entry: apm pack --check-clean --dry-run --offline
+        language: system
+        pass_filenames: false
+        files: ^(apm\.yml|\.claude-plugin/marketplace\.json)$
