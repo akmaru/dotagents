@@ -12,12 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
+      - uses: astral-sh/setup-uv@v5
 
-      - name: Install dependencies
-        run: pip install pyyaml pytest
+      # uv sync provides the apm CLI (apm-cli dev dependency), so the marketplace
+      # e2e test (test_e2e_marketplace.py) runs here too.
+      - name: Sync dev tools
+        run: uv sync
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: uv run pytest tests/ -v

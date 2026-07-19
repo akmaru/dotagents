@@ -1,0 +1,14 @@
+[project]
+name = "dotagents"
+version = "0.1.0"
+description = "Personal AI agent skills managed as an APM marketplace"
+requires-python = ">=3.10"
+
+# Not a Python package — this repo only uses uv to manage dev tooling locally.
+[tool.uv]
+package = false
+
+# Dev tools stay project-local (no global installs). Run via `uv run <tool>`.
+# apm-cli provides the `apm` CLI used by the marketplace e2e test.
+[dependency-groups]
+dev = ["pytest", "pyyaml", "pre-commit", "apm-cli"]
