@@ -119,6 +119,6 @@ so it requires `apm` on `PATH`.
 
 `tests/test_e2e_marketplace.py` drives the real consumer UX end-to-end
 (`apm marketplace add` → `apm install <pkg>@dotagents` → skill deployed) in an isolated `HOME`.
-It is skipped when `apm` is not on `PATH`. CI installs `apm` via
-[microsoft/apm-action](https://github.com/microsoft/apm-action) so it runs there; tests run
-automatically on push and pull requests via GitHub Actions.
+The `apm` CLI comes from the `apm-cli` dev dependency, so `uv run pytest` exercises it both
+locally and in CI (it is skipped only if `apm` is not on `PATH`). Tests run automatically on push
+and pull requests via GitHub Actions.

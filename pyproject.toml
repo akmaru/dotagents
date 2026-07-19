@@ -9,5 +9,6 @@ requires-python = ">=3.10"
 package = false
 
 # Dev tools stay project-local (no global installs). Run via `uv run <tool>`.
+# apm-cli provides the `apm` CLI used by the marketplace e2e test.
 [dependency-groups]
-dev = ["pytest", "pyyaml", "pre-commit"]
+dev = ["pytest", "pyyaml", "pre-commit", "apm-cli"]
