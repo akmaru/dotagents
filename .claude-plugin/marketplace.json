@@ -24,6 +24,18 @@
       "source": "./packages/rust"
     },
     {
+      "name": "madr-writer",
+      "description": "Author Architecture Decision Records (ADRs) in MADR format under docs/adr/.",
+      "version": "1.0.0",
+      "source": "./packages/madr-writer"
+    },
+    {
+      "name": "refine-design",
+      "description": "Critically pressure-test and refine a design decision — surface alternatives and trade-offs, and check consistency with existing decisions.",
+      "version": "1.0.0",
+      "source": "./packages/refine-design"
+    },
+    {
       "name": "skill-creator",
       "source": {
         "source": "git-subdir",

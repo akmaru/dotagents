@@ -1,0 +1,9 @@
+name: madr-writer
+version: 1.0.0
+description: Author Architecture Decision Records (ADRs) in MADR format under docs/adr/.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []
