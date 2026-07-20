@@ -1,42 +1,42 @@
 ---
 name: beads
-description: Beads issue tracking workflow for Claude Code. When this skill is installed, beads is the issue tracker for this project. Always create a beads issue before starting any task, update it during work, and close it on completion.
+description: Claude Code 向けの beads issue トラッキングワークフロー。このスキルが導入されている間、beads がこのプロジェクトの issue トラッカーになる。あらゆるタスクは着手前に beads issue を作成し、作業中に更新し、完了時にクローズする。
 compatibility: Designed for Claude Code
 ---
 
-## Workflow
+## ワークフロー
 
-This skill being installed means **beads is the issue tracker for this project**. Follow this workflow for every task:
+このスキルが導入されているということは、**beads がこのプロジェクトの issue トラッカー**であることを意味する。すべてのタスクで次のワークフローに従う:
 
-1. **Task start**: Create a beads issue with `br create --label=beads` before doing any work
-2. **In progress**: Update the issue to `in_progress` with `br update <id> --status=in_progress`
-3. **Task end**: Close the issue with `br close <id>` and sync with `br sync --flush-only`
+1. **タスク開始**: 作業を始める前に `br create --label=beads` で beads issue を作成する
+2. **進行中**: `br update <id> --status=in_progress` で issue を `in_progress` に更新する
+3. **タスク終了**: `br close <id>` で issue をクローズし、`br sync --flush-only` で同期する
 
-Never start implementation without a corresponding beads issue.
+対応する beads issue なしに実装を始めてはならない。
 
-## Commands
+## コマンド
 
 ```bash
-# View actionable work
+# 対応可能な作業を見る
 br ready
 
-# Create an issue (always add the "beads" label)
+# issue を作成する（必ず "beads" ラベルを付ける）
 br create --title="..." --description="..." --type=task --priority=2 --label=beads
 
-# Update status
+# ステータスを更新する
 br update <id> --status=in_progress
 
-# Close
+# クローズする
 br close <id> --reason="..."
 
-# Sync to git
+# git に同期する
 br sync --flush-only
 ```
 
-## Issue types
+## Issue タイプ
 
 `task`, `bug`, `feature`, `epic`, `chore`, `docs`, `question`
 
-## Priority
+## 優先度
 
 `0`=critical, `1`=high, `2`=medium, `3`=low, `4`=backlog
