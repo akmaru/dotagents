@@ -1,9 +1,9 @@
 ---
 name: rust
-description: Rust development workflow combining rust-analyzer LSP integration. Activates when working on Rust projects (.rs files, Cargo.toml). Provides LSP-powered navigation, diagnostics, and code intelligence via rust-analyzer.
+description: rust-analyzer LSP 連携による Rust 開発ワークフロー。Rust プロジェクト（.rs ファイル、Cargo.toml）で作業するときに有効化される。rust-analyzer による LSP 連携のナビゲーション・診断・コードインテリジェンスを提供する。
 compatibility: Requires rust-analyzer installed (rustup component add rust-analyzer)
 ---
 
-This skill bundles rust-analyzer LSP support for Rust development.
+このスキルは Rust 開発向けに rust-analyzer の LSP サポートをまとめたもの。
 
-See the bundled [rust-analyzer-lsp](rust-analyzer-lsp/SKILL.md) skill for LSP usage instructions.
+LSP の使い方は同梱の [rust-analyzer-lsp](rust-analyzer-lsp/SKILL.md) スキルを参照。

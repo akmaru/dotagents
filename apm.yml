@@ -16,6 +16,10 @@ marketplace:
     source: ./packages/beads
   - name: rust
     source: ./packages/rust
+  - name: madr-writer
+    source: ./packages/madr-writer
+  - name: refine-design
+    source: ./packages/refine-design
   - name: skill-creator
     source: anthropics/claude-plugins-official
     ref: f9cb226d81172f53a1787cc3ba90dc9ab51aa169

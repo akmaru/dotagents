@@ -1,24 +1,24 @@
 ---
 name: grill-me
-description: Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their design, or mentions "grill me".
+description: 計画や設計について、決定木の各分岐を解消しながら共通理解に至るまで、ユーザーをリレントレスに問い詰める。計画をストレステストしたいとき、設計を厳しく問い詰めてほしいとき、または「grill me」と言われたときに使う。
 compatibility: Designed for Claude Code and OpenCode
 ---
 
-Interview the user about their plan or design through focused, one-at-a-time questioning using the AskUserQuestion tool.
+AskUserQuestion ツールを使い、1 問ずつ焦点を絞った質問で、ユーザーの計画や設計をインタビューする。
 
-## Rules
+## ルール
 
-- Always use `AskUserQuestion` tool — never ask questions as plain text
-- Ask exactly one question at a time; wait for the answer before proceeding
-- Provide 2–4 concrete multiple-choice options representing the most realistic answers for the specific context
-- After each answer, acknowledge briefly (1–2 sentences), then immediately ask the next question
-- Explore the codebase or files yourself rather than asking the user to describe them
-- Continue until all branches of the decision tree are resolved
-- Conclude with a concise summary of all decisions made
+- 必ず `AskUserQuestion` ツールを使う — プレーンテキストで質問しない
+- 一度に 1 問だけ質問し、回答を待ってから次に進む
+- その文脈で最も現実的な回答を表す、具体的な選択肢を 2〜4 個提示する
+- 各回答のあとは短く受け止め（1〜2 文）、すぐに次の質問へ移る
+- ファイルやコードベースはユーザーに説明させず、自分で調べる
+- 決定木のすべての分岐が解消されるまで続ける
+- 最後に、下したすべての決定を簡潔にまとめる
 
-## Workflow
+## ワークフロー
 
-1. Start by asking what plan or design to grill
-2. Identify the key decision points and unknowns
-3. Work through each branch systematically
-4. Summarize all resolved decisions at the end
+1. まず、どの計画・設計を grill するかを尋ねる
+2. 主要な決定ポイントと不明点を洗い出す
+3. 各分岐を体系的に処理する
+4. 最後に、解消したすべての決定をまとめる
