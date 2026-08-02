@@ -24,3 +24,5 @@ marketplace:
     source: anthropics/claude-plugins-official
     ref: f9cb226d81172f53a1787cc3ba90dc9ab51aa169
     subdir: plugins/skill-creator
+  - name: adr
+    source: ./packages/adr-skill

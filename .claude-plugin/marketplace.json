@@ -44,6 +44,12 @@
         "ref": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169",
         "sha": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169"
       }
+    },
+    {
+      "name": "adr",
+      "description": "ADRs as executable specifications for coding agents",
+      "version": "1.0.0",
+      "source": "./packages/adr-skill"
     }
   ]
 }

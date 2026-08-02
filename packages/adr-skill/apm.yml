@@ -1,0 +1,9 @@
+name: adr-skill
+version: 1.0.0
+description: ADRs as executable specifications for coding agents
+author: joelhooks
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []
