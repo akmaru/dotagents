@@ -1,11 +1,12 @@
 """
-Validate that user/install.sh links the user-level config correctly.
+Validate that user/install.sh distributes the user-level config correctly.
 
 Runs install.sh against a throwaway HOME (a temp dir) so the real ~/.claude is
-never touched and the test is CI-safe. install.sh only does mkdir/ln/rm, no
+never touched and the test is CI-safe. install.sh only does mkdir/ln/rm/jq, no
 network, so sandboxing HOME fully exercises it.
 """
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -20,14 +21,17 @@ INSTALL_SH = USER_DIR / "install.sh"
 EXPECTED_LINKS = {
     ".claude/AGENTS.md": "AGENTS.md",
     ".claude/CLAUDE.md": "CLAUDE.md",
-    ".claude/settings.json": "settings.json",
     ".claude/rules": "rules",
     ".config/opencode/AGENTS.md": "AGENTS.md",
+    ".config/herdr/config.toml": "herdr/config.toml",
+    ".config/herdr/scripts": "herdr/scripts",
 }
 
 
 def _run_install(home: Path):
-    env = {**os.environ, "HOME": str(home)}
+    # herdr integration の導入は実バイナリを叩き repo の settings.json を書き換えるため、
+    # symlink の検証には不要な副作用として抑止する（正規化処理は tests/test_herdr.py で検証）
+    env = {**os.environ, "HOME": str(home), "DOTAGENTS_SKIP_HERDR_INTEGRATION": "1"}
     return subprocess.run(
         ["bash", str(INSTALL_SH)],
         env=env,
@@ -58,10 +62,46 @@ def test_claude_import_target_resolves(installed):
     assert agents.is_file(), "@~/.claude/AGENTS.md import target must resolve to a file"
 
 
-def test_settings_is_valid_json_through_link(installed):
-    import json
+def test_settings_is_merged_not_linked(installed):
+    """settings.json は symlink せずマージする（docs/adr/0009）。"""
+    settings = installed / ".claude" / "settings.json"
+    assert not settings.is_symlink(), "マシン固有のキーを書けるよう実ファイルである必要がある"
 
-    json.loads((installed / ".claude" / "settings.json").read_text())
+    merged = json.loads(settings.read_text())
+    repo = json.loads((USER_DIR / "settings.json").read_text())
+    assert repo.items() <= merged.items()
+
+
+def test_settings_merge_keeps_local_keys(tmp_path):
+    """herdr の hook など、ローカルにしかないキーは残す。競合したキーは repo が勝つ。"""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir(parents=True)
+    local_only = {"SessionStart": [{"matcher": "*", "hooks": []}]}
+    (claude_dir / "settings.json").write_text(
+        json.dumps({"hooks": local_only, "theme": "machine-local"})
+    )
+
+    assert _run_install(tmp_path).returncode == 0
+
+    merged = json.loads((claude_dir / "settings.json").read_text())
+    repo = json.loads((USER_DIR / "settings.json").read_text())
+    assert merged["hooks"] == local_only
+    assert merged["theme"] == repo["theme"]
+
+
+def test_settings_migrates_from_symlink(tmp_path):
+    """旧 symlink 方式からの移行: symlink を実ファイルに置き換える。"""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir(parents=True)
+    (claude_dir / "settings.json").symlink_to(USER_DIR / "settings.json")
+
+    assert _run_install(tmp_path).returncode == 0
+
+    settings = claude_dir / "settings.json"
+    assert not settings.is_symlink()
+    assert json.loads(settings.read_text()) == json.loads(
+        (USER_DIR / "settings.json").read_text()
+    ), "repo の内容を壊さずに実ファイル化する"
 
 
 def test_cpp_rule_reachable_through_rules_link(installed):
@@ -91,3 +131,14 @@ def test_replaces_stale_symlink(tmp_path):
     assert (claude_dir / "CLAUDE.md").resolve() == (USER_DIR / "CLAUDE.md").resolve()
     assert (claude_dir / "rules").is_symlink()
     assert not (claude_dir / "rules" / "old.md").exists(), "stale rules must be removed"
+
+
+def test_preserves_pre_existing_herdr_config(tmp_path):
+    """herdr が自分で書いた config.toml は消さず退避する。"""
+    herdr_dir = tmp_path / ".config" / "herdr"
+    herdr_dir.mkdir(parents=True)
+    (herdr_dir / "config.toml").write_text("onboarding = false\n")
+
+    assert _run_install(tmp_path).returncode == 0
+    assert (herdr_dir / "config.toml").is_symlink()
+    assert (herdr_dir / "config.toml.pre-dotagents").read_text() == "onboarding = false\n"
