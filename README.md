@@ -49,6 +49,25 @@ user/
 └── install.sh     # symlinks the above into ~/.claude and ~/.config/opencode
 ```
 
+## Setup (`install.sh`, `mcp/`, `hindsight/`)
+
+```bash
+./install.sh
+```
+
+Installs the Claude Code CLI, then runs `user/install.sh` and `mcp/install.sh`. Network access is confined
+to this top-level script so the ones it calls stay purely local (which is what lets `tests/test_install.py`
+exercise them against a throwaway HOME).
+
+| Path | Purpose |
+|------|---------|
+| `mcp/` | MCP server config, synced to Claude Code / Desktop / VS Code / GitLab Duo — see [mcp/README.md](mcp/README.md) |
+| `hindsight/` | [Hindsight](https://github.com/vectorize-io/hindsight) agent memory: server and client setup — see [hindsight/README.md](hindsight/README.md) |
+
+`hindsight/` is not called from `install.sh`: the server pulls in a local embedding model and is only needed
+on the machine that actually runs it. Install it explicitly (`hindsight/install-server.sh` /
+`hindsight/install-client.sh`).
+
 - `AGENTS.md` is the single source of truth. `CLAUDE.md` imports it so Claude and OpenCode read the same
   content without duplication ([docs/adr/0005](docs/adr/0005-agents-md-canonical.md)).
 - `paths:`-scoped rules are Claude-only; OpenCode has no equivalent mechanism

@@ -5,3 +5,7 @@ __pycache__/
 
 # APM dependencies
 apm_modules/
+
+# Secrets (never commit)
+.env
+*.local.*
