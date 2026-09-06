@@ -24,7 +24,7 @@ dotagents/
 
 各プリミティブは必ず `.apm/<type>/` 配下に置くこと。パッケージルート直下に置くと `apm pack` は通るが `apm install` 時に黙って欠落する。
 
-`user/` は marketplace とは別概念の個人ユーザーレベル設定（グローバルプロンプト・rules・settings）で、`apm compile` ではなくネイティブ symlink で `~/.claude` / `~/.config/opencode` へ配布する。詳細は [docs/adr/](docs/adr/) 参照。
+`user/` は marketplace とは別概念の個人ユーザーレベル設定（グローバルプロンプト・rules・settings・herdr 設定）で、`apm compile` ではなくネイティブ symlink で `~/.claude` / `~/.config/opencode` / `~/.config/herdr` へ配布する（`settings.json` のみ、マシン固有のキーを残すため symlink ではなく jq マージ）。詳細は [docs/adr/](docs/adr/) 参照。
 
 ## スキルの追加
 

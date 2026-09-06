@@ -1,0 +1,23 @@
+onboarding = false
+
+[theme]
+name = "terminal"
+auto_switch = false
+
+[ui]
+status_indicators = "symbols"
+
+show_agent_labels_on_pane_borders = true
+[ui.toast]
+delivery = "herdr"
+
+[keys]
+# スクロール (copy mode) はデフォルト未割り当てなので tmux 風に割り当てる
+copy_mode = "prefix+["
+
+# フォーカス中の Claude Code セッションを分岐して隣の pane で開く
+[[keys.command]]
+key = "prefix+f"
+type = "shell"
+command = "$HOME/.config/herdr/scripts/fork-claude-session.sh"
+description = "fork focused claude session"
