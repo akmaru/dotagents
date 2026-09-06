@@ -12,6 +12,11 @@ export HINDSIGHT_API_LLM_PROVIDER=anthropic
 # directive も無視する。retain / consolidation は投入量が多いので haiku のまま据え置く。
 export HINDSIGHT_API_REFLECT_LLM_MODEL=claude-sonnet-5
 
+# 日本語で投入しても retain が fact を英語や中国語に翻訳して保存することがある。
+# 未設定は「ソースの言語を保持する」建前だが実際には保持されないため明示する。
+# retain / consolidation / reflect すべてに一律で効く。
+export HINDSIGHT_API_LLM_OUTPUT_LANGUAGE=Japanese
+
 # 認証を有効にしていないので、ループバック限定で待ち受ける。
 export HINDSIGHT_API_HOST=127.0.0.1
 export HINDSIGHT_API_PORT=8888
