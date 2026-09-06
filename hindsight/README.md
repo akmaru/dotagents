@@ -55,7 +55,7 @@ ps -o pid,ppid,tty,args= -p "$(lsof -nP -iTCP:8888 -sTCP:LISTEN -t | head -1)"
 ./install-client.sh
 ```
 
-`${XDG_CONFIG_HOME}/mcp/master-mcp.d/hindsight.json` を生成し、dotfiles の `sync-mcp.sh` を実行する。これで Claude Code / Claude Desktop / VS Code / GitLab Duo すべてに配布される。
+`${XDG_CONFIG_HOME}/mcp/master-mcp.d/hindsight.json` を生成し、`mcp/sync-mcp.sh` を実行する。これで Claude Code / Claude Desktop / VS Code / GitLab Duo すべてに配布される。
 
 リモートのサーバーに繋ぐ場合は URL を指定する。
 
@@ -81,14 +81,16 @@ claude mcp remove --scope local hindsight
 
 ```bash
 npx -y @vectorize-io/hindsight-control-plane \
-  --api-url http://127.0.0.1:8888 --hostname localhost --port 9999
+  --api-url http://127.0.0.1:8888 --hostname localhost --port 19999
 ```
 
 バンクとメモリの一覧、エンティティのグラフ、取り込み履歴、recall の試験実行ができる。認証がないので `--hostname` を省略してはいけない。
 
+Control Plane の既定ポートは 9999 だが、ありふれた番号で他のローカルサービスと衝突しやすいため 19999 にずらしている。
+
 **`--hostname 127.0.0.1` にしてはいけない。** 全ページが 307 で自己リダイレクトし `ERR_TOO_MANY_REDIRECTS` になる。next-intl のミドルウェアが生成する rewrite 先が常に `localhost` という綴りで組み立てられ、サーバー自身の HOSTNAME 文字列が一致しないと rewrite が内部処理されずリダイレクトとして漏れるため（[issue #1926](https://github.com/vectorize-io/hindsight/issues/1926)、CLOSED だが 0.9.2 でも未修正）。どちらの指定でもループバック限定でバインドするので、露出の差はない。
 
-macOS では `localhost` 指定時に IPv6 ループバック `[::1]` のみに bind されるため、`127.0.0.1:9999` ではなく `localhost:9999` でアクセスする。
+macOS では `localhost` 指定時に IPv6 ループバック `[::1]` のみに bind されるため、`127.0.0.1:19999` ではなく `localhost:19999` でアクセスする。
 
 ## 既知の罠
 
