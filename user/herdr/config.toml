@@ -21,6 +21,27 @@ prefix = "ctrl+q"
 # スクロール (copy mode) はデフォルト未割り当てなので tmux 風に割り当てる
 copy_mode = "prefix+["
 
+# pane 移動は矢印キーでも行えるようにする（tmux の prefix+矢印と同じ操作感）
+# 指定した値でデフォルトが置き換わるため、配列に prefix+h/j/k/l も明示して残す
+focus_pane_left = ["prefix+h", "prefix+left"]
+focus_pane_down = ["prefix+j", "prefix+down"]
+focus_pane_up = ["prefix+k", "prefix+up"]
+focus_pane_right = ["prefix+l", "prefix+right"]
+
+# workspace 操作を「tab の同じ操作 + shift」に揃える。herdr の既定は tab が
+# prefix+c/n/p (新規/次/前) なのに workspace の新規が prefix+shift+n で、
+# shift 層で n の意味が new と next に食い違っていた。ここを tab 側に合わせる。
+# switch/next/previous_workspace はいずれも既定未割り当てなので新規追加。
+# なお prefix なしの shift+1..9 は herdr が「入力を奪う」として拒否するため prefix 必須。
+switch_workspace = "prefix+shift+1..9"   # prefix+1..9 (switch_tab) の shift 版
+previous_workspace = "prefix+shift+p"    # prefix+p (previous_tab) の shift 版
+next_workspace = "prefix+shift+n"        # prefix+n (next_tab) の shift 版
+new_workspace = "prefix+shift+c"         # prefix+c (new_tab) の shift 版。既定の prefix+shift+n から移動
+
+# prefix+shift+p を next/previous_workspace に明け渡した分の退避先。
+# t=tab / w=workspace / p=pane という rename の頭文字ルールは alt 側で保つ
+rename_pane = "prefix+alt+p"
+
 # フォーカス中の Claude Code セッションを分岐して隣の pane で開く
 [[keys.command]]
 key = "prefix+f"
@@ -50,14 +71,18 @@ command = "persiyanov.reviewr.toggle"
 description = "reviewr toggle"
 
 # nvim をサイドバーで開き、エージェントの出力からファイルを拾う
+# prefix+e / prefix+o は既定の edit_scrollback / open_notification_target と衝突する。
+# config check は keys.command と既定の衝突を報告せず黙って一方が死ぬため alt 層へ退避。
+# 特に open_notification_target は toast の発生元 pane へ飛ぶ操作で、
+# ui.toast.delivery = "herdr" にしている以上手放したくない
 [[keys.command]]
-key = "prefix+e"
+key = "prefix+alt+e"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.toggle"
 description = "nvim sidebar"
 
 [[keys.command]]
-key = "prefix+o"
+key = "prefix+alt+o"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.pick-file"
 description = "open file from agent output"
