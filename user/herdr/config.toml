@@ -7,6 +7,12 @@ auto_switch = false
 [ui]
 status_indicators = "symbols"
 
+# Agent サイドバーを attention 順 (blocked → done → …) に並べる。
+# 既定の "spaces" は workspace ごとのグループ表示で、待たせているエージェントが
+# 一覧のどこに居るか毎回探すことになる。next_agent と組み合わせて
+# 「1 打鍵目が要対応エージェント」になるようにするための前提設定
+agent_panel_sort = "priority"
+
 show_agent_labels_on_pane_borders = true
 [ui.toast]
 delivery = "herdr"
@@ -38,9 +44,24 @@ previous_workspace = "prefix+shift+p"    # prefix+p (previous_tab) の shift 版
 next_workspace = "prefix+shift+n"        # prefix+n (next_tab) の shift 版
 new_workspace = "prefix+shift+c"         # prefix+c (new_tab) の shift 版。既定の prefix+shift+n から移動
 
-# prefix+shift+p を next/previous_workspace に明け渡した分の退避先。
-# t=tab / w=workspace / p=pane という rename の頭文字ルールは alt 側で保つ
-rename_pane = "prefix+alt+p"
+# 作業が終わった / 質問してきたエージェントへ飛ぶための移動キー。
+# next/previous_agent は Agent サイドバーの表示順で移動するので、
+# ui.agent_panel_sort = "priority" と併せて attention 順の巡回になる。
+# focus は done (= idle だが未確認) を seen に落とすため、押し続けるだけで
+# 未確認の完了を消化できる。いずれも既定未割り当てなので新規追加。
+# 「次/前は n/p、番号は 1..9、階層は 無印(tab) → shift(workspace) → alt(agent)」
+# という規則に合わせるため、agent は alt 層に統一する
+previous_agent = "prefix+alt+p"   # prefix+p (previous_tab) の alt 版
+next_agent = "prefix+alt+n"       # prefix+n (next_tab) の alt 版
+focus_agent = "prefix+alt+1..9"   # prefix+1..9 (switch_tab) の alt 版
+
+# 既定の prefix+shift+p は previous_workspace に、退避先だった prefix+alt+p は
+# previous_agent に明け渡した。t=tab / w=workspace / p=pane という rename の
+# 頭文字ルールは shift/alt 層のどちらでも維持できないので、tmux の
+# rename (prefix+,) に倣って修飾キーなしの層へ逃がす。
+# rename_pane 自体は滅多に使わないため、頭文字ルールより
+# 「shift=workspace / alt=agent を例外なく保つ」ことを優先した
+rename_pane = "prefix+comma"
 
 # フォーカス中の Claude Code セッションを分岐して隣の pane で開く
 [[keys.command]]
