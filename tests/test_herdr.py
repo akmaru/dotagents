@@ -77,7 +77,8 @@ def test_plugins_are_pinned_to_a_full_commit():
 
 def test_plugin_action_bindings_have_a_declared_plugin():
     """キーバインドだけ配って本体が入っていない状態を防ぐ。"""
-    repos = [entry.partition("@")[0] for entry in _declared_plugins()]
+    # plugin_id の owner は herdr が小文字化するため（ChmaraX → chmarax）比較も小文字で行う
+    repos = [entry.partition("@")[0].lower() for entry in _declared_plugins()]
     for command in _commands():
         if command.get("type") != "plugin_action":
             continue

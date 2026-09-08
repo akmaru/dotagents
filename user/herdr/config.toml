@@ -11,6 +11,9 @@ show_agent_labels_on_pane_borders = true
 [ui.toast]
 delivery = "herdr"
 
+[experimental]
+kitty_graphics = true
+
 [keys]
 # prefix はデフォルトの ctrl+b から ctrl+q に変更
 prefix = "ctrl+q"
@@ -45,3 +48,16 @@ key = "prefix+d"
 type = "plugin_action"
 command = "persiyanov.reviewr.toggle"
 description = "reviewr toggle"
+
+# nvim をサイドバーで開き、エージェントの出力からファイルを拾う
+[[keys.command]]
+key = "prefix+e"
+type = "plugin_action"
+command = "chmarax.herdr-nvim.toggle"
+description = "nvim sidebar"
+
+[[keys.command]]
+key = "prefix+o"
+type = "plugin_action"
+command = "chmarax.herdr-nvim.pick-file"
+description = "open file from agent output"
