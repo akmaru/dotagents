@@ -71,6 +71,8 @@ HERDR_PLUGINS=(
   "kryptamine/herdr-auto-title@a34f22d1fc8a6037d171789cfda17289088527e0"
   # エージェントの差分をレビューし、行コメントをエージェントの入力欄へ送る
   "persiyanov/herdr-reviewr@4c090225af706bf3aaa24b39fea890a72994f40f"
+  # nvim をサイドバーで開き、エージェントの出力からファイルを拾う
+  "ChmaraX/herdr-nvim@e652ebf7b3d6713992e68a30aec588822e69fae5"
 )
 
 if [ "${DOTAGENTS_SKIP_HERDR_PLUGINS:-}" != "1" ] && command -v herdr >/dev/null 2>&1; then
