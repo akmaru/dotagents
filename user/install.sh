@@ -62,4 +62,35 @@ if [ "${DOTAGENTS_SKIP_HERDR_INTEGRATION:-}" != "1" ] && command -v herdr >/dev/
   herdr server reload-config >/dev/null 2>&1 || true
 fi
 
+# herdr plugins: ~/.config/herdr/plugins.json は絶対パスとインストール時刻を持つため
+# symlink で配れない。宣言的に install する（docs/adr/0010）。
+# ref は検証済みのコミットに固定する。更新は ref を書き換えて再実行するだけでよい
+# （herdr が既存インストールを replace する）。
+HERDR_PLUGINS=(
+  # タブ名を作業内容から自動生成する。ビルドに Go が要る
+  "kryptamine/herdr-auto-title@a34f22d1fc8a6037d171789cfda17289088527e0"
+  # エージェントの差分をレビューし、行コメントをエージェントの入力欄へ送る
+  "persiyanov/herdr-reviewr@4c090225af706bf3aaa24b39fea890a72994f40f"
+)
+
+if [ "${DOTAGENTS_SKIP_HERDR_PLUGINS:-}" != "1" ] && command -v herdr >/dev/null 2>&1; then
+  installed="$(herdr plugin list 2>/dev/null || true)"
+  for entry in "${HERDR_PLUGINS[@]}"; do
+    repo="${entry%@*}"
+    ref="${entry##*@}"
+    case "${installed}" in
+      *"github:${repo}@${ref}"*) continue ;;
+    esac
+    echo "herdr plugin: installing ${repo}@${ref}"
+    herdr plugin install "${repo}" --ref "${ref}" --yes >/dev/null ||
+      echo "herdr plugin: ${repo} のインストールに失敗（auto-title のビルドには Go が要る）" >&2
+  done
+  # プラグインは herdr サーバがセッションを復元するときに起動する。
+  # 初回導入時は `herdr server stop` が要る（reload-config では起動しない）。
+fi
+
+# config.toml の popup バインドが呼ぶ外部コマンド。無くても install は続行する
+command -v lazygit >/dev/null 2>&1 ||
+  echo "lazygit が見つかりません（prefix+alt+g のバインドに必要）" >&2
+
 echo "Linked user-level agent config from ${USER_DIR}"
