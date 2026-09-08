@@ -21,6 +21,17 @@ prefix = "ctrl+q"
 # スクロール (copy mode) はデフォルト未割り当てなので tmux 風に割り当てる
 copy_mode = "prefix+["
 
+# pane 移動は矢印キーでも行えるようにする（tmux の prefix+矢印と同じ操作感）
+# 指定した値でデフォルトが置き換わるため、配列に prefix+h/j/k/l も明示して残す
+focus_pane_left = ["prefix+h", "prefix+left"]
+focus_pane_down = ["prefix+j", "prefix+down"]
+focus_pane_up = ["prefix+k", "prefix+up"]
+focus_pane_right = ["prefix+l", "prefix+right"]
+
+# workspace 直接移動はデフォルト未割り当て。tab が prefix+1..9 なので shift 付きで揃える
+# prefix なしの shift+1..9 は herdr 側が「入力を奪う」として拒否するため prefix 必須
+switch_workspace = "prefix+shift+1..9"
+
 # フォーカス中の Claude Code セッションを分岐して隣の pane で開く
 [[keys.command]]
 key = "prefix+f"
