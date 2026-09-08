@@ -71,14 +71,18 @@ command = "persiyanov.reviewr.toggle"
 description = "reviewr toggle"
 
 # nvim をサイドバーで開き、エージェントの出力からファイルを拾う
+# prefix+e / prefix+o は既定の edit_scrollback / open_notification_target と衝突する。
+# config check は keys.command と既定の衝突を報告せず黙って一方が死ぬため alt 層へ退避。
+# 特に open_notification_target は toast の発生元 pane へ飛ぶ操作で、
+# ui.toast.delivery = "herdr" にしている以上手放したくない
 [[keys.command]]
-key = "prefix+e"
+key = "prefix+alt+e"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.toggle"
 description = "nvim sidebar"
 
 [[keys.command]]
-key = "prefix+o"
+key = "prefix+alt+o"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.pick-file"
 description = "open file from agent output"
