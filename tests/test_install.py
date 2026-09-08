@@ -8,6 +8,7 @@ network, so sandboxing HOME fully exercises it.
 
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -31,7 +32,13 @@ EXPECTED_LINKS = {
 def _run_install(home: Path):
     # herdr integration の導入は実バイナリを叩き repo の settings.json を書き換えるため、
     # symlink の検証には不要な副作用として抑止する（正規化処理は tests/test_herdr.py で検証）
-    env = {**os.environ, "HOME": str(home), "DOTAGENTS_SKIP_HERDR_INTEGRATION": "1"}
+    # plugin install は GitHub から clone・ビルドするため、テストは常に抑止する
+    env = {
+        **os.environ,
+        "HOME": str(home),
+        "DOTAGENTS_SKIP_HERDR_INTEGRATION": "1",
+        "DOTAGENTS_SKIP_HERDR_PLUGINS": "1",
+    }
     return subprocess.run(
         ["bash", str(INSTALL_SH)],
         env=env,
@@ -142,3 +149,66 @@ def test_preserves_pre_existing_herdr_config(tmp_path):
     assert _run_install(tmp_path).returncode == 0
     assert (herdr_dir / "config.toml").is_symlink()
     assert (herdr_dir / "config.toml.pre-dotagents").read_text() == "onboarding = false\n"
+
+
+def _stub_herdr(tmp_path):
+    """呼び出しを記録するだけの herdr を PATH の先頭に置く。
+
+    herdr は設定ディレクトリを $HOME ではなく OS のユーザーから解決するため、
+    偽 HOME では隔離できない（`HOME=/tmp/x herdr plugin config-dir` は実ユーザーの
+    ~/.config/herdr を返す）。実バイナリを呼ばせると開発機の実環境に
+    プラグインを入れてしまうので、スタブに差し替えて検証する。
+    """
+    bin_dir = tmp_path / "stub-bin"
+    bin_dir.mkdir()
+    log = tmp_path / "herdr-calls.log"
+    stub = bin_dir / "herdr"
+    stub.write_text(f'#!/usr/bin/env bash\necho "$@" >> "{log}"\n')
+    stub.chmod(0o755)
+    return bin_dir, log
+
+
+def test_declared_plugins_are_installed_with_their_pinned_ref(tmp_path):
+    bin_dir, log = _stub_herdr(tmp_path)
+    home = tmp_path / "home"
+    home.mkdir()
+
+    result = subprocess.run(
+        ["bash", str(INSTALL_SH)],
+        env={**os.environ, "HOME": str(home), "PATH": f"{bin_dir}:{os.environ['PATH']}"},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+    calls = log.read_text()
+    install_sh = INSTALL_SH.read_text()
+    declared = re.findall(r'"([\w.-]+/[\w.-]+)@([0-9a-f]{40})"', install_sh)
+    assert declared, "install.sh に宣言されたプラグインが要る"
+    for repo, ref in declared:
+        assert f"plugin install {repo} --ref {ref} --yes" in calls
+
+
+def test_plugin_install_is_skippable(tmp_path):
+    """DOTAGENTS_SKIP_HERDR_PLUGINS=1 で plugin install を打たない。
+
+    テストは常にこの経路を通る。ここが壊れるとスイートがネットワークに出て、
+    実行した開発機の実 herdr にプラグインを入れてしまう。
+    """
+    bin_dir, log = _stub_herdr(tmp_path)
+    home = tmp_path / "home"
+    home.mkdir()
+
+    result = subprocess.run(
+        ["bash", str(INSTALL_SH)],
+        env={
+            **os.environ,
+            "HOME": str(home),
+            "PATH": f"{bin_dir}:{os.environ['PATH']}",
+            "DOTAGENTS_SKIP_HERDR_PLUGINS": "1",
+        },
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "plugin install" not in (log.read_text() if log.exists() else "")
