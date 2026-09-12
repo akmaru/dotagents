@@ -76,17 +76,26 @@ HERDR_PLUGINS=(
 )
 
 if [ "${DOTAGENTS_SKIP_HERDR_PLUGINS:-}" != "1" ] && command -v herdr >/dev/null 2>&1; then
-  installed="$(herdr plugin list 2>/dev/null || true)"
-  for entry in "${HERDR_PLUGINS[@]}"; do
-    repo="${entry%@*}"
-    ref="${entry##*@}"
-    case "${installed}" in
-      *"github:${repo}@${ref}"*) continue ;;
-    esac
-    echo "herdr plugin: installing ${repo}@${ref}"
-    herdr plugin install "${repo}" --ref "${ref}" --yes >/dev/null ||
-      echo "herdr plugin: ${repo} のインストールに失敗（auto-title のビルドには Go が要る）" >&2
-  done
+  # 一覧が引けない時点で install も全滅する（CLI とサーバのプロトコル不一致など）。
+  # 個別の失敗として 3 回報告すると真因が埋もれるので、ここで止めて herdr の
+  # エラーをそのまま見せる。
+  if ! installed="$(herdr plugin list 2>&1)"; then
+    echo "herdr plugin: 一覧の取得に失敗したためインストールをスキップします" >&2
+    printf '%s\n' "${installed}" >&2
+  else
+    for entry in "${HERDR_PLUGINS[@]}"; do
+      repo="${entry%@*}"
+      ref="${entry##*@}"
+      case "${installed}" in
+        *"github:${repo}@${ref}"*) continue ;;
+      esac
+      echo "herdr plugin: installing ${repo}@${ref}"
+      if ! output="$(herdr plugin install "${repo}" --ref "${ref}" --yes 2>&1)"; then
+        echo "herdr plugin: ${repo}@${ref} のインストールに失敗" >&2
+        printf '%s\n' "${output}" >&2
+      fi
+    done
+  fi
   # プラグインは herdr サーバがセッションを復元するときに起動する。
   # 初回導入時は `herdr server stop` が要る（reload-config では起動しない）。
 fi
