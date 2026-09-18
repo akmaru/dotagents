@@ -1,6 +1,6 @@
 # Global Agent Instructions
 
-リポジトリ横断で適用される共通の指示です。Claude Code / OpenCode など複数のエージェントで共有します。
+リポジトリ横断で適用される共通の指示です。
 
 ## Communication Style
 
