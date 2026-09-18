@@ -38,6 +38,12 @@ fi
 jq -s '.[0] * .[1]' "${SETTINGS}" "${USER_DIR}/settings.json" > "${SETTINGS}.tmp"
 mv "${SETTINGS}.tmp" "${SETTINGS}"
 
+# --- Claude Code hooks / statusLine (~/.local/bin) ---
+# settings.json が参照するスクリプト。settings.json 同様、絶対パスに依存しないよう
+# ~/.local/bin に symlink し、PATH 経由で解決させる。
+mkdir -p "${HOME}/.local/bin"
+ln -sfn "${USER_DIR}/bin/claude-statusline.sh" "${HOME}/.local/bin/claude-statusline.sh"
+
 # --- OpenCode (~/.config/opencode) ---
 mkdir -p "${HOME}/.config/opencode"
 ln -sfn "${USER_DIR}/AGENTS.md" "${HOME}/.config/opencode/AGENTS.md"

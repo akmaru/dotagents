@@ -57,6 +57,32 @@ def test_install_sh_is_executable():
     assert os.access(install, os.X_OK), "user/install.sh must be executable"
 
 
+def test_statusline_script_is_executable():
+    """settings.json の statusLine が参照するスクリプト。
+
+    install.sh は symlink するだけなので、実行権が無いと statusLine が何も描画しない。
+    """
+    script = USER_DIR / "bin" / "claude-statusline.sh"
+    assert script.is_file(), "user/bin/claude-statusline.sh must exist"
+    assert os.access(script, os.X_OK), "statusline script must be executable"
+
+
+def test_statusline_command_is_distributed_by_install_sh():
+    """settings.json が参照するコマンド名を install.sh が ~/.local/bin に配ること。
+
+    参照だけ更新して配布を忘れると、statusLine が command not found で無言で空になる。
+    settings.json は絶対パスを持てない（ADR 0009）ため、PATH 上の名前で解決させる。
+    """
+    command = json.loads((USER_DIR / "settings.json").read_text())["statusLine"]["command"]
+    assert "/" not in command, (
+        f"statusLine.command は絶対パスを持てない（マシン固有になる）。名前で指定する: {command}"
+    )
+    install = (USER_DIR / "install.sh").read_text()
+    assert f"${{HOME}}/.local/bin/{command}" in install, (
+        f"install.sh が {command} を ~/.local/bin へ配布していない"
+    )
+
+
 @pytest.mark.parametrize(
     "rule_file",
     sorted((USER_DIR / "rules").rglob("*.md")) if (USER_DIR / "rules").exists() else [],
