@@ -29,7 +29,8 @@ SHELL_SCRIPTS = [
 # executable bit nor its own `set -euo pipefail` (which would leak to the caller).
 EXECUTABLE_SCRIPTS = [s for s in SHELL_SCRIPTS if s != "api-key.sh"]
 
-DEFAULT_URL = "https://hindsight.akmaru.dev/mcp"
+# バンクは URL パスで固定する。/mcp だと既定バンクが空の default になる (hindsight/README.md)
+DEFAULT_URL = "https://hindsight.akmaru.dev/mcp/personal/"
 
 
 def _stub(home: Path, name: str, body: str) -> Path:
