@@ -4,17 +4,17 @@
 # べき等: 何度実行しても同じ結果になる。
 #
 # mcp/sync-mcp.sh が持つ master-mcp.d/ インクルード機構に相乗りする。
-# 接続先 URL はマシンごとに異なりうるため、リポジトリ内のファイルへの symlink ではなく
-# 生成する。リモートのサーバーに繋ぐ場合は HINDSIGHT_MCP_URL で上書きする。
+# 接続先 URL と API キーはマシンごとに異なりうるため、リポジトリ内のファイルへの symlink ではなく
+# 生成する。別のインスタンスに繋ぐ場合は HINDSIGHT_MCP_URL で上書きする。
 #
-# リモート（ApiKeyTenantExtension で認証）に繋ぐ場合は API キーを Authorization ヘッダに
-# 載せる。キーは環境変数 HINDSIGHT_MCP_API_KEY が優先、なければ macOS Keychain から取得する:
+# サーバーは ApiKeyTenantExtension で認証するので API キーを Authorization ヘッダに載せる。
+# キーは環境変数 HINDSIGHT_MCP_API_KEY が優先、なければ macOS Keychain から取得する:
 #   security add-generic-password -a "${USER}" -s hindsight-mcp-api-key -w
-# ローカル（認証なし）ではキー不要で、ヘッダは付けない。
+# キーがなければヘッダなしで生成する（認証を無効にした開発用インスタンス向け）。
 #
 set -euo pipefail
 
-MCP_URL="${HINDSIGHT_MCP_URL:-http://localhost:8888/mcp}"
+MCP_URL="${HINDSIGHT_MCP_URL:-https://hindsight.akmaru.dev/mcp}"
 MCP_CONF_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/mcp/master-mcp.d"
 FRAGMENT="${MCP_CONF_DIR}/hindsight.json"
 KEYCHAIN_SERVICE="hindsight-mcp-api-key"

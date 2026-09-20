@@ -2,7 +2,10 @@
   "servers": {
     "hindsight": {
       "type": "http",
-      "url": "http://localhost:8888/mcp"
+      "url": "https://hindsight.akmaru.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer <hindsight-mcp-api-key>"
+      }
     }
   }
 }

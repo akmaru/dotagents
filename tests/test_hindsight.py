@@ -3,8 +3,8 @@ Validate the Hindsight setup assets under hindsight/.
 
 install-client.sh only writes a small JSON fragment (no network, no process
 launch), so running it against a throwaway HOME/XDG_CONFIG_HOME fully exercises
-it. install-server.sh runs `pip install` and is therefore never executed here --
-it is only checked structurally.
+it. The server side (compose/, aws/) talks to Docker and AWS and is therefore
+only checked structurally.
 """
 
 import json
@@ -19,19 +19,13 @@ HINDSIGHT_DIR = ROOT / "hindsight"
 INSTALL_CLIENT_SH = HINDSIGHT_DIR / "install-client.sh"
 
 SHELL_SCRIPTS = [
-    "config.sh",
-    "install-server.sh",
     "install-client.sh",
-    "bin/hindsight-start.sh",
-    "bin/hindsight-stop.sh",
+    "control-plane.sh",
     "compose/deploy.sh",
 ]
+EXECUTABLE_SCRIPTS = SHELL_SCRIPTS
 
-# config.sh is sourced by the other scripts, not invoked: it needs neither the
-# executable bit nor its own `set -euo pipefail` (which would leak to the caller).
-EXECUTABLE_SCRIPTS = [s for s in SHELL_SCRIPTS if s != "config.sh"]
-
-DEFAULT_URL = "http://localhost:8888/mcp"
+DEFAULT_URL = "https://hindsight.akmaru.dev/mcp"
 
 
 def _run_install_client(home: Path, url: str | None = None, api_key: str | None = None):
@@ -92,15 +86,15 @@ class TestInstallClient:
         assert server["url"] == DEFAULT_URL
 
     def test_url_override(self, tmp_path):
-        url = "https://hindsight.example.ts.net/mcp"
+        url = "http://localhost:8888/mcp"
         assert _run_install_client(tmp_path, url).returncode == 0
         data = json.loads(_fragment_path(tmp_path).read_text())
         assert data["servers"]["hindsight"]["url"] == url, (
-            "HINDSIGHT_MCP_URL must override the default local URL"
+            "HINDSIGHT_MCP_URL must override the default URL"
         )
 
     def test_no_key_means_no_headers(self, installed):
-        """Local servers have no auth; a stray Authorization header must not appear."""
+        """Without a key (dev instance with auth disabled) no Authorization header is emitted."""
         data = json.loads(_fragment_path(installed).read_text())
         assert "headers" not in data["servers"]["hindsight"]
 
@@ -153,6 +147,7 @@ def test_committed_mcp_json_matches_default_url():
     data = json.loads((HINDSIGHT_DIR / "mcp.json").read_text())
     assert data["servers"]["hindsight"]["url"] == DEFAULT_URL
     assert data["servers"]["hindsight"]["type"] == "http"
+    assert data["servers"]["hindsight"]["headers"]["Authorization"].startswith("Bearer ")
 
 
 class TestServerAssets:
@@ -173,15 +168,12 @@ class TestServerAssets:
         assert "ApiKeyTenantExtension" in text
         assert "HINDSIGHT_API_TENANT_API_KEY" in text
 
-    def test_compose_matches_config_sh(self):
-        """Non-secret settings are duplicated from config.sh; keep them in sync."""
+    def test_compose_pins_known_traps(self):
+        """Each of these guards a documented misbehaviour (README: 既知の罠)."""
         compose = (self.COMPOSE_DIR / "docker-compose.yml").read_text()
-        config = (HINDSIGHT_DIR / "config.sh").read_text()
-        for line in config.splitlines():
-            if not line.startswith("export HINDSIGHT_API_") or "HOST" in line or "PORT" in line:
-                continue
-            key, value = line.removeprefix("export ").split("=", 1)
-            assert f"{key}: {value}" in compose, f"{key}={value} from config.sh is missing in compose"
+        assert "HINDSIGHT_API_LLM_PROVIDER: anthropic" in compose, "unset provider falls back to openai -> 401"
+        assert "HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: Japanese" in compose, "retain translates facts otherwise"
+        assert "HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5" in compose, "haiku fabricates on reflect"
 
     def test_env_is_ignored(self):
         assert ".env" in (self.COMPOSE_DIR / ".gitignore").read_text().split()

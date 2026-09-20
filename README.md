@@ -64,9 +64,8 @@ exercise them against a throwaway HOME).
 | `mcp/` | MCP server config, synced to Claude Code / Desktop / VS Code / GitLab Duo — see [mcp/README.md](mcp/README.md) |
 | `hindsight/` | [Hindsight](https://github.com/vectorize-io/hindsight) agent memory: server and client setup — see [hindsight/README.md](hindsight/README.md) |
 
-`hindsight/` is not called from `install.sh`: the server pulls in a local embedding model and is only needed
-on the machine that actually runs it. Install it explicitly (`hindsight/install-server.sh` /
-`hindsight/install-client.sh`).
+`hindsight/` is not called from `install.sh`: the server runs on AWS (`hindsight/aws`, `hindsight/compose`)
+and the client needs an API key in the Keychain first. Run `hindsight/install-client.sh` explicitly.
 
 - `AGENTS.md` is the single source of truth. `CLAUDE.md` imports it so Claude and OpenCode read the same
   content without duplication ([docs/adr/0005](docs/adr/0005-agents-md-canonical.md)).

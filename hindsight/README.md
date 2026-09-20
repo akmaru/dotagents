@@ -2,7 +2,8 @@
 
 [Hindsight](https://github.com/vectorize-io/hindsight) をエージェントの長期記憶として使うためのセットアップ資産。
 
-サーバー側とクライアント側を分けている。サーバーは AWS 上（常用）とローカル（評価・開発用）の 2 通りで動かせ、クライアントは接続先 URL と API キーを変えるだけで済む。
+サーバー側（AWS、[ADR 0011](../docs/adr/0011-hindsight-on-aws.md)）とクライアント側を分けている。
+以前のローカル常駐構成（[ADR 0007](../docs/adr/0007-hindsight-setup-assets.md)）は AWS 移行にともない削除した。
 
 ```
 サーバー側 (AWS)                                       クライアント側
@@ -10,11 +11,6 @@ hindsight.akmaru.dev (EC2 / Docker Compose)  ←────  Claude Code / VS C
   ├─ caddy         TLS 終端 (Let's Encrypt)           MCP: https://hindsight.akmaru.dev/mcp
   ├─ hindsight-api ApiKeyTenantExtension で認証            Authorization: Bearer <key>
   └─ postgres      pgvector、EBS 上、日次スナップショット
-
-サーバー側 (ローカル)
-hindsight-api (127.0.0.1:8888)                ←────  MCP: http://localhost:8888/mcp（認証なし）
-  ├─ pg0 (~/.pg0)
-  └─ ローカル埋め込みモデル
 ```
 
 ## AWS へのデプロイ (`aws/`, `compose/`)
@@ -74,51 +70,15 @@ compose/   サーバー上で動く docker-compose.yml, Caddyfile, deploy.sh
 user-data は初回起動時にしか走らない。`user-data.sh.tftpl` を変えても既存インスタンスには反映されないので、
 必要なら手で同じ操作をするか作り直す。
 
-### ローカルからの移行
+### 他インスタンスからの移行
 
 ```bash
-hindsight-admin export-bank <bank_id>                 # ローカルで。埋め込みを含まないポータブルな ZIP
-# ZIP をサーバーへ送り (aws s3 cp 経由が楽)、サーバーで
-docker compose -f /opt/dotagents/hindsight/compose/docker-compose.yml exec hindsight-api hindsight-admin import-bank <archive>
+hindsight-admin export-bank -b <bank_id> -o <archive>   # 移行元で。埋め込みを含まないポータブルな ZIP
+# ZIP をサーバーへ送り (S3 の presigned URL 経由が楽)、サーバーで
+cd /opt/dotagents/hindsight/compose
+docker compose cp <archive> hindsight-api:/tmp/bank.zip
+docker compose exec -T hindsight-api hindsight-admin import-bank -a /tmp/bank.zip
 ```
-
-## ローカルサーバーのセットアップ
-
-Hindsight を実際に動かすマシンでのみ実行する。ローカル埋め込みモデルを含むため常駐時の RSS が 800MB を超える。
-
-```bash
-./install-server.sh
-```
-
-`hindsight-api` を pip で導入し、`hindsight-start.sh` / `hindsight-stop.sh` を `~/.local/bin` に配置する。
-
-### API キーの登録
-
-macOS では Keychain から取得する。
-
-```bash
-security add-generic-password -a "${USER}" -s hindsight-anthropic-api-key -w
-```
-
-Linux では Keychain を使わない。`HINDSIGHT_API_LLM_API_KEY` を環境に設定しておけば、そちらが優先される。秘密の管理は systemd やクラウドの secret manager に任せる。
-
-### 起動・停止
-
-```bash
-hindsight-start.sh
-hindsight-stop.sh
-tail -f ~/.hindsight/daemon.log
-```
-
-`hindsight-start.sh` は起動前にポート衝突を確認し、起動後に `/health` で疎通を確認する。デーモンが正しく上がったかは次で判定できる。
-
-```bash
-ps -o pid,ppid,tty,args= -p "$(lsof -nP -iTCP:8888 -sTCP:LISTEN -t | head -1)"
-```
-
-`PPID 1` かつ `TTY ??` ならデーモン化に成功している。
-
-デーモンはターミナルを閉じても、ログアウトして再ログインしても生き続ける。止まるのは再起動・シャットダウン・クラッシュのときで、その場合は手動で `hindsight-start.sh` を実行する。
 
 ## クライアント側のセットアップ
 
@@ -128,12 +88,13 @@ ps -o pid,ppid,tty,args= -p "$(lsof -nP -iTCP:8888 -sTCP:LISTEN -t | head -1)"
 
 `${XDG_CONFIG_HOME}/mcp/master-mcp.d/hindsight.json` を生成し、`mcp/sync-mcp.sh` を実行する。これで Claude Code / Claude Desktop / VS Code / GitLab Duo すべてに配布される。
 
-AWS 上のサーバーに繋ぐ場合は URL を指定し、API キーを Keychain に登録しておく（環境変数 `HINDSIGHT_MCP_API_KEY` が優先）。
-キーがあれば `Authorization: Bearer` ヘッダ付きのフラグメントを生成する。
+接続先は既定で `https://hindsight.akmaru.dev/mcp`（`HINDSIGHT_MCP_URL` で上書き可）。API キーは Keychain に登録しておく
+（環境変数 `HINDSIGHT_MCP_API_KEY` が優先）。キーがあれば `Authorization: Bearer` ヘッダ付きのフラグメントを生成し、
+なければヘッダなし（認証を無効にした開発用インスタンス向け）になる。
 
 ```bash
-security add-generic-password -a "${USER}" -s hindsight-mcp-api-key -w   # /hindsight/tenant_api_key の値
-HINDSIGHT_MCP_URL=https://hindsight.akmaru.dev/mcp ./install-client.sh
+security add-generic-password -a "${USER}" -s hindsight-mcp-api-key -w   # SSM /hindsight/tenant_api_key の値
+./install-client.sh
 ```
 
 確認:
@@ -150,14 +111,15 @@ claude mcp remove --scope local hindsight
 
 ## Control Plane (Web UI)
 
-使用頻度が低いので起動スクリプトは用意していない。
+サーバーには置かず、見たいときにローカルで起動して AWS の API に繋ぐ。
 
 ```bash
-npx -y @vectorize-io/hindsight-control-plane \
-  --api-url http://127.0.0.1:8888 --hostname localhost --port 19999
+./control-plane.sh        # http://localhost:19999
 ```
 
-バンクとメモリの一覧、エンティティのグラフ、取り込み履歴、recall の試験実行ができる。認証がないので `--hostname` を省略してはいけない。
+`npx -y @vectorize-io/hindsight-control-plane` を、Keychain `hindsight-mcp-api-key` のキーを
+`HINDSIGHT_CP_DATAPLANE_API_KEY` に載せて起動する。バンクとメモリの一覧、エンティティのグラフ、取り込み履歴、
+recall の試験実行ができる。UI 自体に認証はないので `--hostname localhost`（ループバック限定）を外してはいけない。
 
 Control Plane の既定ポートは 9999 だが、ありふれた番号で他のローカルサービスと衝突しやすいため 19999 にずらしている。
 
@@ -167,10 +129,9 @@ macOS では `localhost` 指定時に IPv6 ループバック `[::1]` のみに 
 
 ## 既知の罠
 
-- **`HINDSIGHT_API_LLM_PROVIDER` を設定し忘れると 401 になる。** 未設定だと `config.py` の `DEFAULT_LLM_PROVIDER="openai"` にフォールバックし、Anthropic のキーを OpenAI のエンドポイントへ送る。`config.sh` で設定済み。
-- **`--daemon` は失敗しても無言。** 親が即座に `exit(0)` するため、ポート衝突などでバインドに失敗してもシェルには何も出ない。しかも古いプロセスが応答するので `/health` も通ってしまう。`hindsight-start.sh` はこれを検知する。
-- **retain が投入テキストを別言語に翻訳する。** 日本語で `retain` しても fact が英語や中国語で保存されることがある。`llm_output_language` は「未設定ならソースの言語を保持する」建前だが実際には保持されない。`config.sh` で `HINDSIGHT_API_LLM_OUTPUT_LANGUAGE=Japanese` を指定して回避している。retain / consolidation / reflect すべてに一律で効く。副作用として、fact 本文の人名が漢字に変換されることがある (`entities` 側は原綴りを保つ)。
-- **`reflect` は記憶にない情報を捏造する。** 既定の `claude-haiku-4-5` では顕著で、directive も無視する。`config.sh` で reflect のみ `claude-sonnet-5` に上げている。事実確認には `recall`（保存された fact をそのまま返す）を使い、`reflect` の出力は検証する。
+- **`HINDSIGHT_API_LLM_PROVIDER` を設定し忘れると 401 になる。** 未設定だと `config.py` の `DEFAULT_LLM_PROVIDER="openai"` にフォールバックし、Anthropic のキーを OpenAI のエンドポイントへ送る。`compose/docker-compose.yml` で設定済み。
+- **retain が投入テキストを別言語に翻訳する。** 日本語で `retain` しても fact が英語や中国語で保存されることがある。`llm_output_language` は「未設定ならソースの言語を保持する」建前だが実際には保持されない。`compose/docker-compose.yml` で `HINDSIGHT_API_LLM_OUTPUT_LANGUAGE=Japanese` を指定して回避している。retain / consolidation / reflect すべてに一律で効く。副作用として、fact 本文の人名が漢字に変換されることがある (`entities` 側は原綴りを保つ)。
+- **`reflect` は記憶にない情報を捏造する。** 既定の `claude-haiku-4-5` では顕著で、directive も無視する。`compose/docker-compose.yml` で reflect のみ `claude-sonnet-5` に上げている。事実確認には `recall`（保存された fact をそのまま返す）を使い、`reflect` の出力は検証する。
 
 ## hindsight-admin
 

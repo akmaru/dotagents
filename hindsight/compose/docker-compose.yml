@@ -1,6 +1,6 @@
 # Hindsight サーバー一式（TLS 終端 / API / Postgres）。
 # 秘密は同ディレクトリの .env（deploy.sh が SSM Parameter Store から生成、gitignore）から読む。
-# 非秘密の設定値は ../config.sh と同じ内容を environment: に書く（差分が出たら両方直す）。
+# 非秘密の設定値は environment: に直接書く（理由は各行のコメントと ../README.md「既知の罠」）。
 
 services:
   caddy:
@@ -28,10 +28,12 @@ services:
       # 認証: Authorization: Bearer <HINDSIGHT_API_TENANT_API_KEY>。MCP endpoint にも効く
       HINDSIGHT_API_TENANT_EXTENSION: hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension
       HINDSIGHT_API_TENANT_API_KEY: ${HINDSIGHT_API_TENANT_API_KEY:?set in .env}
-      # 以下 ../config.sh と同じ
+      # 未設定だと openai にフォールバックし、Anthropic のキーを OpenAI へ送って 401 になる
       HINDSIGHT_API_LLM_PROVIDER: anthropic
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY:?set in .env}
+      # reflect のみ上位モデル。既定の haiku は記憶にない情報を捏造し directive も無視する
       HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5
+      # 日本語で投入しても fact が英語や中国語に翻訳されて保存されるのを防ぐ
       HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: Japanese
     volumes:
       # 埋め込みモデル (~130MB) のキャッシュ。再起動時の再ダウンロードを避ける

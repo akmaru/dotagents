@@ -56,9 +56,11 @@ decision-makers: akmaru
 * ゾーン `akmaru.dev` と tfstate バケットは akmaru.dev リポジトリが管理する。dotagents 側は
   `data "aws_route53_zone"` で名前引きして A レコードを 1 本足す。リポジトリ間の結合はゾーン名だけで、
   remote state は参照しない。バケット名・profile は `backend.hcl` / `terraform.tfvars`（gitignore）で渡す。
-* ローカルの `install-server.sh` / `hindsight-start.sh` は評価・開発用として残す。
+* ローカルの `install-server.sh` / `hindsight-start.sh` / `config.sh` は移行完了後に削除した（当初は評価・開発用に
+  残す予定だったが、AWS 側で疎通とバンク移行を確認できたため同日に撤去）。
   `install-client.sh` は API キー（Keychain `hindsight-mcp-api-key` または `HINDSIGHT_MCP_API_KEY`）があれば
-  ヘッダ付きのフラグメントを生成し、なければ従来どおり認証なしのローカル向けを生成する。
+  ヘッダ付きのフラグメントを生成し、なければ認証なし（開発用インスタンス向け）を生成する。既定 URL は AWS 側。
+* Control Plane はサーバーに置かず、`control-plane.sh` でローカルに起動して API キー付きで AWS の API に繋ぐ。
 
 ### Consequences
 
@@ -79,7 +81,7 @@ decision-makers: akmaru
 ### Confirmation
 
 `tests/test_hindsight.py` の `TestServerAssets` が、compose の YAML 妥当性・サービス構成・API キー認証の有効化・
-`config.sh` との非秘密設定の一致・gitignore・`terraform fmt -check` と `validate` を検証する。
+既知の罠を防ぐ設定値の存在・gitignore・`terraform fmt -check` と `validate` を検証する。
 `TestInstallClient` が API キーの有無でフラグメントの `headers` が変わること、キー入りフラグメントが所有者のみ
 読める権限であることを検証する。実挙動は `curl https://hindsight.akmaru.dev/health` と `claude mcp list` で確認する。
 
