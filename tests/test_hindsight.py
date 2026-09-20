@@ -225,7 +225,7 @@ class TestServerAssets:
     def test_compose_is_valid_yaml_with_expected_services(self):
         yaml = pytest.importorskip("yaml")
         data = yaml.safe_load((self.COMPOSE_DIR / "docker-compose.yml").read_text())
-        assert set(data["services"]) == {"caddy", "hindsight-api", "postgres"}
+        assert set(data["services"]) == {"caddy", "hindsight-api", "postgres", "scanner"}
 
     def test_compose_enables_api_key_auth(self):
         """The public endpoint must not be reachable without the tenant API key."""

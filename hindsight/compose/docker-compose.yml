@@ -51,6 +51,22 @@ services:
       start_period: 120s
       retries: 3
 
+  # 識別子の破損を定期検出する (../scanner/README.md)。LLM を使わない照合だけで、
+  # 結果は ${HINDSIGHT_DATA_DIR}/scanner/report.json に書く。API は compose
+  # ネットワーク内で叩くので Caddy を経由しない。
+  scanner:
+    build: ../scanner
+    restart: unless-stopped
+    environment:
+      HINDSIGHT_API_URL: http://hindsight-api:8888
+      HINDSIGHT_API_TENANT_API_KEY: ${HINDSIGHT_API_TENANT_API_KEY:?set in .env}
+      SCANNER_STATE_DIR: /state
+    volumes:
+      - ${HINDSIGHT_DATA_DIR:-/data/hindsight}/scanner:/state
+    depends_on:
+      hindsight-api:
+        condition: service_healthy
+
   postgres:
     image: pgvector/pgvector:pg17
     restart: unless-stopped

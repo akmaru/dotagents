@@ -31,9 +31,16 @@ POSTGRES_PASSWORD=$(get_param postgres_password)
 ENV
 
 mkdir -p "${HINDSIGHT_DATA_DIR:-/data/hindsight}/postgres"
+# scanner は nobody で動くので、バインドマウント先を先に作って渡しておく
+# (docker に作らせると root 所有になり、レポートを書けない)。
+mkdir -p "${HINDSIGHT_DATA_DIR:-/data/hindsight}/scanner"
+chown 65534:65534 "${HINDSIGHT_DATA_DIR:-/data/hindsight}/scanner"
 
 cd "${SCRIPT_DIR}"
-docker compose pull --quiet
+# scanner はローカルビルドなので pull の対象から外す (未 push のイメージを
+# 引きに行って失敗する)。
+docker compose pull --quiet caddy hindsight-api postgres
+docker compose build --quiet scanner
 docker compose up -d --remove-orphans
 
 # hindsight-api の初期化（モデルロード + マイグレーション）を待って疎通確認
