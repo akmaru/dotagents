@@ -31,10 +31,13 @@ services:
       # 未設定だと openai にフォールバックし、Anthropic のキーを OpenAI へ送って 401 になる
       HINDSIGHT_API_LLM_PROVIDER: anthropic
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY:?set in .env}
-      # reflect のみ上位モデル。既定の haiku は記憶にない情報を捏造し directive も無視する
+      # reflect は上位モデル。既定の haiku は記憶にない情報を捏造し directive も無視する
       HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5
       # 日本語で投入しても fact が英語や中国語に翻訳されて保存されるのを防ぐ
       HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: Japanese
+      # OUTPUT_LANGUAGE を設定すると consolidation の識別子保護ルールが外れる (README の既知の罠)。
+      # haiku は残った翻訳指示に引きずられて識別子を日本語化するため、observation 生成も上位モデルにする
+      HINDSIGHT_API_CONSOLIDATION_LLM_MODEL: claude-sonnet-5
     volumes:
       # 埋め込みモデル (~130MB) のキャッシュ。再起動時の再ダウンロードを避ける
       - hf_cache:/root/.cache/huggingface
