@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# 初回起動時に cloud-init が実行する。以降の更新は deploy.sh を直接実行する。
+set -euxo pipefail
+
+DATA_DIR=/data
+REPO_DIR=/opt/dotagents
+
+dnf install -y docker git
+systemctl enable --now docker
+
+# AL2023 は compose プラグインを同梱しないので GitHub release から入れる
+COMPOSE_VERSION=v5.5.1
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL "https://github.com/docker/compose/releases/download/$${COMPOSE_VERSION}/docker-compose-linux-aarch64" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# データボリューム: 未フォーマットなら ext4 で初期化し、UUID で fstab に登録する。
+# Nitro ではデバイス名が /dev/nvme1n1 になるので、ルート以外の nvme を探す
+ROOT_DEV="$(findmnt -no SOURCE / | sed -E 's/p?[0-9]+$//')"
+for _ in $(seq 1 30); do
+  DATA_DEV="$(lsblk -dpno NAME,TYPE | awk '$2=="disk"{print $1}' | grep -v "^$${ROOT_DEV}" | head -1 || true)"
+  [[ -n "$${DATA_DEV}" ]] && break
+  sleep 2
+done
+[[ -n "$${DATA_DEV}" ]]
+if ! blkid "$${DATA_DEV}" >/dev/null 2>&1; then
+  mkfs.ext4 -L hindsight-data "$${DATA_DEV}"
+fi
+mkdir -p "$${DATA_DIR}"
+UUID="$(blkid -s UUID -o value "$${DATA_DEV}")"
+grep -q "$${UUID}" /etc/fstab || echo "UUID=$${UUID} $${DATA_DIR} ext4 defaults,nofail 0 2" >> /etc/fstab
+mountpoint -q "$${DATA_DIR}" || mount "$${DATA_DIR}"
+
+if [[ ! -d "$${REPO_DIR}/.git" ]]; then
+  git clone "${dotagents_repo}" "$${REPO_DIR}"
+fi
+git -C "$${REPO_DIR}" fetch --prune origin
+git -C "$${REPO_DIR}" checkout "${dotagents_ref}"
+git -C "$${REPO_DIR}" pull --ff-only origin "${dotagents_ref}"
+
+HINDSIGHT_SSM_PREFIX="${ssm_prefix}" HINDSIGHT_DATA_DIR="$${DATA_DIR}/hindsight" \
+  "$${REPO_DIR}/hindsight/compose/deploy.sh"
