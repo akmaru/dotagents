@@ -1,0 +1,5 @@
+# TLS 証明書は Let's Encrypt から自動取得・更新される（/data に保存）。
+# .dev は HSTS preload 対象なので http は常に https へリダイレクトされる。
+{$HINDSIGHT_DOMAIN} {
+	reverse_proxy hindsight-api:8888
+}

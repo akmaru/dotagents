@@ -24,6 +24,7 @@ SHELL_SCRIPTS = [
     "install-client.sh",
     "bin/hindsight-start.sh",
     "bin/hindsight-stop.sh",
+    "compose/deploy.sh",
 ]
 
 # config.sh is sourced by the other scripts, not invoked: it needs neither the
@@ -33,18 +34,31 @@ EXECUTABLE_SCRIPTS = [s for s in SHELL_SCRIPTS if s != "config.sh"]
 DEFAULT_URL = "http://localhost:8888/mcp"
 
 
-def _run_install_client(home: Path, url: str | None = None):
+def _run_install_client(home: Path, url: str | None = None, api_key: str | None = None):
     env = {
         **os.environ,
         "HOME": str(home),
         "XDG_CONFIG_HOME": str(home / ".config"),
-        # keep the real sync-mcp.sh out of the way; the fragment is what we assert on
-        "PATH": "/usr/bin:/bin",
+        # keep the real sync-mcp.sh out of the way; the fragment is what we assert on.
+        # jq is needed; keep the Homebrew prefixes so the script finds it on macOS.
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        # a real Keychain entry must not leak into the no-key assertions
+        "HINDSIGHT_MCP_API_KEY": "",
     }
     if url is not None:
         env["HINDSIGHT_MCP_URL"] = url
     else:
         env.pop("HINDSIGHT_MCP_URL", None)
+    if api_key is not None:
+        env["HINDSIGHT_MCP_API_KEY"] = api_key
+    else:
+        # shadow macOS `security` so a real Keychain entry cannot leak into the fragment
+        stub_dir = home / "stubbin"
+        stub_dir.mkdir(exist_ok=True)
+        stub = stub_dir / "security"
+        stub.write_text("#!/bin/sh\nexit 1\n")
+        stub.chmod(0o755)
+        env["PATH"] = f"{stub_dir}:{env['PATH']}"
     return subprocess.run(
         ["bash", str(INSTALL_CLIENT_SH)],
         env=env,
@@ -85,6 +99,23 @@ class TestInstallClient:
             "HINDSIGHT_MCP_URL must override the default local URL"
         )
 
+    def test_no_key_means_no_headers(self, installed):
+        """Local servers have no auth; a stray Authorization header must not appear."""
+        data = json.loads(_fragment_path(installed).read_text())
+        assert "headers" not in data["servers"]["hindsight"]
+
+    def test_api_key_becomes_bearer_header(self, tmp_path):
+        """ApiKeyTenantExtension reads `Authorization: Bearer <key>` (also on /mcp)."""
+        url = "https://hindsight.example.com/mcp"
+        assert _run_install_client(tmp_path, url, api_key="s3cret").returncode == 0
+        data = json.loads(_fragment_path(tmp_path).read_text())
+        assert data["servers"]["hindsight"]["headers"] == {"Authorization": "Bearer s3cret"}
+
+    def test_fragment_is_private(self, tmp_path):
+        """The fragment can hold the API key, so it must be owner-readable only."""
+        assert _run_install_client(tmp_path, api_key="s3cret").returncode == 0
+        assert _fragment_path(tmp_path).stat().st_mode & 0o077 == 0
+
     def test_idempotent(self, tmp_path):
         """Running twice yields the same valid fragment (no error, no duplication)."""
         assert _run_install_client(tmp_path).returncode == 0
@@ -117,3 +148,57 @@ def test_committed_mcp_json_matches_default_url():
     data = json.loads((HINDSIGHT_DIR / "mcp.json").read_text())
     assert data["servers"]["hindsight"]["url"] == DEFAULT_URL
     assert data["servers"]["hindsight"]["type"] == "http"
+
+
+class TestServerAssets:
+    """The AWS deployment (hindsight/compose + hindsight/aws) is only checked
+    structurally: nothing here talks to Docker or AWS."""
+
+    COMPOSE_DIR = HINDSIGHT_DIR / "compose"
+    AWS_DIR = HINDSIGHT_DIR / "aws"
+
+    def test_compose_is_valid_yaml_with_expected_services(self):
+        yaml = pytest.importorskip("yaml")
+        data = yaml.safe_load((self.COMPOSE_DIR / "docker-compose.yml").read_text())
+        assert set(data["services"]) == {"caddy", "hindsight-api", "postgres"}
+
+    def test_compose_enables_api_key_auth(self):
+        """The public endpoint must not be reachable without the tenant API key."""
+        text = (self.COMPOSE_DIR / "docker-compose.yml").read_text()
+        assert "ApiKeyTenantExtension" in text
+        assert "HINDSIGHT_API_TENANT_API_KEY" in text
+
+    def test_compose_matches_config_sh(self):
+        """Non-secret settings are duplicated from config.sh; keep them in sync."""
+        compose = (self.COMPOSE_DIR / "docker-compose.yml").read_text()
+        config = (HINDSIGHT_DIR / "config.sh").read_text()
+        for line in config.splitlines():
+            if not line.startswith("export HINDSIGHT_API_") or "HOST" in line or "PORT" in line:
+                continue
+            key, value = line.removeprefix("export ").split("=", 1)
+            assert f"{key}: {value}" in compose, f"{key}={value} from config.sh is missing in compose"
+
+    def test_env_is_ignored(self):
+        assert ".env" in (self.COMPOSE_DIR / ".gitignore").read_text().split()
+
+    def test_backend_and_tfvars_are_ignored(self):
+        """Account-specific values live outside this public repo."""
+        ignored = (self.AWS_DIR / ".gitignore").read_text().split()
+        assert "backend.hcl" in ignored
+        assert "terraform.tfvars" in ignored
+        assert (self.AWS_DIR / "backend.hcl.example").is_file()
+        assert (self.AWS_DIR / "terraform.tfvars.example").is_file()
+
+    def test_terraform_validate(self):
+        import shutil
+
+        if shutil.which("terraform") is None:
+            pytest.skip("terraform not installed")
+        run = lambda *args: subprocess.run(  # noqa: E731
+            ["terraform", *args], cwd=self.AWS_DIR, capture_output=True, text=True
+        )
+        assert run("fmt", "-check", "-recursive").returncode == 0, "run `terraform fmt`"
+        init = run("init", "-backend=false", "-input=false")
+        assert init.returncode == 0, init.stderr
+        validate = run("validate")
+        assert validate.returncode == 0, validate.stderr

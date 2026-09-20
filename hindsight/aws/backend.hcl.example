@@ -1,0 +1,6 @@
+# cp backend.hcl.example backend.hcl して埋める（backend.hcl は gitignore）
+bucket       = "<tfstate bucket>"
+key          = "dotagents/hindsight.tfstate"
+region       = "ap-northeast-1"
+profile      = "<aws profile>"
+use_lockfile = true

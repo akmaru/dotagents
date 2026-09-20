@@ -1,0 +1,4 @@
+# cp terraform.tfvars.example terraform.tfvars して埋める（terraform.tfvars は gitignore）
+profile   = "<aws profile>"
+zone_name = "example.com"
+hostname  = "hindsight"
