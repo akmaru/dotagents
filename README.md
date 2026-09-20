@@ -55,7 +55,7 @@ user/
 ./install.sh
 ```
 
-Installs the Claude Code CLI, then runs `user/install.sh` and `mcp/install.sh`. Network access is confined
+Installs the Claude Code CLI, then runs `user/install.sh`, `mcp/install.sh` and `hindsight/install-client.sh`. Network access is confined
 to this top-level script so the ones it calls stay purely local (which is what lets `tests/test_install.py`
 exercise them against a throwaway HOME).
 
@@ -64,8 +64,9 @@ exercise them against a throwaway HOME).
 | `mcp/` | MCP server config, synced to Claude Code / Desktop / VS Code / GitLab Duo — see [mcp/README.md](mcp/README.md) |
 | `hindsight/` | [Hindsight](https://github.com/vectorize-io/hindsight) agent memory: server and client setup — see [hindsight/README.md](hindsight/README.md) |
 
-`hindsight/` is not called from `install.sh`: the server runs on AWS (`hindsight/aws`, `hindsight/compose`)
-and the client needs an API key in the Keychain first. Run `hindsight/install-client.sh` explicitly.
+`install.sh` also runs `hindsight/install-client.sh`. The server itself runs on AWS (`hindsight/aws`,
+`hindsight/compose`); the client only needs the API key registered locally (Keychain / libsecret / file — the
+script prints the options and skips itself when the key is missing, so the rest of the install still completes).
 
 - `AGENTS.md` is the single source of truth. `CLAUDE.md` imports it so Claude and OpenCode read the same
   content without duplication ([docs/adr/0005](docs/adr/0005-agents-md-canonical.md)).

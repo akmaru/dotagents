@@ -82,20 +82,35 @@ docker compose exec -T hindsight-api hindsight-admin import-bank -a /tmp/bank.zi
 
 ## クライアント側のセットアップ
 
+ルートの `install.sh` から呼ばれる。単独でも実行できる。
+
 ```bash
 ./install-client.sh
 ```
 
 `${XDG_CONFIG_HOME}/mcp/master-mcp.d/hindsight.json` を生成し、`mcp/sync-mcp.sh` を実行する。これで Claude Code / Claude Desktop / VS Code / GitLab Duo すべてに配布される。
+接続先は既定で `https://hindsight.akmaru.dev/mcp`（`HINDSIGHT_MCP_URL` で上書き可）。
 
-接続先は既定で `https://hindsight.akmaru.dev/mcp`（`HINDSIGHT_MCP_URL` で上書き可）。API キーは Keychain に登録しておく
-（環境変数 `HINDSIGHT_MCP_API_KEY` が優先）。キーがあれば `Authorization: Bearer` ヘッダ付きのフラグメントを生成し、
-なければヘッダなし（認証を無効にした開発用インスタンス向け）になる。
+### API キーの登録
+
+値は SSM Parameter Store にある。
 
 ```bash
-security add-generic-password -a "${USER}" -s hindsight-mcp-api-key -w   # SSM /hindsight/tenant_api_key の値
-./install-client.sh
+aws ssm get-parameter --profile maru --name /hindsight/tenant_api_key --with-decryption --query Parameter.Value --output text
 ```
+
+`api-key.sh` が次の順で探す。macOS と Linux のどちらでも使える。
+
+| 順 | 場所 | 登録方法 | 向き |
+|---|---|---|---|
+| 1 | 環境変数 `HINDSIGHT_MCP_API_KEY` | `export` | CI・コンテナ |
+| 2 | macOS Keychain | `security add-generic-password -a "${USER}" -s hindsight-mcp-api-key -w` | Mac |
+| 2 | libsecret（`secret-tool`） | `secret-tool store --label='Hindsight MCP API key' service hindsight-mcp-api-key` | Linux デスクトップ |
+| 3 | `~/.config/hindsight/mcp-api-key`（600） | `mkdir -p ~/.config/hindsight && (umask 077 && printf '%s\n' '<key>' > ~/.config/hindsight/mcp-api-key)` | ヘッドレス Linux |
+
+キーが無い場合、既定 URL 向けにはフラグメントを書かず、上の登録方法を案内して正常終了する（キー無しの設定を配ると
+全クライアントが 401 になるだけなので）。`install.sh` 全体は止まらない。`HINDSIGHT_MCP_URL` を明示した場合は
+認証を無効にした開発用インスタンスとみなし、ヘッダなしで書く。
 
 確認:
 

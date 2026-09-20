@@ -1,27 +1,35 @@
 #!/usr/bin/env bash
 #
 # Hindsight を MCP サーバーとして各エージェントへ配布する。
-# べき等: 何度実行しても同じ結果になる。
+# べき等: 何度実行しても同じ結果になる。install.sh から呼ばれる。
 #
 # mcp/sync-mcp.sh が持つ master-mcp.d/ インクルード機構に相乗りする。
 # 接続先 URL と API キーはマシンごとに異なりうるため、リポジトリ内のファイルへの symlink ではなく
 # 生成する。別のインスタンスに繋ぐ場合は HINDSIGHT_MCP_URL で上書きする。
 #
 # サーバーは ApiKeyTenantExtension で認証するので API キーを Authorization ヘッダに載せる。
-# キーは環境変数 HINDSIGHT_MCP_API_KEY が優先、なければ macOS Keychain から取得する:
-#   security add-generic-password -a "${USER}" -s hindsight-mcp-api-key -w
-# キーがなければヘッダなしで生成する（認証を無効にした開発用インスタンス向け）。
+# キーの探索順と登録方法は api-key.sh を参照。
+# キーが無いときは、既定 URL（認証必須の AWS サーバー）向けにはフラグメントを書かない。
+# キー無しの設定を配ると全クライアントが 401 になるだけなので、登録方法を案内して正常終了する
+# （install.sh 全体を止めない）。HINDSIGHT_MCP_URL を明示した場合は認証なしの開発用インスタンスと
+# みなし、ヘッダなしで書く。
 #
 set -euo pipefail
 
-MCP_URL="${HINDSIGHT_MCP_URL:-https://hindsight.akmaru.dev/mcp}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/api-key.sh"
+
+DEFAULT_URL="https://hindsight.akmaru.dev/mcp"
+MCP_URL="${HINDSIGHT_MCP_URL:-${DEFAULT_URL}}"
 MCP_CONF_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/mcp/master-mcp.d"
 FRAGMENT="${MCP_CONF_DIR}/hindsight.json"
-KEYCHAIN_SERVICE="hindsight-mcp-api-key"
 
-API_KEY="${HINDSIGHT_MCP_API_KEY:-}"
-if [[ -z "${API_KEY}" && "$(uname)" == "Darwin" ]]; then
-  API_KEY="$(security find-generic-password -a "${USER}" -s "${KEYCHAIN_SERVICE}" -w 2>/dev/null || true)"
+API_KEY="$(hindsight_mcp_api_key || true)"
+
+if [[ -z "${API_KEY}" && -z "${HINDSIGHT_MCP_URL:-}" ]]; then
+  hindsight_print_api_key_help
+  echo "登録後にもう一度 hindsight/install-client.sh を実行してください。Hindsight の配布はスキップします。" >&2
+  exit 0
 fi
 
 mkdir -p "${MCP_CONF_DIR}"
