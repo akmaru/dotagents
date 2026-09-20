@@ -146,7 +146,8 @@ macOS では `localhost` 指定時に IPv6 ループバック `[::1]` のみに 
 
 - **`HINDSIGHT_API_LLM_PROVIDER` を設定し忘れると 401 になる。** 未設定だと `config.py` の `DEFAULT_LLM_PROVIDER="openai"` にフォールバックし、Anthropic のキーを OpenAI のエンドポイントへ送る。`compose/docker-compose.yml` で設定済み。
 - **retain が投入テキストを別言語に翻訳する。** 日本語で `retain` しても fact が英語や中国語で保存されることがある。`llm_output_language` は「未設定ならソースの言語を保持する」建前だが実際には保持されない。`compose/docker-compose.yml` で `HINDSIGHT_API_LLM_OUTPUT_LANGUAGE=Japanese` を指定して回避している。retain / consolidation / reflect すべてに一律で効く。副作用として、fact 本文の人名が漢字に変換されることがある (`entities` 側は原綴りを保つ)。
-- **`reflect` は記憶にない情報を捏造する。** 既定の `claude-haiku-4-5` では顕著で、directive も無視する。`compose/docker-compose.yml` で reflect のみ `claude-sonnet-5` に上げている。事実確認には `recall`（保存された fact をそのまま返す）を使い、`reflect` の出力は検証する。
+- **`HINDSIGHT_API_LLM_OUTPUT_LANGUAGE` を設定すると consolidation の識別子保護が外れる。** `engine/consolidation/prompts.py` は言語ルールを二者択一で組み立てており、未設定のときだけ入る `_DEFAULT_LANGUAGE_RULE` に "Proper nouns, identifiers, and units stay verbatim." が含まれる。設定するとこのブロックごと落ち、代わりに `prompt_utils.output_language_directive` の「エンティティ名を含め全て翻訳しろ」だけが残る。結果 observation 内の識別子が日本語化されて潰れる (`hindsight-mcp-api-key` → `hindsightmcpapikey`、`t4g.medium` → `t4gmedium`)。生の fact は retain 側の別ルールで守られるため無傷で、壊れるのは派生した observation だけ。バンクの `observations_mission` に識別子を原文のまま保つ指示を入れた上で、`compose/docker-compose.yml` で consolidation も `claude-sonnet-5` に上げて回避している。
+- **`reflect` は記憶にない情報を捏造する。** 既定の `claude-haiku-4-5` では顕著で、directive も無視する。`compose/docker-compose.yml` で reflect を `claude-sonnet-5` に上げている。事実確認には `recall`（保存された fact をそのまま返す）を使い、`reflect` の出力は検証する。
 
 ## hindsight-admin
 
