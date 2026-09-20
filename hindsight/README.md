@@ -8,7 +8,7 @@
 ```
 サーバー側 (AWS)                                       クライアント側
 hindsight.akmaru.dev (EC2 / Docker Compose)  ←────  Claude Code / VS Code / GitLab Duo
-  ├─ caddy         TLS 終端 (Let's Encrypt)           MCP: https://hindsight.akmaru.dev/mcp
+  ├─ caddy         TLS 終端 (Let's Encrypt)           MCP: https://hindsight.akmaru.dev/mcp/personal/
   ├─ hindsight-api ApiKeyTenantExtension で認証            Authorization: Bearer <key>
   └─ postgres      pgvector、EBS 上、日次スナップショット
 ```
@@ -89,7 +89,10 @@ docker compose exec -T hindsight-api hindsight-admin import-bank -a /tmp/bank.zi
 ```
 
 `${XDG_CONFIG_HOME}/mcp/master-mcp.d/hindsight.json` を生成し、`mcp/sync-mcp.sh` を実行する。これで Claude Code / Claude Desktop / VS Code / GitLab Duo すべてに配布される。
-接続先は既定で `https://hindsight.akmaru.dev/mcp`（`HINDSIGHT_MCP_URL` で上書き可）。
+接続先は既定で `https://hindsight.akmaru.dev/mcp/personal/`（`HINDSIGHT_MCP_URL` で上書き可）。
+バンクは URL パスで固定する。`/mcp` だと multi-bank モードになり、既定バンクが空の `default` になるため、
+エージェントが `bank_id` を渡し忘れた retain / recall が `personal` に届かない。バンクの解決順は
+URL パス → `X-Bank-Id` ヘッダ → `HINDSIGHT_MCP_BANK_ID`（[MCP server docs](https://hindsight.vectorize.io/developer/mcp-server)）。
 
 ### API キーの登録
 

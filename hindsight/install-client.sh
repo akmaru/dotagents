@@ -7,6 +7,8 @@
 # 接続先 URL と API キーはマシンごとに異なりうるため、リポジトリ内のファイルへの symlink ではなく
 # 生成する。別のインスタンスに繋ぐ場合は HINDSIGHT_MCP_URL で上書きする。
 #
+# バンクは URL パスで固定する。`/mcp` (multi-bank モード) だと既定バンクが空の `default` になり、
+# エージェントが bank_id を渡し忘れた retain/recall がすべて `default` へ行って記憶が分断される。
 # サーバーは ApiKeyTenantExtension で認証するので API キーを Authorization ヘッダに載せる。
 # キーの探索順と登録方法は api-key.sh を参照。
 # キーが無いときは、既定 URL（認証必須の AWS サーバー）向けにはフラグメントを書かない。
@@ -19,7 +21,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/api-key.sh"
 
-DEFAULT_URL="https://hindsight.akmaru.dev/mcp"
+DEFAULT_URL="https://hindsight.akmaru.dev/mcp/personal/"
 MCP_URL="${HINDSIGHT_MCP_URL:-${DEFAULT_URL}}"
 MCP_CONF_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/mcp/master-mcp.d"
 FRAGMENT="${MCP_CONF_DIR}/hindsight.json"
