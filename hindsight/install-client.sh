@@ -25,7 +25,9 @@ if [[ -z "${API_KEY}" && "$(uname)" == "Darwin" ]]; then
 fi
 
 mkdir -p "${MCP_CONF_DIR}"
-umask 077 # フラグメントにキーが入るので所有者以外に読ませない
+# フラグメントにキーが入るので所有者以外に読ませない。既存ファイルは umask では変わらないので chmod もする
+umask 077
+[[ -e "${FRAGMENT}" ]] && chmod 600 "${FRAGMENT}"
 if [[ -n "${API_KEY}" ]]; then
   jq -n --arg url "${MCP_URL}" --arg key "${API_KEY}" \
     '{servers: {hindsight: {type: "http", url: $url, headers: {Authorization: ("Bearer " + $key)}}}}' \

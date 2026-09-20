@@ -71,6 +71,10 @@ decision-makers: akmaru
 * Bad: OS パッチ・Docker の更新は自前。AL2023 の `dnf update` を定期的に SSM 経由で行う。
 * Bad: user-data は初回のみ実行されるため、`user-data.sh.tftpl` の変更は既存インスタンスに反映されない。
 * Neutral: ドメインは `.dev`（HSTS preload）なので HTTP では絶対に繋がらない。今回の用途では利点。
+* Neutral: Anthropic のキーはサーバー専用に発行した静的キー（Service account key、有効期限つき）。
+  Anthropic の Workload Identity Federation（AWS IAM の OIDC トークンを短命トークンに交換）は
+  hindsight-api 0.9.2 の Anthropic プロバイダが静的キーしか受け付けないため採用しない。対応したら
+  Issuer を AWS IAM にして切り替える。
 
 ### Confirmation
 

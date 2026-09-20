@@ -55,7 +55,7 @@ compose/   サーバー上で動く docker-compose.yml, Caddyfile, deploy.sh
 
    ```bash
    curl -s https://hindsight.akmaru.dev/health
-   curl -s -H "Authorization: Bearer $(aws ssm get-parameter --name /hindsight/tenant_api_key --with-decryption --query Parameter.Value --output text)" https://hindsight.akmaru.dev/v1/banks
+   curl -s -H "Authorization: Bearer $(aws ssm get-parameter --name /hindsight/tenant_api_key --with-decryption --query Parameter.Value --output text)" https://hindsight.akmaru.dev/v1/default/banks
    ```
 
 4. クライアント側にキーを登録して配布（下記「クライアント側のセットアップ」）

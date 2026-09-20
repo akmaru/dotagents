@@ -112,9 +112,14 @@ class TestInstallClient:
         assert data["servers"]["hindsight"]["headers"] == {"Authorization": "Bearer s3cret"}
 
     def test_fragment_is_private(self, tmp_path):
-        """The fragment can hold the API key, so it must be owner-readable only."""
+        """The fragment can hold the API key, so it must be owner-readable only,
+        also when it overwrites a world-readable fragment from an older version."""
+        frag = _fragment_path(tmp_path)
+        frag.parent.mkdir(parents=True)
+        frag.write_text("{}")
+        frag.chmod(0o644)
         assert _run_install_client(tmp_path, api_key="s3cret").returncode == 0
-        assert _fragment_path(tmp_path).stat().st_mode & 0o077 == 0
+        assert frag.stat().st_mode & 0o077 == 0
 
     def test_idempotent(self, tmp_path):
         """Running twice yields the same valid fragment (no error, no duplication)."""
