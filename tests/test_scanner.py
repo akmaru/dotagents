@@ -120,13 +120,25 @@ def test_short_identifiers_are_ignored():
 def test_compose_runs_the_scanner():
     compose = yaml.safe_load(COMPOSE_FILE.read_text())
     service = compose["services"]["scanner"]
-    assert service["build"] == "../scanner"
     # API は compose ネットワーク内で叩く (Caddy と公開 URL を経由しない)。
     assert service["environment"]["HINDSIGHT_API_URL"] == "http://hindsight-api:8888"
     # レポートはスナップショット対象の EBS ボリューム上に置く。
     assert any("/state" in v for v in service["volumes"])
+    assert any("scanner.py" in v for v in service["volumes"])
 
 
-def test_scanner_has_no_third_party_dependencies():
-    """標準ライブラリだけで動くこと (Dockerfile に pip install を置かない)。"""
-    assert "pip install" not in (SCANNER_DIR / "Dockerfile").read_text()
+def test_scanner_needs_no_image_build():
+    """サーバーの buildx が古く `compose build` が通らないので、素の python で動かす。
+
+    ビルドを復活させるとデプロイが落ちる。標準ライブラリ以外を import したく
+    なったときは、まずサーバーの buildx を上げること。
+    """
+    compose = yaml.safe_load(COMPOSE_FILE.read_text())
+    service = compose["services"]["scanner"]
+    assert "build" not in service
+    assert service["image"].startswith("python:")
+    source = (SCANNER_DIR / "scanner.py").read_text()
+    for line in source.splitlines():
+        if line.startswith(("import ", "from ")) and not line.startswith("from ."):
+            module = line.split()[1].split(".")[0]
+            assert module in sys.stdlib_module_names, module

@@ -37,11 +37,11 @@ mkdir -p "${HINDSIGHT_DATA_DIR:-/data/hindsight}/scanner"
 chown 65534:65534 "${HINDSIGHT_DATA_DIR:-/data/hindsight}/scanner"
 
 cd "${SCRIPT_DIR}"
-# scanner はローカルビルドなので pull の対象から外す (未 push のイメージを
-# 引きに行って失敗する)。
-docker compose pull --quiet caddy hindsight-api postgres
-docker compose build --quiet scanner
+docker compose pull --quiet
 docker compose up -d --remove-orphans
+# scanner.py はバインドマウントなので、git pull で中身が変わっても compose から
+# 見た設定は同じ＝コンテナが作り直されない。明示的に入れ替える。
+docker compose restart scanner
 
 # hindsight-api の初期化（モデルロード + マイグレーション）を待って疎通確認
 for _ in $(seq 1 60); do
