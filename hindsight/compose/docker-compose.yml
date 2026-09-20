@@ -54,14 +54,21 @@ services:
   # 識別子の破損を定期検出する (../scanner/README.md)。LLM を使わない照合だけで、
   # 結果は ${HINDSIGHT_DATA_DIR}/scanner/report.json に書く。API は compose
   # ネットワーク内で叩くので Caddy を経由しない。
+  # イメージをビルドせず、素の python にスクリプトを読ませる。サーバーの buildx は
+  # 0.12.1 で Compose v5.5.1 が要求する 0.17.0 に満たず `compose build` が通らない。
+  # 検出は標準ライブラリだけで動くので、ビルドする理由がそもそも無い。
   scanner:
-    build: ../scanner
+    image: python:3.12-slim
     restart: unless-stopped
+    user: "65534:65534"
+    command: ["python", "-u", "/app/scanner.py"]
     environment:
       HINDSIGHT_API_URL: http://hindsight-api:8888
       HINDSIGHT_API_TENANT_API_KEY: ${HINDSIGHT_API_TENANT_API_KEY:?set in .env}
       SCANNER_STATE_DIR: /state
+      PYTHONDONTWRITEBYTECODE: "1"
     volumes:
+      - ../scanner/scanner.py:/app/scanner.py:ro
       - ${HINDSIGHT_DATA_DIR:-/data/hindsight}/scanner:/state
     depends_on:
       hindsight-api:

@@ -55,8 +55,16 @@ retain は `claude-haiku-4-5` のままなので、軸1 は今後も破損しう
 
 ## 動かし方
 
-compose の `scanner` サービスとして常駐する。`deploy.sh` がビルドして起動するので、
+compose の `scanner` サービスとして常駐する。`deploy.sh` が起動するので、
 サーバー上で個別に操作する必要はない。
+
+**イメージはビルドしない。** 素の `python:3.12-slim` に `scanner.py` をバインドマウントして
+動かしている。サーバーの buildx が 0.12.1 で、Compose v5.5.1 が `compose build` に要求する
+0.17.0 に満たないため。検出は標準ライブラリだけで動くのでビルドする理由も無い。
+標準ライブラリ以外を import したくなったら、先にサーバーの buildx を上げること。
+
+バインドマウントなので、`git pull` でスクリプトが変わってもコンテナは作り直されない。
+`deploy.sh` は `docker compose restart scanner` で明示的に入れ替えている。
 
 ローカルから 1 回だけ実行して確かめることもできる（`--once`）。
 公開 URL 経由の場合はテナント API キーが要る。
