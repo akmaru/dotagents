@@ -43,6 +43,19 @@ mv "${SETTINGS}.tmp" "${SETTINGS}"
 # ~/.local/bin に symlink し、PATH 経由で解決させる。
 mkdir -p "${HOME}/.local/bin"
 ln -sfn "${USER_DIR}/bin/claude-statusline.sh" "${HOME}/.local/bin/claude-statusline.sh"
+ln -sfn "${USER_DIR}/bin/claude-context.py"    "${HOME}/.local/bin/claude-context.py"
+
+# コンテキスト使用量の記録・要点表示を SessionStart hook として登録する（docs/adr/0013）。
+# hooks.SessionStart は herdr も書き込む配列で、上の deep merge では配列が丸ごと置換される。
+# user/settings.json に持たせると herdr の hook を消してしまうので、ここで無ければ末尾に足す。
+CONTEXT_HOOK_CMD="claude-context.py session-start"
+jq --arg cmd "${CONTEXT_HOOK_CMD}" '
+  .hooks.SessionStart = ((.hooks.SessionStart // []) as $h
+    | if any($h[]?; (.hooks // []) | any(.command == $cmd)) then $h
+      else $h + [{"matcher": "startup|resume", "hooks": [{"type": "command", "command": $cmd, "timeout": 10}]}]
+      end)
+' "${SETTINGS}" > "${SETTINGS}.tmp"
+mv "${SETTINGS}.tmp" "${SETTINGS}"
 
 # --- OpenCode (~/.config/opencode) ---
 mkdir -p "${HOME}/.config/opencode"

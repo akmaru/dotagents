@@ -92,8 +92,38 @@ def test_settings_merge_keeps_local_keys(tmp_path):
 
     merged = json.loads((claude_dir / "settings.json").read_text())
     repo = json.loads((USER_DIR / "settings.json").read_text())
-    assert merged["hooks"] == local_only
+    # install.sh が足す context-budget の hook 以外は、ローカルの hooks をそのまま残す
+    assert merged["hooks"]["SessionStart"][0] == local_only["SessionStart"][0]
     assert merged["theme"] == repo["theme"]
+
+
+CONTEXT_HOOK_CMD = "claude-context.py session-start"
+
+
+def _context_hook_entries(settings: dict):
+    return [
+        e for e in settings.get("hooks", {}).get("SessionStart", [])
+        if any(h.get("command") == CONTEXT_HOOK_CMD for h in e.get("hooks", []))
+    ]
+
+
+def test_context_hook_is_added_once_and_keeps_existing_hooks(tmp_path):
+    """SessionStart hook は配列で herdr も書くので、user/settings.json ではなく install.sh が追記する
+    （docs/adr/0013）。2 回走らせても 1 つだけ、既存の hook は消さない。"""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir(parents=True)
+    herdr_entry = {"matcher": "*", "hooks": [{"type": "command", "command": "bash /x/herdr-agent-state.sh session"}]}
+    (claude_dir / "settings.json").write_text(json.dumps({"hooks": {"SessionStart": [herdr_entry]}}))
+
+    assert _run_install(tmp_path).returncode == 0
+    assert _run_install(tmp_path).returncode == 0
+
+    merged = json.loads((claude_dir / "settings.json").read_text())
+    assert merged["hooks"]["SessionStart"][0] == herdr_entry
+    entries = _context_hook_entries(merged)
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == "startup|resume"
+    assert (tmp_path / ".local" / "bin" / "claude-context.py").resolve() == (USER_DIR / "bin" / "claude-context.py").resolve()
 
 
 def test_settings_migrates_from_symlink(tmp_path):
@@ -106,7 +136,9 @@ def test_settings_migrates_from_symlink(tmp_path):
 
     settings = claude_dir / "settings.json"
     assert not settings.is_symlink()
-    assert json.loads(settings.read_text()) == json.loads(
+    merged = json.loads(settings.read_text())
+    merged.pop("hooks", None)  # install.sh が足す context-budget の hook（後述）だけは増える
+    assert merged == json.loads(
         (USER_DIR / "settings.json").read_text()
     ), "repo の内容を壊さずに実ファイル化する"
 

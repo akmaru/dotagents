@@ -1,0 +1,9 @@
+name: context-budget
+version: 1.0.0
+description: Measure Claude Code context usage (baseline breakdown + per-session growth) and reduce it with evidence.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []

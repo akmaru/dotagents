@@ -20,6 +20,8 @@ marketplace:
     source: ./packages/madr-writer
   - name: refine-design
     source: ./packages/refine-design
+  - name: context-budget
+    source: ./packages/context-budget
   - name: skill-creator
     source: anthropics/claude-plugins-official
     ref: f9cb226d81172f53a1787cc3ba90dc9ab51aa169
