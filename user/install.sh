@@ -57,6 +57,30 @@ jq --arg cmd "${CONTEXT_HOOK_CMD}" '
 ' "${SETTINGS}" > "${SETTINGS}.tmp"
 mv "${SETTINGS}.tmp" "${SETTINGS}"
 
+# --- agents (~/.claude/agents) ---
+# 役割定義（サブエージェント）はファイル単位で symlink する（docs/adr/0014）。
+# ディレクトリごと張ると /agents UI が書いた定義が repo に入り、OpenCode が読めない
+# frontmatter（tools: "Read, Grep" 等）を配ってしまう。OpenCode 側への配布は、
+# Claude 固有キーが provider に流れて拒否されないことを検証してから足す。
+AGENTS_LINK_DIR="${HOME}/.claude/agents"
+mkdir -p "${AGENTS_LINK_DIR}"
+# repo 側で消した役割の壊れたリンクを掃除する（dotagents 由来のものだけ）
+for link in "${AGENTS_LINK_DIR}"/*.md; do
+  [ -L "${link}" ] || continue
+  case "$(readlink "${link}")" in
+    "${USER_DIR}/agents/"*) [ -e "${link}" ] || rm -f "${link}" ;;
+  esac
+done
+for src in "${USER_DIR}"/agents/*.md; do
+  dst="${AGENTS_LINK_DIR}/$(basename "${src}")"
+  # /agents UI や手で書いた同名の実ファイルは消さず退避する
+  if [ -e "${dst}" ] && [ ! -L "${dst}" ]; then
+    mkdir -p "${AGENTS_LINK_DIR}.pre-dotagents"
+    mv "${dst}" "${AGENTS_LINK_DIR}.pre-dotagents/"
+  fi
+  ln -sfn "${src}" "${dst}"
+done
+
 # --- OpenCode (~/.config/opencode) ---
 mkdir -p "${HOME}/.config/opencode"
 ln -sfn "${USER_DIR}/AGENTS.md" "${HOME}/.config/opencode/AGENTS.md"

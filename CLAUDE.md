@@ -19,6 +19,7 @@ dotagents/
 │       ├── LICENSE
 │       └── .apm/skills/<name>/SKILL.md  # スキル定義（agentskills.io spec 準拠）
 ├── user/                            # 個人ユーザースコープ設定（非 APM・symlink 配布）
+│   └── agents/<role>.md             # 役割定義（researcher / designer / critic）。~/.claude/agents/ へファイル単位 symlink
 └── docs/adr/                        # Architecture Decision Records
 ```
 
@@ -54,6 +55,19 @@ compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
 | [madr-writer](packages/madr-writer/.apm/skills/madr-writer/SKILL.md) | MADR 形式で ADR を作成・レビューするスキル |
 | [refine-design](packages/refine-design/.apm/skills/refine-design/SKILL.md) | 設計判断を代替案・トレードオフ・既存決定との整合で審議・リファインするスキル |
 | [context-budget](packages/context-budget/.apm/skills/context-budget/SKILL.md) | コンテキスト使用量を計測し、削減候補を提案・適用・再計測するスキル（計測は `user/bin/claude-context.py`） |
+
+## 役割（サブエージェント）
+
+`user/agents/` の役割定義をメインセッションが委譲先として使う（[ADR 0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)）。
+frontmatter は Claude 用 `disallowedTools` と OpenCode 用 `permission` を同居させ、`tools` / `color` / `model` は
+書かない（OpenCode の設定ロードを壊す）。委譲の指示は `user/AGENTS.md` の Delegation 節。
+
+| 役割 | 用途 |
+|------|------|
+| [researcher](user/agents/researcher.md) | 仕様・一次情報・実現可能性を出典付きで調べる |
+| [designer](user/agents/designer.md) | 代替案とトレードオフを整理し推奨案を出す |
+| [critic](user/agents/critic.md) | 別文脈から反対の立場で成果物を検証する |
+| explainer（段階 1b） | herdr の固定 pane に常駐する解説役（[設計書](docs/design/explainer-pane.md)） |
 
 ## 利用方法
 

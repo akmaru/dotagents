@@ -47,6 +47,7 @@ user/
 ├── CLAUDE.md      # @import AGENTS.md + Claude-specific additions (work import)
 ├── settings.json  # Claude Code settings
 ├── rules/         # Claude-only, path-scoped rules (recursive, paths: frontmatter)
+├── agents/        # agent role definitions (researcher / designer / critic), one file per role
 └── install.sh     # symlinks the above into ~/.claude and ~/.config/opencode
 ```
 
@@ -73,6 +74,11 @@ script prints the options and skips itself when the key is missing, so the rest 
   content without duplication ([docs/adr/0005](docs/adr/0005-agents-md-canonical.md)).
 - `paths:`-scoped rules are Claude-only; OpenCode has no equivalent mechanism
   ([docs/adr/0006](docs/adr/0006-file-scoped-rules-claude-only.md)).
+- `agents/*.md` are role definitions the main session delegates to (sub-agents). One file serves both
+  Claude Code (`disallowedTools`) and OpenCode (`permission`); they are symlinked per file into
+  `~/.claude/agents/` ([docs/adr/0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)). Generic
+  names such as `critic` can be shadowed by a project's own `.claude/agents/`. The `explainer` role runs as a
+  persistent session in a herdr pane ([docs/design/explainer-pane.md](docs/design/explainer-pane.md)).
 
 Install:
 
