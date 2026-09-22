@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0017
 date: 2026-09-22
 decision-makers: akmaru
 ---
@@ -7,6 +7,9 @@ decision-makers: akmaru
 # 記憶の投入はメインセッションのモデルが行い、hook による自動化は設計として保留する
 
 ## Context and Problem Statement
+
+> **この ADR の決定は [ADR 0017](0017-session-end-retain-hook.md) で覆されている。**
+> 判断軸（Consequences の 6 軸）は引き続き有効で、0017 はそれを使って評価している。
 
 Hindsight への記憶の投入は、`user/AGENTS.md` の Memory (Hindsight) の 1 行だけを根拠に、メインセッションの
 モデルが会話中に自分で判断して `retain` を呼ぶ形になっている。自動化は一切入っておらず、誰も呼ばなければ

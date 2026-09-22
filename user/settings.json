@@ -20,6 +20,20 @@
     "padding": 1,
     "refreshInterval": 5
   },
+  "hooks": {
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hindsight-retain-hook.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "tui": "fullscreen",
   "theme": "dark",
   "skipAutoPermissionPrompt": true,
