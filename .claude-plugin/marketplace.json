@@ -36,6 +36,12 @@
       "source": "./packages/refine-design"
     },
     {
+      "name": "context-budget",
+      "description": "Measure Claude Code context usage (baseline breakdown + per-session growth) and reduce it with evidence.",
+      "version": "1.0.0",
+      "source": "./packages/context-budget"
+    },
+    {
       "name": "skill-creator",
       "source": {
         "source": "git-subdir",
