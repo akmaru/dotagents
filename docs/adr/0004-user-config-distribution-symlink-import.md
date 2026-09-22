@@ -79,6 +79,9 @@ cross-agent 共有に生成処理は不要。以上より symlink 方式が要�
 settings.json のみ、外部ツールがマシン固有のキーを書き込むため後に symlink をやめ、
 マージ方式へ変更した（[ADR 0009](0009-settings-json-merge.md)）。
 
+エージェントの役割定義（`user/agents/`）は `/agents` UI が書き込む場所へ配るため、ディレクトリではなく
+ファイル単位で symlink する（[ADR 0014](0014-agent-roles-dual-key-per-file-symlink.md)）。
+
 関連: [ADR 0001](0001-target-claude-code-and-opencode.md)（両ツール対応の基盤制約）、
 [ADR 0005](0005-agents-md-canonical.md)（AGENTS.md 正典化）、
 [ADR 0006](0006-file-scoped-rules-claude-only.md)（rules は Claude 専用）。

@@ -63,6 +63,53 @@ def test_link_points_to_user_file(installed, link, target):
     )
 
 
+def _agent_links():
+    """user/agents/*.md → ~/.claude/agents/<name>.md（ファイル単位、docs/adr/0014）"""
+    return {
+        f".claude/agents/{p.name}": f"agents/{p.name}"
+        for p in sorted((USER_DIR / "agents").glob("*.md"))
+    }
+
+
+@pytest.mark.parametrize("link, target", _agent_links().items())
+def test_agent_definition_is_linked_per_file(installed, link, target):
+    link_path = installed / link
+    assert link_path.is_symlink(), f"{link} must be a per-file symlink"
+    assert link_path.resolve() == (USER_DIR / target).resolve()
+    assert not (installed / ".claude" / "agents").is_symlink(), (
+        "ディレクトリごと symlink すると /agents UI の書き込みが repo に入る"
+    )
+
+
+def test_preserves_pre_existing_agent_file(tmp_path):
+    """/agents UI や手で書いた同名の実ファイルは消さず退避する。"""
+    agents_dir = tmp_path / ".claude" / "agents"
+    agents_dir.mkdir(parents=True)
+    name = next(iter(_agent_links()))  # ".claude/agents/<x>.md"
+    (tmp_path / name).write_text("hand-written\n")
+
+    assert _run_install(tmp_path).returncode == 0
+    assert (tmp_path / name).is_symlink()
+    moved = tmp_path / ".claude" / "agents.pre-dotagents" / Path(name).name
+    assert moved.read_text() == "hand-written\n"
+
+
+def test_removes_dangling_dotagents_agent_links_only(tmp_path):
+    """repo 側で消した役割のリンクは掃除する。他由来のファイル・リンクには触れない。"""
+    agents_dir = tmp_path / ".claude" / "agents"
+    agents_dir.mkdir(parents=True)
+    (agents_dir / "retired.md").symlink_to(USER_DIR / "agents" / "retired.md")  # dotagents 由来・壊れ
+    foreign = tmp_path / "foreign.md"
+    foreign.write_text("other tool\n")
+    (agents_dir / "foreign-link.md").symlink_to(foreign)
+    (agents_dir / "foreign-file.md").write_text("mine\n")
+
+    assert _run_install(tmp_path).returncode == 0
+    assert not (agents_dir / "retired.md").is_symlink()
+    assert (agents_dir / "foreign-link.md").resolve() == foreign
+    assert (agents_dir / "foreign-file.md").read_text() == "mine\n"
+
+
 def test_claude_import_target_resolves(installed):
     """CLAUDE.md imports @~/.claude/AGENTS.md; that path must resolve to a real file."""
     agents = installed / ".claude" / "AGENTS.md"
