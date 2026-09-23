@@ -237,7 +237,7 @@ class TestServerAssets:
         """Each of these guards a documented misbehaviour (README: 既知の罠)."""
         compose = (self.COMPOSE_DIR / "docker-compose.yml").read_text()
         assert "HINDSIGHT_API_LLM_PROVIDER: anthropic" in compose, "unset provider falls back to openai -> 401"
-        assert "HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: Japanese" in compose, "retain translates facts otherwise"
+        assert "HINDSIGHT_API_LLM_OUTPUT_LANGUAGE" not in compose, "pinning the output language strips identifier protection (ADR 0019)"
         assert "HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5" in compose, "haiku fabricates on reflect"
 
     def test_env_is_ignored(self):

@@ -2,10 +2,12 @@
 
 Hindsight に保存されたテキストから、識別子が壊れていないかを定期検出する常駐サービス。
 
-`HINDSIGHT_API_LLM_OUTPUT_LANGUAGE` を設定すると retain / consolidation のプロンプトから
+`HINDSIGHT_API_LLM_OUTPUT_LANGUAGE` を設定していた間、retain / consolidation のプロンプトから
 識別子保護ルールが外れ、LLM が `hindsight-mcp-api-key` を `hindsightmcpapikey` のように
-日本語化して潰す。根本原因と経緯は [../README.md](../README.md) の「既知の罠」、
-設計判断は [ADR 0012](../../docs/adr/0012-hindsight-identifier-scanner.md) を参照。
+日本語化して潰していた。2026-09-23 にこの設定をやめて保護を戻した
+([ADR 0019](../../docs/adr/0019-output-language-via-retain-mission.md)) が、本サービスは再発を測る
+装置として残す。根本原因と経緯は [../README.md](../README.md) の「既知の罠」、
+最初の設計判断は [ADR 0012](../../docs/adr/0012-hindsight-identifier-scanner.md) を参照。
 
 LLM は使わない。文字列照合だけなので、走査コストは実質ゼロ。
 
