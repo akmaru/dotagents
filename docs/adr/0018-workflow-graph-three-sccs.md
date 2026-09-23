@@ -58,9 +58,10 @@ decision-makers: akmaru
 - 離脱は「**同じものの再発**」で判定する。① は同じ軸の再訪（確定も新軸も増えない周が 2 回続いたら人間に
   確認）、② は同一原因で 2 回 fail（ベンチ未達だけは 1 回目）、③ は指摘が実装でなく設計に及んだとき。
   ② と ③ の離脱先はどちらも ①。
-- 台帳は SCC ごとに 1 枚、scratchpad に置く: `decisions.md`（軸 / 選択肢 / 確定・未確定 / 根拠）、
-  `verify.md`（検証項目 / 種別 / pass・fail・未実行 / 直近の原因）、`review.md`（指摘 / 対応・棚上げ・却下）。
-  抜ける条件はそれぞれ未確定 0 / 全項目 pass / 未対応 0。
+- 台帳は SCC ごとに 1 枚: `decisions.json`（軸 / 選択肢 / 確定・未確定 / 根拠）、
+  `verify.json`（検証項目 / 種別 / pass・fail・未実行 / 直近の原因）、`review.json`（指摘 / 対応・棚上げ・却下）。
+  抜ける条件はそれぞれ未確定 0 / 全項目 pass / 未対応 0。置き場は作業ツリー直下の
+  `.claude/workflow-graph/<task>/`（タスク = worktree と寿命を揃える。[ADR 0019](0019-workflow-graph-control-flow.md)）。
 - ① の台帳は**役割の報告末尾にある「未決事項」をそのまま使う**。書式を別に定義しない
   （[ADR 0014](0014-agent-roles-dual-key-per-file-symlink.md)）。
 - エッジに載せるのは要約ではなくファイルのパス。`user/AGENTS.md` の Delegation 節の規約に従う。
@@ -70,7 +71,9 @@ decision-makers: akmaru
   グラフ全体の終了時副作用として扱う。
 - `explainer` はどの SCC からも参照できるが状態を変えない side-car とする
   （[ADR 0016](0016-explainer-pane-transcript-digest.md)）。
-- ② と ③ に対応する役割（implementer / verifier / reviewer）は**定義しない**。拡張点として残す。
+- 誰がどの遷移を回すか（ワークフロー / メインセッション / hook の分担）と、② ③ の実行主体
+  （`verifier` / `reviewer` 役割、`implement` は役割ファイル無し）は
+  [ADR 0019](0019-workflow-graph-control-flow.md) で決める。本 ADR はグラフの形だけを決める。
 - 機構と運用の詳細は [docs/design/workflow-graph.md](../design/workflow-graph.md)、図は
   [docs/design/workflow-graph.drawio](../design/workflow-graph.drawio)。
 
@@ -80,25 +83,23 @@ decision-makers: akmaru
 * Good: 3 つの SCC が同じ形なので、覚える規則が 1 つで済む。
 * Good: 「グラフが閉じていない」のが ③ → beads → `intake` の 1 本だけになり、タスクがどこで増えるかが
   1 箇所に固定される。現在空の beads に役割が生まれる。
-* Bad: 台帳 3 枚の維持コストが新たに発生する。scratchpad はセッション固有なので、長期に要るものは
+* Bad: 台帳 3 枚の維持コストが新たに発生する。台帳は worktree と一緒に消えるので、長期に要るものは
   `docs/` か beads へ移す手間も要る。
-* Bad: ② と ③ には対応する役割が無いため、当面この 2 つはメインセッションが抱えたままになる。
-  グラフとしては描けているが、文脈の隔離という利得は ① にしか効かない。
 * Bad: 「空転 2 周」「ベンチは 1 回目で離脱」の閾値は実測に基づかない初期値である。
 * Neutral: 委譲が手動指示のみという制約は変えないので、グラフは当面「人間とモデルが読む規約」として
   機能し、自動実行はされない。
 
 ### Confirmation
 
-**本 ADR を強制する自動チェックは存在しない。** 台帳の有無や離脱条件の遵守を検査するテストは書いていない。
-これは作業の規約であり、現時点でコードに強制点が無いため。
+グラフの**形**（3 つの SCC、台帳、離脱の判定）そのものを検査するテストは無い。これは規約であり、
+強制点は制御の分担を決めた [ADR 0019](0019-workflow-graph-control-flow.md) 側にある。そちらの
+`tests/test_workflow_graph_hooks.py` が「抜ける条件」（`verify.json` 全 pass で PR、`review.json`
+未対応 0 で merge）を hook が守ることを、`tests/test_workflows.py` が SCC ごとに 1 本のワークフローが
+あることを検証する。
 
-現に存在する関連チェックは、役割を足したときに初めて効く次の 2 つだけである。
-
-* `tests/test_user_config.py` の `TestAgentDefinition` が `user/agents/*.md` の frontmatter と報告形式
-  （末尾の「未決事項」）を検証し、`test_delegation_table_lists_every_agent` が全役割が
-  `user/AGENTS.md` の Delegation 表に載ることを検証する。② と ③ の役割を定義したとき、これが整合を強制する。
-* `tests/test_install.py` の `test_agent_definition_is_linked_per_file` が配布を検証する。
+役割については `tests/test_user_config.py` の `TestAgentDefinition` が `user/agents/*.md` の frontmatter と
+報告形式（末尾の「未決事項」）を、`test_delegation_table_lists_every_agent` が Delegation 表との整合を
+検証する。
 
 追試の予定: 次の設計タスク 1 本で台帳 3 枚を実際に作り、① の周回数・離脱が起きた回数・閾値が妥当だったかを
 [docs/design/workflow-graph.md](../design/workflow-graph.md) に追記する。閾値が外れていれば本 ADR を改訂する。
@@ -159,5 +160,4 @@ decision-makers: akmaru
 * グラフエンジニアリングの出典:
   [Graph Engineering in the Era of LLM Agents (arXiv:2608.21156)](https://arxiv.org/abs/2608.21156)、
   [DEEP-JLU/Awesome-Graph-Engineering](https://github.com/DEEP-JLU/Awesome-Graph-Engineering)
-* フォローアップ: ② と ③ の役割（implementer / verifier / reviewer）の定義。verifier は本質的に
-  コマンドを実行するため、読み取り専用の `disallowedTools` が Bash 経由の書き込みを防げない問題が再燃する。
+* 制御の分担と ② ③ の実行主体: [ADR 0019](0019-workflow-graph-control-flow.md)

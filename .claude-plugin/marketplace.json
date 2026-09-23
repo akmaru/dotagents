@@ -42,13 +42,20 @@
       "source": "./packages/context-budget"
     },
     {
+      "name": "workflow-graph",
+      "description": "Run work as a graph of three strongly connected components (deliberate / build / review) with saved workflows, ledgers, and enforced exit conditions.",
+      "version": "0.1.0",
+      "source": "./packages/workflow-graph"
+    },
+    {
       "name": "skill-creator",
       "source": {
         "source": "git-subdir",
         "url": "anthropics/claude-plugins-official",
         "path": "plugins/skill-creator",
         "ref": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169",
-        "sha": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169"
+        "sha": "f9cb226d81172f53a1787cc3ba90dc9ab51aa169",
+        "tag_pattern": "v{version}"
       }
     },
     {

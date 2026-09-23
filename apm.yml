@@ -22,6 +22,8 @@ marketplace:
     source: ./packages/refine-design
   - name: context-budget
     source: ./packages/context-budget
+  - name: workflow-graph
+    source: ./packages/workflow-graph
   - name: skill-creator
     source: anthropics/claude-plugins-official
     ref: f9cb226d81172f53a1787cc3ba90dc9ab51aa169

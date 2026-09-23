@@ -1,10 +1,12 @@
 # ワークフローグラフ（3 つの強連結成分）
 
 普段の作業を、ノード（仕事）・エッジ（遷移条件）・エッジ上を流れる共有状態として明示したもの。
-決定は [ADR 0018](../adr/0018-workflow-graph-three-sccs.md)、図は
+グラフの形は [ADR 0018](../adr/0018-workflow-graph-three-sccs.md)、制御の分担（誰が遷移を回すか）は
+[ADR 0019](../adr/0019-workflow-graph-control-flow.md)、図は
 [workflow-graph.drawio](workflow-graph.drawio)（draw.io で開く）。役割定義の形式と配布は
 [ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)。
-本書は機構の説明で、運用規約を兼ねる（2026-09-23 時点）。
+本書は機構の説明で、メインセッション向けの運用規約は `packages/workflow-graph/` の SKILL.md にある
+（2026-09-23 時点）。
 
 **グラフエンジニアリング**（graph engineering）= 複数のエージェント・ループ・検証器・人間を明示的な
 グラフとして設計する層。プロンプトエンジニアリング（1 回の入力）やコンテキストエンジニアリング
@@ -66,9 +68,10 @@
 |---|---|---|---|
 | 人間ノード | `decide` | `human-op` | `human-review` |
 | 機械ノード | `research` / `design` / `critique` | `implement` / `verify-local` | `verify-CI` / `差分の提示` / `fix` |
-| 台帳 | `decisions.md` | `verify.md` | `review.md` |
-| 台帳の行 | 軸 / 選択肢 / 確定・未確定 / 根拠 | 検証項目 / 種別 / pass・fail・未実行 / 直近の原因 | 指摘 / 対応・棚上げ・却下 |
-| 抜ける条件 | 未確定 0 | 全項目 pass | 未対応 0 |
+| 台帳 | `decisions.json` | `verify.json` | `review.json` |
+| 台帳の行 | `confirmed` / `open`（軸 / 質問 / 選択肢） | `items`（項目 / 種別 / pass・fail / 原因 / 層） | `items`（指摘 / file:line / open・fixed・deferred・rejected） |
+| 回すもの | `/deliberate` | `/build` | `/review` |
+| 抜ける条件 | `open` が 0 | 全項目 pass（`gh pr create` を hook が守る） | `open` が 0（`gh pr merge` を hook が守る） |
 | 離脱の判定 | **同じ軸の再訪**: 確定も新軸も増えない周が 2 回続いたら人間に確認 | **同一原因の再発**: 同じ項目が同じ原因で 2 回 fail → ① へ。ベンチ未達は 1 回目で ① へ | **層の不一致**: 指摘が実装でなく設計に及ぶ → ① へ |
 
 ### ① deliberate
@@ -82,7 +85,8 @@
 | `decide → decide` | 「まず永続化は API のみは決定。永続化については少し掘り下げたい」 | 委譲なし。台帳を部分確定に更新するだけ |
 
 役割の報告は**末尾が必ず「未決事項（質問 + 選択肢 2〜4 個）」**で終わる（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)）。
-これが `decisions.md` の未確定行にそのまま対応するので、台帳の書式を別に定義する必要はない。
+これが `decisions.json` の `open` 行にそのまま対応するので、台帳の書式を別に定義する必要はない。
+`/deliberate` は designer / critic の未決事項を `schema` で JSON として受け取り、`open` に併合して返す。
 
 確定済みの軸は再オープンしない。次のノードへ渡すときは「確定済み」と明記する
 （`user/AGENTS.md` の Delegation 節の規約そのもの）。
@@ -97,8 +101,12 @@
 `human-op` は人間が手で実行する特権・対話操作（`aws sso login`、`terraform apply`、keychain 登録、
 daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に戻る。
 
-ローカルで再現できない検証項目（例: CI 固有の OS マトリクス）は `verify.md` に印を付けて持ち、
-② の抜ける条件からは除外して ③ の `verify-CI` に委ねる。
+ローカルで再現できない検証項目（例: CI 固有の OS マトリクス）は `/build` の `checks` に入れず、
+③ の `verify-CI` に委ねる。
+
+`implement` は `/build` の中の通常のワークフローエージェント（役割ファイル無し。`tests/test_user_config.py`
+が全役割に Edit / Write の禁止を要求するため、編集する役割は役割ファイルにできない）。この作業ツリーで
+直接編集し、commit はしない。`human-op` が要ると分かった時点で `needs_human_op` を返して止まる。
 
 ### ③ review
 
@@ -114,7 +122,8 @@ daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に
 | 却下 | 台帳に理由付きで記録して閉じる | — |
 
 **③ は単独の入口も持つ**。他人の MR / PR のレビュー依頼は `intake` から ③ に直接入り、
-`merge` へは行かず指摘を出して終わる。組み込みの `/code-review` skill がこのノードの実装候補。
+`merge` へは行かず指摘を出して終わる。`差分の提示` は `/review` の中の `reviewer` 役割が担い、
+「止める / 直す」の指摘は 1 件ずつ反証エージェントにかけて誤検知を落としてから人間に渡す。
 
 ## side-car: explainer
 
@@ -128,35 +137,67 @@ daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に
 
 | 層 | 置き場所 | 寿命 |
 |---|---|---|
-| 台帳（揮発） | scratchpad の `decisions.md` / `verify.md` / `review.md` | タスク単位。セッション固有の一時領域 |
+| 台帳と報告 | `<作業ツリー>/.claude/workflow-graph/<task>/`（`*.json` と `research-N.md` / `design-vN.md` / `critique-vN.md` / `implement-rN.md` / `verify-rN.md` / `review-v1.md`） | タスク = worktree。セッションを跨いで残り、worktree と一緒に消える。`.claude/` は gitignore 済み |
 | 決定 | `docs/adr/NNNN-*.md` | 永続。`record` ノードの出力 |
 | タスク | beads（`.beads/`） | 永続。棚上げで増える |
 | 学び | Hindsight | 永続。`SessionEnd` hook が自動投入（[ADR 0017](../adr/0017-session-end-retain-hook.md)） |
 
-台帳は scratchpad に置くので、長期に要るものは `docs/` か beads に移してから捨てる。
+台帳は worktree と寿命を共にするので、長期に要るものは `docs/` か beads に移してから worktree を消す。
 学びの投入はグラフ上のノードではなく、**グラフ全体の終了時副作用**として扱う。
+
+## 制御の分担（ADR 0019）
+
+グラフの遷移は 2 種類あり、それぞれ最も強い機構に持たせる。
+
+| 遷移 | 制御の主体 | 機構 | 置き場 |
+|---|---|---|---|
+| SCC 内（機械ノード間の周回） | スクリプト | 保存ワークフロー `/deliberate` `/build` `/review`。役割は `agent(..., {agentType})` で呼び、台帳の行は `schema` で JSON として返す | `user/workflows/*.js` → `~/.claude/workflows/`（ファイル単位 symlink） |
+| 人間ノードと SCC 間 | メインセッション | `workflow-graph` skill の規約に従い、`AskUserQuestion` で人間に聞き、戻り値を台帳に書く | `packages/workflow-graph/.apm/skills/workflow-graph/SKILL.md` |
+| 抜ける条件の強制 | hook | `PreToolUse`（Bash）: `gh pr create` は `verify.json` 全 pass、`gh pr merge` は `review.json` 未対応 0 を要求 | `user/bin/workflow-graph-guard.sh` |
+| 現在地の把握 | hook | `UserPromptSubmit`: 台帳の件数を毎ターン 1 行注入 | `user/bin/workflow-graph-state.sh` |
+
+ワークフローは**実行中にユーザー入力を受けられない**（[公式](https://code.claude.com/docs/en/workflows#behavior-and-limits)）。
+この制約が人間ノードを SCC の硬い境界にする。1 周 = ワークフロー 1 回 → 人間の判断 → 次の周。
+`/deliberate` は「同じ致命的指摘が丸ごと残る周」を空転として自分で止め、`/build` は「同一原因 2 回 /
+ベンチ未達 / 設計の前提の問題」で離脱を返す。周を跨ぐ判定（① の「確定も新軸も増えない周が 2 回」）は
+main が台帳の差分で行う。hook は台帳ディレクトリが無い作業には一切干渉しない。
 
 ## 委譲の規約との対応
 
-ノードから役割を呼ぶときは `Agent` ツールの `subagent_type` に役割名を渡す。渡すものは
+SCC の内側では保存ワークフローが `agent(..., {agentType: '<役割>'})` で役割を呼ぶ。渡すものは
 `user/AGENTS.md` の Delegation 節のとおり（目的・制約・関連ファイルの絶対パス・先行報告のパス・
-確定済み事項の明示）。**追補は同じエージェントを再開、改訂は呼び直し**という既存の区別が、
-そのまま ① の戻りエッジのラベルになっている。
+確定済み事項の明示）で、スクリプトがプロンプトに組み立てる。役割の報告全文は `ledgerDir` に書かせ、
+最終出力には要約とパスだけを返させる（main の文脈に全文を載せない）。
+**追補は同じエージェントを再開、改訂は呼び直し**という既存の区別は、`/deliberate` では
+「designer の改訂は新しい `agent()` 呼び出し」として現れる。
 
-委譲は現在「ユーザーが役割名で指示したときだけ」（閾値計測のためのドッグフーディング中）。
+SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツールの `subagent_type`。
+委譲もワークフローの起動も「ユーザーが名前で指示したときだけ」（閾値計測のためのドッグフーディング中）。
 本グラフはその制約を変えない。
 
-## 未定義の拡張点
+## 役割と実行主体の対応
 
-- **② と ③ に対応する役割が無い**。[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md) は
-  implementer / verifier を「拡張点（定義なし）」とし、reviewer は役割自体が存在しない。
-  足すときは `user/agents/<name>.md` を同じ形式で作り、`user/AGENTS.md` の Delegation 表に行を追加する
-  （`tests/test_user_config.py` が整合を強制する）。
-- **verifier の権限**。役割の読み取り専用制約（`disallowedTools`）は Bash 経由の書き込みを防げない。
-  verifier は本質的にコマンドを実行するので、ここは制約文と作業ディレクトリの限定で補う必要がある。
-- **`intake` のルーティング**。現在はメインのモデルの判断に委ねる。skill として明文化して機械的に
-  踏ませるかは未決（[ADR 0015](../adr/0015-memory-ingestion-path.md) の「モデル判断 vs 機械的保証」と同じ軸）。
-- **空転 2 周という閾値**は実測に基づかない初期値。数タスク回してから見直す。
+| ノード | 実行主体 |
+|---|---|
+| intake / decide / record / human-op / human-review / merge / beads | メインセッション（skill の規約） |
+| research / design / critique | `researcher` / `designer` / `critic`（`/deliberate` 内） |
+| implement / fix | `/build` 内の通常エージェント（役割ファイル無し。この worktree で編集） |
+| verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） |
+| 差分の提示 | `reviewer`（`/review` 内） |
+| explainer | 常駐セッション（未実装。[ADR 0016](../adr/0016-explainer-pane-transcript-digest.md)） |
+
+`verifier` の Bash は検証コマンドの実行を許す（他の役割は読み取り専用）。役割の `disallowedTools` は
+Bash 経由の書き込みを防げないので、起動前後の `git status --short` の一致を報告させて検知する。
+
+## 未確定の点
+
+- **空転 2 周という閾値**、`/deliberate` の `maxRounds` 既定 2、`/build` の backstop 6 周は実測に基づかない
+  初期値。数タスク回してから見直す。
+- **別セッションの implementer**（人が横に座って会話する形）は作っていない。`human-op` が濃い実装
+  （インフラ系）で必要になったら、[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md) の
+  別セッション協調プロトコルを起こす。
+- ワークフローと hook は Claude Code 専用。OpenCode 側の対応は
+  [ADR 0001](../adr/0001-target-claude-code-and-opencode.md) の見直しに委ねる。
 
 ## 測り直し方
 

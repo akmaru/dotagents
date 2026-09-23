@@ -47,7 +47,9 @@ user/
 ├── CLAUDE.md      # @import AGENTS.md + Claude-specific additions (work import)
 ├── settings.json  # Claude Code settings
 ├── rules/         # Claude-only, path-scoped rules (recursive, paths: frontmatter)
-├── agents/        # agent role definitions (researcher / designer / critic), one file per role
+├── agents/        # agent role definitions (researcher / designer / critic / verifier / reviewer), one file per role
+├── workflows/     # saved dynamic workflows, one per SCC (/deliberate, /build, /review)
+├── bin/           # hook and status-line scripts (workflow-graph-*.sh, hindsight-retain-hook.sh, ...)
 └── install.sh     # symlinks the above into ~/.claude and ~/.config/opencode
 ```
 
@@ -81,7 +83,11 @@ script prints the options and skips itself when the key is missing, so the rest 
   persistent session in a herdr pane ([docs/design/explainer-pane.md](docs/design/explainer-pane.md)).
 - The overall workflow is modelled as three strongly connected components (deliberate / build / review),
   each holding one ledger file and leaving on recurrence rather than an iteration cap
-  ([docs/adr/0018](docs/adr/0018-workflow-graph-three-sccs.md),
+  ([docs/adr/0018](docs/adr/0018-workflow-graph-three-sccs.md)). Inside each SCC a saved workflow
+  (`workflows/*.js`, linked into `~/.claude/workflows/`) runs the machine nodes; the main session handles the
+  human nodes following the `workflow-graph` skill; hooks in `bin/` inject the ledger state on every prompt and
+  refuse `gh pr create` / `gh pr merge` until the exit condition holds
+  ([docs/adr/0019](docs/adr/0019-workflow-graph-control-flow.md),
   [docs/design/workflow-graph.md](docs/design/workflow-graph.md)).
 
 Install:
