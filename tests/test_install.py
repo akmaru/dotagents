@@ -123,7 +123,10 @@ def test_settings_is_merged_not_linked(installed):
 
     merged = json.loads(settings.read_text())
     repo = json.loads((USER_DIR / "settings.json").read_text())
-    assert repo.items() <= merged.items()
+    # hooks だけは install.sh が SessionStart を足すので完全一致にならない。
+    # repo が持ち込む SessionEnd 側が生きていることを別に見る。
+    assert {k: v for k, v in repo.items() if k != "hooks"}.items() <= merged.items()
+    assert merged["hooks"]["SessionEnd"] == repo["hooks"]["SessionEnd"]
 
 
 def test_settings_merge_keeps_local_keys(tmp_path):
@@ -184,10 +187,12 @@ def test_settings_migrates_from_symlink(tmp_path):
     settings = claude_dir / "settings.json"
     assert not settings.is_symlink()
     merged = json.loads(settings.read_text())
-    merged.pop("hooks", None)  # install.sh が足す context-budget の hook（後述）だけは増える
-    assert merged == json.loads(
-        (USER_DIR / "settings.json").read_text()
-    ), "repo の内容を壊さずに実ファイル化する"
+    repo = json.loads((USER_DIR / "settings.json").read_text())
+    assert merged["hooks"]["SessionEnd"] == repo["hooks"]["SessionEnd"]
+    # install.sh が足す context-budget の SessionStart hook（後述）だけは増える
+    merged.pop("hooks", None)
+    repo.pop("hooks", None)
+    assert merged == repo, "repo の内容を壊さずに実ファイル化する"
 
 
 def test_cpp_rule_reachable_through_rules_link(installed):

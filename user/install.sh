@@ -42,8 +42,11 @@ mv "${SETTINGS}.tmp" "${SETTINGS}"
 # settings.json が参照するスクリプト。settings.json 同様、絶対パスに依存しないよう
 # ~/.local/bin に symlink し、PATH 経由で解決させる。
 mkdir -p "${HOME}/.local/bin"
-ln -sfn "${USER_DIR}/bin/claude-statusline.sh" "${HOME}/.local/bin/claude-statusline.sh"
-ln -sfn "${USER_DIR}/bin/claude-context.py"    "${HOME}/.local/bin/claude-context.py"
+ln -sfn "${USER_DIR}/bin/claude-statusline.sh"    "${HOME}/.local/bin/claude-statusline.sh"
+ln -sfn "${USER_DIR}/bin/claude-context.py"       "${HOME}/.local/bin/claude-context.py"
+# SessionEnd hook。SessionStart と違い herdr が書かない配列なので、登録は
+# user/settings.json 側の deep merge に任せられる（docs/adr/0017）。
+ln -sfn "${USER_DIR}/bin/hindsight-retain-hook.sh" "${HOME}/.local/bin/hindsight-retain-hook.sh"
 
 # コンテキスト使用量の記録・要点表示を SessionStart hook として登録する（docs/adr/0013）。
 # hooks.SessionStart は herdr も書き込む配列で、上の deep merge では配列が丸ごと置換される。
