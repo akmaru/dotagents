@@ -69,6 +69,13 @@ frontmatter は Claude 用 `disallowedTools` と OpenCode 用 `permission` を�
 | [critic](user/agents/critic.md) | 別文脈から反対の立場で成果物を検証する |
 | explainer（段階 1b） | herdr の固定 pane に常駐する解説役（[設計書](docs/design/explainer-pane.md)） |
 
+## ワークフローグラフ
+
+作業全体を 3 つの強連結成分（deliberate / build / review）としてモデル化し、各 SCC は台帳 1 枚と
+「再発」による離脱条件を持つ（[ADR 0018](docs/adr/0018-workflow-graph-three-sccs.md)）。
+機構と運用は [docs/design/workflow-graph.md](docs/design/workflow-graph.md)、
+図は [docs/design/workflow-graph.drawio](docs/design/workflow-graph.drawio)。
+
 ## 利用方法
 
 ### APM Marketplace 経由（推奨）

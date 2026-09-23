@@ -79,6 +79,10 @@ script prints the options and skips itself when the key is missing, so the rest 
   `~/.claude/agents/` ([docs/adr/0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)). Generic
   names such as `critic` can be shadowed by a project's own `.claude/agents/`. The `explainer` role runs as a
   persistent session in a herdr pane ([docs/design/explainer-pane.md](docs/design/explainer-pane.md)).
+- The overall workflow is modelled as three strongly connected components (deliberate / build / review),
+  each holding one ledger file and leaving on recurrence rather than an iteration cap
+  ([docs/adr/0018](docs/adr/0018-workflow-graph-three-sccs.md),
+  [docs/design/workflow-graph.md](docs/design/workflow-graph.md)).
 
 Install:
 
