@@ -121,6 +121,9 @@ deploy 後に実測して分かったこと。**`retain_mission` 自体の言語
 * Neutral: consolidation を `claude-sonnet-5` に上げた理由（ADR 0012）は前提が変わる。`claude-haiku-4-5`
   に戻せばコストは下がるが、別途検証が要るため本 ADR では触らない
 * Neutral: scanner（ADR 0012）は残す。retain の識別子破損が実際に止まったかを測る装置として必要
+* Neutral: 同じ日に、応答フィードバックの収集指示を同じ `retain_mission` に追加した。1 つの mission に
+  関心事が 2 つ同居することになるが、`dry-run-extract` で測った限り言語指示は薄まらなかった（コード片が
+  濃い入力でも日本語と識別子 verbatim を維持）。関心事が増えるたびに同じ確認が要る
 
 ### Confirmation
 
@@ -169,6 +172,7 @@ deploy 後に実測して分かったこと。**`retain_mission` 自体の言語
 * Good: `dry-run-extract` で事前に測れる
 * Bad: consolidation 側は測れないまま残る
 * Bad: `retain_mission` を応答フィードバックの収集などに使う場合、1 つの mission に複数の関心事が同居する
+  （2026-09-23 に実際に同居させた。Consequences に記したとおり、この時点では問題にならなかった）
 
 ### 4. `retain_extraction_mode` を `verbatim` にする
 
