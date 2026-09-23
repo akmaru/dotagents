@@ -33,10 +33,9 @@ services:
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY:?set in .env}
       # reflect は上位モデル。既定の haiku は記憶にない情報を捏造し directive も無視する
       HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5
-      # 日本語で投入しても fact が英語や中国語に翻訳されて保存されるのを防ぐ
-      HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: Japanese
-      # OUTPUT_LANGUAGE を設定すると consolidation の識別子保護ルールが外れる (README の既知の罠)。
-      # haiku は残った翻訳指示に引きずられて識別子を日本語化するため、observation 生成も上位モデルにする
+      # 出力言語は固定しない。固定すると retain / consolidation の識別子保護が巻き添えで外れる
+      # (docs/adr/0019)。言語はバンクの retain_mission で地の文に合わせる
+      # observation 生成の上位モデルは据え置く。識別子破損が本当に止まったかを見極めるまでの保険
       HINDSIGHT_API_CONSOLIDATION_LLM_MODEL: claude-sonnet-5
     volumes:
       # 埋め込みモデル (~130MB) のキャッシュ。再起動時の再ダウンロードを避ける

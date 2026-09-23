@@ -166,7 +166,9 @@ Memory Defense が実際に何を弾くかは**自動検証していない**（�
 
 * [ADR 0015](0015-memory-ingestion-path.md) — 本 ADR が supersede する。6 軸の定義と、案 1〜7 の全体像はそちら
 * [ADR 0012](0012-hindsight-identifier-scanner.md) — 識別子破損。軸 F は未着手で、`retain_extraction_mode` を
-  `verbatim` にすれば本文の書き直しが止まる。投入経路とは独立に判断できる
+  `verbatim` にすれば本文の書き直しが止まる。投入経路とは独立に判断できる。
+  **2026-09-23 追記**: [ADR 0019](0019-output-language-via-retain-mission.md) で出力言語の固定をやめ、
+  識別子保護ルールがプロンプトに戻った。破損の主因が取れたので、`verbatim` を持ち出す必要は薄い
 * [ADR 0013](0013-context-budget-monitoring.md) — 軸 D を数値で追う手段
 * [Memory Defense](https://hindsight.vectorize.io/developer/memory-defense/) — 45 パターンの一覧と
   `redact` / `block` の意味

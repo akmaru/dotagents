@@ -2,11 +2,13 @@
 """
 Hindsight に保存されたテキストから、識別子の破損を定期検出する。
 
-HINDSIGHT_API_LLM_OUTPUT_LANGUAGE を設定すると、retain / consolidation の
+HINDSIGHT_API_LLM_OUTPUT_LANGUAGE を設定していた間、retain / consolidation の
 プロンプトから識別子保護ルール (_DEFAULT_LANGUAGE_RULE の
 "Proper nouns, identifiers, and units stay verbatim.") が外れ、
-「エンティティ名を含め全て翻訳しろ」という指示だけが残る。その結果 LLM が
-識別子を日本語化し、区切り文字ごと潰す。詳細は ../README.md の既知の罠。
+「エンティティ名を含め全て翻訳しろ」という指示だけが残っていた。その結果 LLM が
+識別子を日本語化し、区切り文字ごと潰した。2026-09-23 にこの設定をやめて保護を戻した
+(../../docs/adr/0019-output-language-via-retain-mission.md) が、本スキャナは
+再発を測る装置として残す。詳細は ../README.md の既知の罠。
 
 検出は「正解 → 生成物」の 2 段を突き合わせる:
 
