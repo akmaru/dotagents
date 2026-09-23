@@ -43,7 +43,7 @@ decision-makers: akmaru
 選択: **3.2 — 環境変数を外し、`retain_mission` に言語指示を置く**（採用）。
 
 - `hindsight/compose/docker-compose.yml` から `HINDSIGHT_API_LLM_OUTPUT_LANGUAGE` を削除する
-- バンクの `retain_mission` に次を設定する
+- バンクの `retain_mission` に次を設定する。**この文を日本語で書くこと自体が意味を持つ**（後述）
 
       出力は地の文の言語で書く。コード片・ファイルパス・識別子・英語の引用が多く含まれていても、
       それらは言語判定の材料にしない。
@@ -84,6 +84,22 @@ consolidation は言語ルールを**二者択一**で組み立てる。`consoli
 `retain_mission` から「日本語」という語を外した一般形でも 5/5 で日本語になったため、特定言語を
 名指ししない文面を採用する。
 
+### mission を何語で書くかが、出力言語を決める
+
+deploy 後に実測して分かったこと。**`retain_mission` 自体の言語が、出力言語の既定として働く。**
+
+| `retain_mission` | 英語だけの入力 | 日本語の入力（コード片あり） |
+|---|---|---|
+| 設定しない | 英語のまま | 素の状態では 8 回中 2 回しか日本語を保たない |
+| 日本語で書く（採用） | **日本語に訳される** | 日本語 |
+| 英語で書く | 英語のまま | 日本語 |
+
+文面はどちらも「地の文の言語で書け」と言っているのに、書かれている言語のほうが既定を動かす。
+
+日本語で書くほうを採る。記憶の言語が投入物によって揺れないほうが recall したときに読みやすく、
+このバンクの投入元はほぼ日本語の会話なので、英語だけの会話が日本語の fact になる実害は小さい。
+ソースの言語をそのまま残したくなったら、mission を英語で書き直せば切り替わる。
+
 ### なぜ `observations_mission` ではなく `retain_mission` なのか
 
 * API 仕様の `CreateBankRequest` によれば、`retain_mission` は `Injected alongside built-in extraction
@@ -97,7 +113,8 @@ consolidation は言語ルールを**二者択一**で組み立てる。`consoli
 * Good: 識別子保護（`Proper nouns, identifiers, and units stay verbatim.`）が consolidation に戻る。
   語間スペースも保たれる
 * Good: `observations_mission` の手書き override が不要になり、バンク設定から対症療法が 1 つ減る
-* Good: 英語のソースが日本語に訳されなくなる。引用の原文がそのまま残る
+* Neutral: 英語だけのソースも日本語の fact になる。`HINDSIGHT_API_LLM_OUTPUT_LANGUAGE` を使っていた頃と
+  同じ挙動だが、今度は識別子と語間スペースが保たれる。切り替えたくなったら mission を英語で書き直す
 * Bad: **consolidation 側の言語安定性は未検証**。`dry-run-extract` は retain しか通らず、
   consolidation を書き込みなしで試す手段が無い
 * Bad: 言語の保証がプロンプト頼みになる。retain が `claude-haiku-4-5` で動く限り、従う保証はない
@@ -111,7 +128,10 @@ consolidation は言語ルールを**二者択一**で組み立てる。`consoli
   `HINDSIGHT_API_LLM_OUTPUT_LANGUAGE` が**無い**ことを pin する。これまで `: Japanese` が有ることを
   pin していたので、assert と根拠コメント（`retain translates facts otherwise`）ごと反転する
 * `hindsight/scanner/scanner.py` — 識別子破損を定期検出し `report.json` の `finding_count` に出す
-  （`scanner.py:327-332`）。設定変更の前後でこの値を比較する。LLM を使わない照合なので判定が揺れない
+  （`scanner.py:327-332`）。設定変更の前後でこの値を比較する。LLM を使わない照合なので判定が揺れない。
+  **変更直前のベースライン（2026-09-23T07:07:10Z）: `memories_scanned: 1432` / `finding_count: 47`**。
+  47 件はすべて `axis: chunk->fact`（生 fact の破損、`repair: manual`）で、retain 由来。この値が
+  増えなくなれば本 ADR の狙いどおり。既存の 47 件は自動では直らないので、減ることは期待しない
 * `retain_mission` と出力言語の関係は
   `POST /v1/default/banks/personal/memories/dry-run-extract` で手で測れる。
   **自動テストは無い** — バンク設定はサーバー側にあり、リポジトリにコードが無いため
