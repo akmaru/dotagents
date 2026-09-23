@@ -45,7 +45,12 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
   "confirmed": [{"axis": "判断軸", "choice": "確定した選択", "reason": "根拠"}],
   "open": [],
   "reports": ["先行する報告・ADR・関連ファイルの絶対パス"],
-  "researchQuestions": ["事実が足りない小問。無ければ空配列（Research を飛ばす）"],
+  "researchQuestions": [
+    "このリポジトリの事実を確かめる小問（文字列 = codebase）",
+    {"question": "外部ツール・技術の仕様や比較を確かめる小問", "kind": "web"}
+  ],
+  "optionResearch": true,
+  "maxDeepResearch": 2,
   "ledgerDir": "<絶対パス>",
   "maxRounds": 2
 }
@@ -53,6 +58,16 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 
 `confirmed` に入れた軸は再オープンされない。2 周目以降は前回の `decisions.json` の `confirmed` と
 `open` をそのまま渡す。
+
+**調査の振り分け**: 小問は並列に調べる。`kind: "codebase"`（既定）は `researcher`、`kind: "web"` は
+同梱の `/deep-research`（Web 検索を角度ごとに並列 → 出典を照合 → 主張ごとに 3 票の反証投票）を
+`/deliberate` の中から呼び、結果を researcher と同じ報告形式に整形する。**deep-research は 1 回で
+最大 100 体近くのエージェントを回し数十分かかる**ので、`maxDeepResearch`（既定 2）を超えた分は
+researcher で代替される。
+
+**案ごとの調査**: designer は 1 周目に「案を比べるのに足りない事実」を `researchNeeded`（案 / 小問 / 種別）
+として返す。`optionResearch` が真なら同じ周で並列に調べ、designer が改訂してから critic に渡る。
+人間の decide に届く `open` を減らすための、`decide → research` の戻りを先回りする仕組み。
 
 **戻り値を台帳にする**: 戻り値の `confirmed` / `open` / `recommendation` / `options` / `fatalRemaining` /
 `reports` / `stoppedBecause` を `decisions.json` に書く（`rounds` は累積で数える）。

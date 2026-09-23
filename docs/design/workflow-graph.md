@@ -88,6 +88,22 @@
 これが `decisions.json` の `open` 行にそのまま対応するので、台帳の書式を別に定義する必要はない。
 `/deliberate` は designer / critic の未決事項を `schema` で JSON として受け取り、`open` に併合して返す。
 
+**research ノードの実装は小問の種別で分かれる。**
+
+| 種別 | 実装 | 向く問い |
+|---|---|---|
+| `codebase` | `researcher` 1 体（`agentType`） | このリポジトリ・ローカルの事実。ADR・テスト・特定ツールの仕様をバージョン固定で |
+| `web` | 同梱 `/deep-research` を `workflow()` で 1 段ネスト呼び出し → 結果を軽いエージェントが researcher の報告形式に整形 | 外部ツール・技術の仕様や比較。出典同士が食い違う問い |
+
+deep-research は Scope → Search（5 角度並列）→ Fetch（最大 15 出典）→ Verify（主張ごと 3 票の反証）→
+Synthesize の 5 段で、1 回に最大 100 体近くを回す。`maxDeepResearch`（既定 2）で本数を抑え、超過分は
+researcher で代替する。
+
+小問は 2 経路で入る。(1) main が `args.researchQuestions` で事前に渡す、(2) designer が 1 周目に
+「案を比べるのに足りない事実」を `researchNeeded`（案 / 小問 / 種別）で返し、同じ周で並列に調べて
+designer が改訂する。(2) は `decide → research` の戻りのうち人間を介さず済む分を先回りするもので、
+decide に届く `open` を減らすのが狙い（効果は未測定）。
+
 確定済みの軸は再オープンしない。次のノードへ渡すときは「確定済み」と明記する
 （`user/AGENTS.md` の Delegation 節の規約そのもの）。
 
