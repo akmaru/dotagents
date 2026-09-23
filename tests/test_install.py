@@ -298,7 +298,7 @@ def test_plugin_install_is_skippable(tmp_path):
     assert "plugin install" not in (log.read_text() if log.exists() else "")
 
 
-# --- workflows: user/workflows/*.js → ~/.claude/workflows/<name>.js（docs/adr/0019） ---
+# --- workflows: user/workflows/*.js → ~/.claude/workflows/<name>.js（docs/adr/0020） ---
 
 def _workflow_links():
     return {
@@ -327,7 +327,7 @@ def test_removes_dangling_dotagents_workflow_links_only(tmp_path):
     assert (wf_dir / "mine.js").read_text() == "export const meta = {}\n"
 
 
-# --- workflow-graph hooks（docs/adr/0019） ---
+# --- workflow-graph hooks（docs/adr/0020） ---
 
 WORKFLOW_GRAPH_HOOKS = {
     "UserPromptSubmit": "workflow-graph-state.sh",

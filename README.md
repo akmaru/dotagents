@@ -87,7 +87,7 @@ script prints the options and skips itself when the key is missing, so the rest 
   (`workflows/*.js`, linked into `~/.claude/workflows/`) runs the machine nodes; the main session handles the
   human nodes following the `workflow-graph` skill; hooks in `bin/` inject the ledger state on every prompt and
   refuse `gh pr create` / `gh pr merge` until the exit condition holds
-  ([docs/adr/0019](docs/adr/0019-workflow-graph-control-flow.md),
+  ([docs/adr/0020](docs/adr/0020-workflow-graph-control-flow.md),
   [docs/design/workflow-graph.md](docs/design/workflow-graph.md)).
 
 Install:

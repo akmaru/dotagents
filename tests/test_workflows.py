@@ -1,6 +1,6 @@
 """
 Validate user/workflows/*.js — the saved dynamic-workflow scripts that run the
-machine part of each SCC (docs/adr/0019).
+machine part of each SCC (docs/adr/0020).
 
 Claude Code loads these from ~/.claude/workflows/<name>.js and exposes each as
 /<name>. The runtime rules checked here come from the official workflows doc
@@ -66,5 +66,5 @@ class TestWorkflowScript:
         assert used <= defined, f"未定義の役割 {used - defined} を agentType に渡している"
 
     def test_uses_ledger_dir_arg(self, script):
-        # 台帳と報告の置き場は main が args.ledgerDir で渡す（docs/adr/0019）
+        # 台帳と報告の置き場は main が args.ledgerDir で渡す（docs/adr/0020）
         assert "args.ledgerDir" in script.read_text()

@@ -2,7 +2,7 @@
 
 普段の作業を、ノード（仕事）・エッジ（遷移条件）・エッジ上を流れる共有状態として明示したもの。
 グラフの形は [ADR 0018](../adr/0018-workflow-graph-three-sccs.md)、制御の分担（誰が遷移を回すか）は
-[ADR 0019](../adr/0019-workflow-graph-control-flow.md)、図は
+[ADR 0020](../adr/0020-workflow-graph-control-flow.md)、図は
 [workflow-graph.drawio](workflow-graph.drawio)（draw.io で開く）。役割定義の形式と配布は
 [ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)。
 本書は機構の説明で、メインセッション向けの運用規約は `packages/workflow-graph/` の SKILL.md にある
@@ -145,7 +145,7 @@ daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に
 台帳は worktree と寿命を共にするので、長期に要るものは `docs/` か beads に移してから worktree を消す。
 学びの投入はグラフ上のノードではなく、**グラフ全体の終了時副作用**として扱う。
 
-## 制御の分担（ADR 0019）
+## 制御の分担（ADR 0020）
 
 グラフの遷移は 2 種類あり、それぞれ最も強い機構に持たせる。
 

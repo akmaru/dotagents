@@ -7,7 +7,7 @@
 #
 # 台帳（<cwd>/.claude/workflow-graph/<task>/）が無ければ何もしない。グラフを使っていない
 # 作業には一切干渉しないことが、この hook を常設できる条件。
-# 設計は docs/adr/0019-workflow-graph-control-flow.md、規約は docs/design/workflow-graph.md。
+# 設計は docs/adr/0020-workflow-graph-control-flow.md、規約は docs/design/workflow-graph.md。
 #
 # user/install.sh が hooks.PreToolUse に登録し、~/.local/bin へ symlink する。
 # 判定不能なときは通す（exit 0・出力なし）。止めるのは台帳が明確に「まだ」と言うときだけ。

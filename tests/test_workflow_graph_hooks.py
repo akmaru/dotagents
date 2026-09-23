@@ -1,6 +1,6 @@
 """
 Validate the two hooks that make the workflow graph's state visible and its
-exit conditions enforced (docs/adr/0019):
+exit conditions enforced (docs/adr/0020):
 
 - user/bin/workflow-graph-state.sh (UserPromptSubmit): injects a one-line
   summary of the active task's ledgers as additionalContext.

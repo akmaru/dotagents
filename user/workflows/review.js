@@ -1,6 +1,6 @@
 // /review — SCC ③（review）の機械レビュー。reviewer の指摘を反証的に検証してから、
 // 人間レビューに渡す一覧（review.json の元）を返す。他人の MR / PR にも同じ形で使う。
-// 人間ノード（human-review）は main 側（docs/adr/0019）。
+// 人間ノード（human-review）は main 側（docs/adr/0020）。
 export const meta = {
   name: 'review',
   description: 'SCC ③: reviewer が差分を読み、指摘を反証検証で絞ってから人間レビュー用の一覧を返す',

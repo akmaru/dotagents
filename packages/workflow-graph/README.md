@@ -7,7 +7,7 @@
 抜ける条件は hook（`user/bin/workflow-graph-guard.sh`）が機械的に守る。
 
 設計: `docs/adr/0018-workflow-graph-three-sccs.md`（グラフの形）、
-`docs/adr/0019-workflow-graph-control-flow.md`（制御の分担）、`docs/design/workflow-graph.md`（機構）。
+`docs/adr/0020-workflow-graph-control-flow.md`（制御の分担）、`docs/design/workflow-graph.md`（機構）。
 
 ## インストール
 
@@ -16,7 +16,7 @@ apm marketplace add akmaru/dotagents
 apm install workflow-graph@dotagents
 ```
 
-ワークフロー本体と hook は APM パッケージではなく `user/install.sh` が配る（ADR 0019）。
+ワークフロー本体と hook は APM パッケージではなく `user/install.sh` が配る（ADR 0020）。
 
 ## 使い方
 

@@ -79,7 +79,7 @@ frontmatter は Claude 用 `disallowedTools` と OpenCode 用 `permission` を�
 SCC の内側は保存ワークフロー `/deliberate` `/build` `/review`（`user/workflows/*.js`、`install.sh` が
 `~/.claude/workflows/` へ symlink）が回し、人間ノードと SCC 間は `workflow-graph` skill に従って
 メインセッションが担い、抜ける条件は hook（`user/bin/workflow-graph-guard.sh`）が守る
-（[ADR 0019](docs/adr/0019-workflow-graph-control-flow.md)）。
+（[ADR 0020](docs/adr/0020-workflow-graph-control-flow.md)）。
 機構と運用は [docs/design/workflow-graph.md](docs/design/workflow-graph.md)、
 図は [docs/design/workflow-graph.drawio](docs/design/workflow-graph.drawio)。
 

@@ -1,6 +1,6 @@
 // /build — SCC ②（build）の implement ⇄ verify ループを、全 pass か離脱条件まで回す。
 // 人間ノード（human-op）はワークフロー内に置けないので、特権操作が要ると分かった時点で
-// needs_human_op を返して止まる。戻り値が verify.json の元になる（docs/adr/0019）。
+// needs_human_op を返して止まる。戻り値が verify.json の元になる（docs/adr/0020）。
 export const meta = {
   name: 'build',
   description: 'SCC ②: implement → verify を、全 pass か「同一原因 2 回 / ベンチ未達」の離脱まで回す',

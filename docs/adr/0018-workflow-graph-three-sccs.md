@@ -61,7 +61,7 @@ decision-makers: akmaru
 - 台帳は SCC ごとに 1 枚: `decisions.json`（軸 / 選択肢 / 確定・未確定 / 根拠）、
   `verify.json`（検証項目 / 種別 / pass・fail・未実行 / 直近の原因）、`review.json`（指摘 / 対応・棚上げ・却下）。
   抜ける条件はそれぞれ未確定 0 / 全項目 pass / 未対応 0。置き場は作業ツリー直下の
-  `.claude/workflow-graph/<task>/`（タスク = worktree と寿命を揃える。[ADR 0019](0019-workflow-graph-control-flow.md)）。
+  `.claude/workflow-graph/<task>/`（タスク = worktree と寿命を揃える。[ADR 0020](0020-workflow-graph-control-flow.md)）。
 - ① の台帳は**役割の報告末尾にある「未決事項」をそのまま使う**。書式を別に定義しない
   （[ADR 0014](0014-agent-roles-dual-key-per-file-symlink.md)）。
 - エッジに載せるのは要約ではなくファイルのパス。`user/AGENTS.md` の Delegation 節の規約に従う。
@@ -73,7 +73,7 @@ decision-makers: akmaru
   （[ADR 0016](0016-explainer-pane-transcript-digest.md)）。
 - 誰がどの遷移を回すか（ワークフロー / メインセッション / hook の分担）と、② ③ の実行主体
   （`verifier` / `reviewer` 役割、`implement` は役割ファイル無し）は
-  [ADR 0019](0019-workflow-graph-control-flow.md) で決める。本 ADR はグラフの形だけを決める。
+  [ADR 0020](0020-workflow-graph-control-flow.md) で決める。本 ADR はグラフの形だけを決める。
 - 機構と運用の詳細は [docs/design/workflow-graph.md](../design/workflow-graph.md)、図は
   [docs/design/workflow-graph.drawio](../design/workflow-graph.drawio)。
 
@@ -92,7 +92,7 @@ decision-makers: akmaru
 ### Confirmation
 
 グラフの**形**（3 つの SCC、台帳、離脱の判定）そのものを検査するテストは無い。これは規約であり、
-強制点は制御の分担を決めた [ADR 0019](0019-workflow-graph-control-flow.md) 側にある。そちらの
+強制点は制御の分担を決めた [ADR 0020](0020-workflow-graph-control-flow.md) 側にある。そちらの
 `tests/test_workflow_graph_hooks.py` が「抜ける条件」（`verify.json` 全 pass で PR、`review.json`
 未対応 0 で merge）を hook が守ることを、`tests/test_workflows.py` が SCC ごとに 1 本のワークフローが
 あることを検証する。
@@ -160,4 +160,4 @@ decision-makers: akmaru
 * グラフエンジニアリングの出典:
   [Graph Engineering in the Era of LLM Agents (arXiv:2608.21156)](https://arxiv.org/abs/2608.21156)、
   [DEEP-JLU/Awesome-Graph-Engineering](https://github.com/DEEP-JLU/Awesome-Graph-Engineering)
-* 制御の分担と ② ③ の実行主体: [ADR 0019](0019-workflow-graph-control-flow.md)
+* 制御の分担と ② ③ の実行主体: [ADR 0020](0020-workflow-graph-control-flow.md)

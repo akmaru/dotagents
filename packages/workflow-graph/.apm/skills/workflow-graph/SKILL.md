@@ -6,7 +6,7 @@ compatibility: Designed for Claude Code (saved workflows and hooks)
 
 メインセッションは**オーケストレータ**であり、この規約に従って 3 つの SCC を渡り歩く。
 SCC の内側（機械ノードの周回）は保存ワークフローが回し、**人間ノードと SCC 間の遷移だけ**が
-メインセッションの仕事である。グラフの形は `docs/adr/0018`、制御の分担は `docs/adr/0019`、
+メインセッションの仕事である。グラフの形は `docs/adr/0018`、制御の分担は `docs/adr/0020`、
 機構の詳細は `docs/design/workflow-graph.md`（dotagents リポジトリ）。
 
 ## 用語

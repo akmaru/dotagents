@@ -7,7 +7,7 @@
 # 台帳があれば、どの SCC にいるか（review > verify > decisions の順で推定）と
 # 「未確定 / 未pass / 未対応」の件数を additionalContext で main に見せる。
 # main が規約を忘れても、抜ける条件の判定材料が毎ターン目に入るようにするのが目的。
-# 設計は docs/adr/0019-workflow-graph-control-flow.md、規約は docs/design/workflow-graph.md。
+# 設計は docs/adr/0020-workflow-graph-control-flow.md、規約は docs/design/workflow-graph.md。
 #
 # user/install.sh が hooks.UserPromptSubmit に登録し、~/.local/bin へ symlink する。
 # ターンを妨げないことを最優先し、何が失敗しても exit 0 する。

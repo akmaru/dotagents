@@ -60,7 +60,7 @@ jq --arg cmd "${CONTEXT_HOOK_CMD}" '
 ' "${SETTINGS}" > "${SETTINGS}.tmp"
 mv "${SETTINGS}.tmp" "${SETTINGS}"
 
-# ワークフローグラフの hook（docs/adr/0019）。現在地の注入（UserPromptSubmit）と
+# ワークフローグラフの hook（docs/adr/0020）。現在地の注入（UserPromptSubmit）と
 # 抜ける条件の強制（PreToolUse, Bash）。どちらも他ツールが書き得る配列なので、
 # SessionStart と同じく「無ければ末尾に足す」。
 ln -sfn "${USER_DIR}/bin/workflow-graph-state.sh" "${HOME}/.local/bin/workflow-graph-state.sh"
@@ -79,7 +79,7 @@ add_hook_once "UserPromptSubmit" "*"    "workflow-graph-state.sh"
 add_hook_once "PreToolUse"       "Bash" "workflow-graph-guard.sh"
 
 # --- workflows (~/.claude/workflows) ---
-# 保存ワークフロー（SCC ごとに 1 本、docs/adr/0019）をファイル単位で symlink する。
+# 保存ワークフロー（SCC ごとに 1 本、docs/adr/0020）をファイル単位で symlink する。
 # /workflows の保存ダイアログは「対象ファイル自身が symlink」のときだけ拒否するので、
 # ディレクトリごと張ると保存が repo に書き込む。agents と同じ配り方にする。
 WORKFLOWS_LINK_DIR="${HOME}/.claude/workflows"

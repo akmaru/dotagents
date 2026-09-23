@@ -1,6 +1,6 @@
 // /deliberate — SCC ①（deliberate）の機械部分を、人間の decide の手前まで 1 周回す。
 // research（事実が足りない小問だけ）→ design → critique → 致命的指摘が残れば designer を呼び直す。
-// 戻り値が decisions.json の元になる。人間ノードは main 側（docs/adr/0019, docs/design/workflow-graph.md）。
+// 戻り値が decisions.json の元になる。人間ノードは main 側（docs/adr/0020, docs/design/workflow-graph.md）。
 export const meta = {
   name: 'deliberate',
   description: 'SCC ①: research → design → critique を回し、人間が決められる状態（未確定行）を返す',
