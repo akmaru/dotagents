@@ -7,6 +7,7 @@ Personal AI agent skills managed as an [APM](https://github.com/microsoft/apm) m
 | Skill | Description |
 |-------|-------------|
 | [grill-me](packages/grill-me/.apm/skills/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
+| [grill-with-docs](packages/grill-with-docs/.apm/skills/grill-with-docs/SKILL.md) | Same interview inside a repo, in rounds with recommended answers, writing resolved terms to `CONTEXT.md` and hard-to-reverse decisions to MADR ADRs as you go |
 | [beads](packages/beads/.apm/skills/beads/SKILL.md) | Beads issue tracking workflow — create/update/close issues around every task |
 | [rust](packages/rust/.apm/skills/rust/SKILL.md) | Rust development workflow with rust-analyzer LSP integration |
 | [madr-writer](packages/madr-writer/.apm/skills/madr-writer/SKILL.md) | Author Architecture Decision Records in MADR format |
