@@ -55,6 +55,7 @@ compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
 | [madr-writer](packages/madr-writer/.apm/skills/madr-writer/SKILL.md) | MADR 形式で ADR を作成・レビューするスキル |
 | [refine-design](packages/refine-design/.apm/skills/refine-design/SKILL.md) | 設計判断を代替案・トレードオフ・既存決定との整合で審議・リファインするスキル |
 | [context-budget](packages/context-budget/.apm/skills/context-budget/SKILL.md) | コンテキスト使用量を計測し、削減候補を提案・適用・再計測するスキル（計測は `user/bin/claude-context.py`） |
+| [workflow-graph](packages/workflow-graph/.apm/skills/workflow-graph/SKILL.md) | 作業を 3 つの SCC のグラフとして回すメインセッション向けの規約（ワークフロー本体は `user/workflows/`、hook は `user/bin/`） |
 
 ## 役割（サブエージェント）
 
@@ -67,7 +68,20 @@ frontmatter は Claude 用 `disallowedTools` と OpenCode 用 `permission` を�
 | [researcher](user/agents/researcher.md) | 仕様・一次情報・実現可能性を出典付きで調べる |
 | [designer](user/agents/designer.md) | 代替案とトレードオフを整理し推奨案を出す |
 | [critic](user/agents/critic.md) | 別文脈から反対の立場で成果物を検証する |
+| [verifier](user/agents/verifier.md) | 検証項目を実行し、fail の原因を「実装 / 設計の前提」で分類する |
+| [reviewer](user/agents/reviewer.md) | 差分を決定との整合・正しさ・テストの観点で読み、file:line 付きで指摘する |
 | explainer（段階 1b） | herdr の固定 pane に常駐する解説役（[設計書](docs/design/explainer-pane.md)） |
+
+## ワークフローグラフ
+
+作業全体を 3 つの強連結成分（deliberate / build / review）としてモデル化し、各 SCC は台帳 1 枚と
+「再発」による離脱条件を持つ（[ADR 0018](docs/adr/0018-workflow-graph-three-sccs.md)）。
+SCC の内側は保存ワークフロー `/deliberate` `/build` `/review`（`user/workflows/*.js`、`install.sh` が
+`~/.claude/workflows/` へ symlink）が回し、人間ノードと SCC 間は `workflow-graph` skill に従って
+メインセッションが担い、抜ける条件は hook（`user/bin/workflow-graph-guard.sh`）が守る
+（[ADR 0020](docs/adr/0020-workflow-graph-control-flow.md)）。
+機構と運用は [docs/design/workflow-graph.md](docs/design/workflow-graph.md)、
+図は [docs/design/workflow-graph.drawio](docs/design/workflow-graph.drawio)。
 
 ## 利用方法
 

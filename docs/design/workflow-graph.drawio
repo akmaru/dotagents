@@ -1,0 +1,77 @@
+<mxfile host="app.diagrams.net" agent="claude-code" type="device">
+  <diagram id="workflow-graph" name="workflow-graph">
+<mxGraphModel dx="1400" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="start" value="要望" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1"><mxGeometry x="90" y="40" width="150" height="50" as="geometry"/></mxCell>
+    <mxCell id="extmr" value="他人の MR / PR" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1"><mxGeometry x="900" y="40" width="190" height="50" as="geometry"/></mxCell>
+    <mxCell id="intake" value="intake&#10;分類・ルーティング" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1"><mxGeometry x="90" y="145" width="150" height="55" as="geometry"/></mxCell>
+
+    <mxCell id="c1" value="① deliberate ／ 台帳 decisions.md（軸 / 選択肢 / 確定・未確定 / 根拠）　抜ける条件: 未確定 0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#808080;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=12;fontStyle=1;container=1;collapsible=0;" vertex="1" parent="1"><mxGeometry x="260" y="230" width="640" height="300" as="geometry"/></mxCell>
+    <mxCell id="research" value="research" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="c1"><mxGeometry x="30" y="60" width="120" height="45" as="geometry"/></mxCell>
+    <mxCell id="design" value="design" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="c1"><mxGeometry x="215" y="60" width="120" height="45" as="geometry"/></mxCell>
+    <mxCell id="critique" value="critique" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="c1"><mxGeometry x="400" y="60" width="120" height="45" as="geometry"/></mxCell>
+    <mxCell id="decide" value="decide（人間）" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="c1"><mxGeometry x="195" y="190" width="170" height="55" as="geometry"/></mxCell>
+    <mxCell id="e_r_d" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c1" source="research" target="design"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_d_c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c1" source="design" target="critique"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_d_de" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c1" source="design" target="decide"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_c_de" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c1" source="critique" target="decide"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_de_r" value="事実の穴埋め&#10;（同じ researcher を再開）" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;fontColor=#994C00;" edge="1" parent="c1" source="decide" target="research"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_de_d" value="軸・選択肢の追加&#10;（designer を呼び直す）" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;fontColor=#994C00;" edge="1" parent="c1" source="decide" target="design"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="record" value="record ／ ADR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1"><mxGeometry x="470" y="570" width="220" height="48" as="geometry"/></mxCell>
+
+    <mxCell id="c2" value="② build ／ 台帳 verify.md（検証項目 / pass・fail・未実行 / 直近の原因）　抜ける条件: 全項目 pass" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#808080;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=12;fontStyle=1;container=1;collapsible=0;" vertex="1" parent="1"><mxGeometry x="260" y="660" width="640" height="235" as="geometry"/></mxCell>
+    <mxCell id="implement" value="implement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="c2"><mxGeometry x="55" y="60" width="140" height="48" as="geometry"/></mxCell>
+    <mxCell id="vlocal" value="verify-local&#10;テスト / ベンチ / 起動確認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="c2"><mxGeometry x="290" y="55" width="190" height="58" as="geometry"/></mxCell>
+    <mxCell id="humanop" value="human-op（人間）" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="c2"><mxGeometry x="55" y="155" width="150" height="48" as="geometry"/></mxCell>
+    <mxCell id="e_im_vl" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c2" source="implement" target="vlocal"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_vl_im" value="fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;fontColor=#994C00;" edge="1" parent="c2" source="vlocal" target="implement"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_im_ho" value="特権・対話操作" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="c2" source="implement" target="humanop"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_ho_im" value="結果を貼り戻す" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;fontColor=#994C00;" edge="1" parent="c2" source="humanop" target="implement"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="prp" value="commit / push / PR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1"><mxGeometry x="460" y="925" width="240" height="48" as="geometry"/></mxCell>
+
+    <mxCell id="c3" value="③ review ／ 台帳 review.md（指摘 / 対応・棚上げ・却下）　抜ける条件: 未対応 0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#808080;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=12;fontStyle=1;container=1;collapsible=0;" vertex="1" parent="1"><mxGeometry x="260" y="1010" width="640" height="295" as="geometry"/></mxCell>
+    <mxCell id="vci" value="verify-CI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="c3"><mxGeometry x="30" y="60" width="130" height="48" as="geometry"/></mxCell>
+    <mxCell id="diff" value="差分の提示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="c3"><mxGeometry x="225" y="60" width="130" height="48" as="geometry"/></mxCell>
+    <mxCell id="hreview" value="human-review（人間）" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="c3"><mxGeometry x="420" y="57" width="170" height="55" as="geometry"/></mxCell>
+    <mxCell id="fix" value="fix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="c3"><mxGeometry x="225" y="185" width="130" height="45" as="geometry"/></mxCell>
+    <mxCell id="humanop2" value="human-op（人間が自分で直す）" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="c3"><mxGeometry x="420" y="185" width="170" height="48" as="geometry"/></mxCell>
+    <mxCell id="e_vci_diff" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c3" source="vci" target="diff"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_diff_hr" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="c3" source="diff" target="hreview"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_hr_fix" value="指摘" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;fontColor=#994C00;" edge="1" parent="c3" source="hreview" target="fix"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_fix_vci" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;" edge="1" parent="c3" source="fix" target="vci"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_hr_ho2" value="自分で直す" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;fontColor=#994C00;" edge="1" parent="c3" source="hreview" target="humanop2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_ho2_vci" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;" edge="1" parent="c3" source="humanop2" target="vci"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="merge" value="merge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1"><mxGeometry x="470" y="1355" width="150" height="45" as="geometry"/></mxCell>
+    <mxCell id="done" value="完了" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1"><mxGeometry x="690" y="1355" width="120" height="45" as="geometry"/></mxCell>
+
+    <mxCell id="beads" value="beads issue&#10;（棚上げ＝新ノード）" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1"><mxGeometry x="940" y="1160" width="170" height="80" as="geometry"/></mxCell>
+    <mxCell id="explainer" value="explainer&#10;常駐 pane&#10;観測のみ・状態を変えない" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#9673a6;fontSize=11;fontColor=#6C3483;" vertex="1" parent="1"><mxGeometry x="940" y="290" width="170" height="80" as="geometry"/></mxCell>
+
+    <mxCell id="e_s_in" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="start" target="intake"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_in_c1" value="調査・設計が要る" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="1" source="intake" target="c1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_in_c2" value="自明・定型" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="1" source="intake" target="c2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_c1_rec" value="未確定 0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="1" source="c1" target="record"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_rec_c2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="record" target="c2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_c2_prp" value="全項目 pass" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="1" source="c2" target="prp"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_prp_c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="prp" target="c3"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_c3_mg" value="未対応 0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="1" source="c3" target="merge"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_mg_dn" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="merge" target="done"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_ext_c3" value="レビュー依頼&#10;（merge へは行かない）" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;" edge="1" parent="1" source="extmr" target="c3"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="e_c2_c1" value="同一原因で 2 回 fail&#10;／ ベンチ未達" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontSize=10;fontColor=#B85450;" edge="1" parent="1" source="c2" target="c1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_c3_c1" value="指摘が設計に及ぶ" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontSize=10;fontColor=#B85450;" edge="1" parent="1" source="c3" target="c1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_c3_bd" value="今は直さない（棚上げ）" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontSize=10;fontColor=#B85450;" edge="1" parent="1" source="c3" target="beads"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_bd_in" value="新しいタスク" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#666666;fontSize=10;fontColor=#666666;" edge="1" parent="1" source="beads" target="intake"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_ex_c1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#9673a6;endArrow=open;" edge="1" parent="1" source="explainer" target="c1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="legend" value="凡例&#10;&#10;オレンジ六角形 = 人間が判断するノード（各 SCC に 1 つ）&#10;オレンジ矢印 = SCC 内の戻りエッジ（回るのが正常）&#10;赤点線 = SCC からの離脱（回数でなく「同じものの再発」で判定）&#10;破線の枠 = 強連結成分。台帳 1 枚と抜ける条件を持つ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fillColor=#ffffff;strokeColor=#999999;fontSize=11;" vertex="1" parent="1"><mxGeometry x="40" y="1330" width="380" height="130" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
+  </diagram>
+</mxfile>

@@ -60,6 +60,41 @@ jq --arg cmd "${CONTEXT_HOOK_CMD}" '
 ' "${SETTINGS}" > "${SETTINGS}.tmp"
 mv "${SETTINGS}.tmp" "${SETTINGS}"
 
+# ワークフローグラフの hook（docs/adr/0020）。現在地の注入（UserPromptSubmit）と
+# 抜ける条件の強制（PreToolUse, Bash）。どちらも他ツールが書き得る配列なので、
+# SessionStart と同じく「無ければ末尾に足す」。
+ln -sfn "${USER_DIR}/bin/workflow-graph-state.sh" "${HOME}/.local/bin/workflow-graph-state.sh"
+ln -sfn "${USER_DIR}/bin/workflow-graph-guard.sh" "${HOME}/.local/bin/workflow-graph-guard.sh"
+add_hook_once() {
+  # $1: イベント名, $2: matcher, $3: command
+  jq --arg ev "$1" --arg m "$2" --arg cmd "$3" '
+    .hooks[$ev] = ((.hooks[$ev] // []) as $h
+      | if any($h[]?; (.hooks // []) | any(.command == $cmd)) then $h
+        else $h + [{"matcher": $m, "hooks": [{"type": "command", "command": $cmd, "timeout": 10}]}]
+        end)
+  ' "${SETTINGS}" > "${SETTINGS}.tmp"
+  mv "${SETTINGS}.tmp" "${SETTINGS}"
+}
+add_hook_once "UserPromptSubmit" "*"    "workflow-graph-state.sh"
+add_hook_once "PreToolUse"       "Bash" "workflow-graph-guard.sh"
+
+# --- workflows (~/.claude/workflows) ---
+# 保存ワークフロー（SCC ごとに 1 本、docs/adr/0020）をファイル単位で symlink する。
+# /workflows の保存ダイアログは「対象ファイル自身が symlink」のときだけ拒否するので、
+# ディレクトリごと張ると保存が repo に書き込む。agents と同じ配り方にする。
+WORKFLOWS_LINK_DIR="${HOME}/.claude/workflows"
+mkdir -p "${WORKFLOWS_LINK_DIR}"
+for link in "${WORKFLOWS_LINK_DIR}"/*.js; do
+  [ -L "${link}" ] || continue
+  case "$(readlink "${link}")" in
+    "${USER_DIR}/workflows/"*) [ -e "${link}" ] || rm -f "${link}" ;;
+  esac
+done
+for src in "${USER_DIR}"/workflows/*.js; do
+  [ -e "${src}" ] || continue
+  ln -sfn "${src}" "${WORKFLOWS_LINK_DIR}/$(basename "${src}")"
+done
+
 # --- agents (~/.claude/agents) ---
 # 役割定義（サブエージェント）はファイル単位で symlink する（docs/adr/0014）。
 # ディレクトリごと張ると /agents UI が書いた定義が repo に入り、OpenCode が読めない

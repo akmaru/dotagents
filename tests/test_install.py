@@ -296,3 +296,68 @@ def test_plugin_install_is_skippable(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert "plugin install" not in (log.read_text() if log.exists() else "")
+
+
+# --- workflows: user/workflows/*.js → ~/.claude/workflows/<name>.js（docs/adr/0020） ---
+
+def _workflow_links():
+    return {
+        f".claude/workflows/{p.name}": f"workflows/{p.name}"
+        for p in sorted((USER_DIR / "workflows").glob("*.js"))
+    }
+
+
+@pytest.mark.parametrize("link, target", _workflow_links().items())
+def test_workflow_is_linked_per_file(installed, link, target):
+    """保存ワークフローはファイル単位で symlink する。ディレクトリごと張ると /workflows の
+    保存ダイアログが repo に書き込む（保存先の symlink 拒否は「対象ファイル自身」だけ）。"""
+    link_path = installed / link
+    assert link_path.is_symlink(), f"{link} must be a per-file symlink"
+    assert link_path.resolve() == (USER_DIR / target).resolve()
+    assert not (installed / ".claude" / "workflows").is_symlink()
+
+
+def test_removes_dangling_dotagents_workflow_links_only(tmp_path):
+    wf_dir = tmp_path / ".claude" / "workflows"
+    wf_dir.mkdir(parents=True)
+    (wf_dir / "retired.js").symlink_to(USER_DIR / "workflows" / "retired.js")
+    (wf_dir / "mine.js").write_text("export const meta = {}\n")
+    assert _run_install(tmp_path).returncode == 0
+    assert not (wf_dir / "retired.js").is_symlink()
+    assert (wf_dir / "mine.js").read_text() == "export const meta = {}\n"
+
+
+# --- workflow-graph hooks（docs/adr/0020） ---
+
+WORKFLOW_GRAPH_HOOKS = {
+    "UserPromptSubmit": "workflow-graph-state.sh",
+    "PreToolUse": "workflow-graph-guard.sh",
+}
+
+
+def _entries_with_command(settings: dict, event: str, cmd: str):
+    return [
+        e for e in settings.get("hooks", {}).get(event, [])
+        if any(h.get("command") == cmd for h in e.get("hooks", []))
+    ]
+
+
+def test_workflow_graph_hooks_added_once_and_keep_existing(tmp_path):
+    """UserPromptSubmit / PreToolUse は他ツールも書き得る配列なので、deep merge ではなく
+    install.sh が無ければ足す（docs/adr/0013 と同じ扱い）。2 回走らせても 1 つずつ。"""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir(parents=True)
+    foreign = {"matcher": "Bash", "hooks": [{"type": "command", "command": "other-guard.sh"}]}
+    (claude_dir / "settings.json").write_text(json.dumps({"hooks": {"PreToolUse": [foreign]}}))
+
+    assert _run_install(tmp_path).returncode == 0
+    assert _run_install(tmp_path).returncode == 0
+    merged = json.loads((claude_dir / "settings.json").read_text())
+
+    assert merged["hooks"]["PreToolUse"][0] == foreign
+    for event, cmd in WORKFLOW_GRAPH_HOOKS.items():
+        entries = _entries_with_command(merged, event, cmd)
+        assert len(entries) == 1, f"{event} の {cmd} は 1 つだけ"
+        assert (tmp_path / ".local" / "bin" / cmd).resolve() == (USER_DIR / "bin" / cmd).resolve()
+    guard = _entries_with_command(merged, "PreToolUse", "workflow-graph-guard.sh")[0]
+    assert guard["matcher"] == "Bash", "guard は Bash の gh pr create/merge だけ見る"
