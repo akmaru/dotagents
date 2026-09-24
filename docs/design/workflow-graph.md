@@ -213,7 +213,9 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 `tests/test_user_config.py` が禁止しているため使えない（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)。
 ADR 0001 の見直しで外れる制約の 1 つ）。既定は各スクリプトの `MODELS` にあり、`args.models` で部分上書きできる。
 判断が結果を左右するノード（design / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
-1 件を判定するノードは sonnet、機械的な整形は haiku。同梱の `/deep-research` は `model` を渡していないため
+1 件を判定するノードは sonnet、機械的な整形は haiku。ワークフローは実行中に人間に聞けないので、
+メインセッションは**起動の直前に毎回** `AskUserQuestion` でノードごとのモデルを確認し、既定から変えた
+分だけを `args.models` に渡す（規約は skill の「起動前にモデルを聞く」）。同梱の `/deep-research` は `model` を渡していないため
 セッションのモデルで 100 体前後が回る（2026-09-23 の追試で全 206 体が Fable 5.1 だった）。これが
 `/web-research` を写しとして持つ理由。
 

@@ -33,6 +33,28 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 保存ワークフローは**ユーザーが `/deliberate` `/build` `/review` と指示したときに**呼ぶ
 （委譲は手動指示のみ、の規則と同じ）。呼ぶときは `Workflow` ツールに `name` と下記の `args` を渡す。
 
+### 起動前にモデルを聞く
+
+ワークフローは**実行中にユーザー入力を受けられない**ので、モデルを選べるのは起動前だけ。
+`/deliberate` `/build` `/review` `/web-research` を呼ぶ**直前に、毎回** `AskUserQuestion` でそのワークフローの
+ノードごとのモデルを確認し、答えを `args.models` に入れる。1 回の質問にノードを 1 つずつ並べ、各ノードの
+選択肢は「既定（<既定値>）」を先頭に、`opus` / `sonnet` / `haiku` / 継承 を続ける。既定を選んだノードは
+`args.models` に書かない（スクリプト側の既定に任せる）。
+
+聞く対象と既定:
+
+| ワークフロー | ノード（既定） |
+|---|---|
+| `/deliberate` | research（opus）/ design（継承）/ critique（継承）/ integrate（haiku）/ webResearch（全段階 opus。`kind: "web"` の小問があるときだけ） |
+| `/build` | implement（sonnet）/ verify（sonnet） |
+| `/review` | review（継承）/ refute（sonnet） |
+| `/web-research` 単独 | scope / search / fetch / verify / synthesize（すべて opus） |
+
+`/web-research` は 1 回で 100 体前後・1,000 万トークン級になるので、モデルと一緒に**回してよいか**も
+同じ質問で確認する。`maxDeepResearch` を 1 以上にするのはその答えがあったときだけ。
+
+ユーザーが「既定でいい」「聞かなくていい」と言ったら、その指示があったセッション中は聞かずに既定で回す。
+
 ## 1. ① deliberate
 
 **`/deliberate` の args**
@@ -58,10 +80,8 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 ```
 
 **モデルはノードごとに呼び出し側で決まる**（役割ファイルに `model:` は書けない。ADR 0014）。既定は
-① research = opus / design・critique = セッション継承 / web-research = 全段階 opus / 結果の整形 = haiku、
-② implement = sonnet / verify = sonnet、③ review = セッション継承 / 反証 = sonnet。
-変えるときは `args.models` に `{"research": "sonnet", "webResearch": {"verify": "sonnet"}}` のように
-部分的に渡す。
+「起動前にモデルを聞く」の表のとおり。`args.models` には起動前の質問で既定から変えたノードだけを
+`{"research": "sonnet", "webResearch": {"verify": "sonnet"}}` のように部分的に渡す。
 
 `confirmed` に入れた軸は再オープンされない。2 周目以降は前回の `decisions.json` の `confirmed` と
 `open` をそのまま渡す。
