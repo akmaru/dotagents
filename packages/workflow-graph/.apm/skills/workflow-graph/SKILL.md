@@ -50,7 +50,7 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
     {"question": "外部ツール・技術の仕様や比較を確かめる小問", "kind": "web"}
   ],
   "optionResearch": true,
-  "maxDeepResearch": 2,
+  "maxDeepResearch": 0,
   "ledgerDir": "<絶対パス>",
   "maxRounds": 2
 }
@@ -62,8 +62,10 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 **調査の振り分け**: 小問は並列に調べる。`kind: "codebase"`（既定）は `researcher`、`kind: "web"` は
 同梱の `/deep-research`（Web 検索を角度ごとに並列 → 出典を照合 → 主張ごとに 3 票の反証投票）を
 `/deliberate` の中から呼び、結果を researcher と同じ報告形式に整形する。**deep-research は 1 回で
-最大 100 体近くのエージェントを回し数十分かかる**ので、`maxDeepResearch`（既定 2）を超えた分は
-researcher で代替される。
+100 体前後のエージェントを回し、実測で 1,000〜1,400 万トークン・数時間かかった**（2026-09-23 の追試）。
+既定の `maxDeepResearch` は 0 で、**人間が明示的に数を渡したときだけ**回る。超過分は researcher
+（WebSearch 可）で代替される。deep-research を回すときは PC をスリープさせない（合成段階が
+「computer went to sleep」で失敗し、`resumeFromRunId` でもキャッシュが当たらず全再実行になった）。
 
 **案ごとの調査**: designer は 1 周目に「案を比べるのに足りない事実」を `researchNeeded`（案 / 小問 / 種別）
 として返す。`optionResearch` が真なら同じ周で並列に調べ、designer が改訂してから critic に渡る。

@@ -24,7 +24,8 @@ export const meta = {
 //   researchQuestions: (string | {question, kind})[],
 //                            事前に埋める小問。kind は 'codebase'（既定。researcher）か 'web'（deep-research）
 //   optionResearch: boolean, designer が案ごとに求めた小問を同じ周で調べて改訂させる（既定 true）
-//   maxDeepResearch: number, 1 回の実行で deep-research を回す上限（既定 2。超過分は researcher で代替）
+//   maxDeepResearch: number, 1 回の実行で deep-research を回す上限（既定 0 = 明示したときだけ。
+//                            1 回で 100 体前後・1,000 万トークン級になり得るため。超過分は researcher で代替）
 //   ledgerDir: string,       報告と台帳の置き場（絶対パス）
 //   maxRounds: number,       design ⇄ critique の周回数の上限（既定 2。空転は別に検知する）
 // }
@@ -35,7 +36,7 @@ const task = args.task || 'task'
 const ledgerDir = args.ledgerDir
 const maxRounds = args.maxRounds || 2
 const optionResearch = args.optionResearch !== false
-let deepBudget = typeof args.maxDeepResearch === 'number' ? args.maxDeepResearch : 2
+let deepBudget = typeof args.maxDeepResearch === 'number' ? args.maxDeepResearch : 0
 const constraints = args.constraints || []
 const confirmed = args.confirmed || []
 const priorOpen = args.open || []

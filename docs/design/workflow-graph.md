@@ -247,6 +247,33 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
   リポジトリの整合性を検査する効果がある。
 - 閾値について: この題材では 1 周で critic が受け入れたので、`maxRounds` 2 / 空転 2 周の当否はまだ測れない。
 
+### 2026-09-23〜24: 同梱 `/deep-research` を 1 問で 2 回（research ノードの web 実装の検証）
+
+問い: AGENTS.md を読む主要ツールと、Claude 固有 frontmatter / @import の扱い（設計報告の前提 P3 の裏取り）。
+
+| 回 | エージェント | トークン | 時間 | 結果 |
+|---|---|---|---|---|
+| 1 | 103 | 約 1,391 万 | 6.9 h | 22 件確認 / 3 件却下。**合成が「computer went to sleep」で失敗** |
+| 2（`resumeFromRunId`） | 103 | 約 986 万 | 4.4 h | 24 件確認。合成が同じ理由で再失敗 |
+
+分かったこと:
+
+- **`args` は文字列の質問、戻りは `{summary, findings[], caveats, openQuestions[], refuted[], unverified[], sources[], stats}`**
+  （スクリプトは実行時にセッション配下へ永続化されるので読める）。`/deliberate` からの `workflow()` 呼び出しと
+  整形エージェントはこの形に合わせて実装した。
+- **コストが 2 桁違う。** `/deliberate` 1 周 39 万に対し deep-research は 1 回 1,000 万超。Scope 1 + Search 5 +
+  Fetch ≤15 + Verify ≤25×3 + Synthesize 1 の構造で、verify の各投票が WebSearch を回すため。
+  `maxDeepResearch` の既定を 0（明示したときだけ）に変えた。
+- **`resumeFromRunId` はキャッシュが当たらなかった。** 公式の「完了済みは保存結果を返す」は、プロンプトが
+  前回と同一の場合に限る。deep-research の URL 重複排除は検索エージェントの完了順で結果が変わるため、
+  Fetch 以降のプロンプトが変わって全再実行になった（推定）。長いワークフローの再開は前提にしない。
+- **PC のスリープで末尾の合成が落ちる。** 数時間かかるワークフローはスリープ抑止（`caffeinate`）が要る。
+  検証済みの主張は `journal.jsonl` と task output に残るので、合成だけ main が手で行い
+  `research-1.md` にまとめた。
+- 内容としては、agents.md の互換一覧に Claude Code が無いこと（3 票一致）、AGENTS.md 仕様に frontmatter /
+  @import が無いこと、Codex / Gemini CLI / Cursor / Copilot CLI の読み込み位置が一次情報で確認できた。
+  ADR 0001 見直しの decide に使える。
+
 ## 測り直し方
 
 本書の「根拠」節の数字は次で再現できる（`jq` が要る）。
