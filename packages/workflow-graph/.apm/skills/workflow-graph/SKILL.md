@@ -58,20 +58,23 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 ```
 
 **モデルはノードごとに呼び出し側で決まる**（役割ファイルに `model:` は書けない。ADR 0014）。既定は
-① research = opus / design・critique = セッション継承 / deep-research 結果の整形 = haiku、
+① research = opus / design・critique = セッション継承 / web-research = 全段階 opus / 結果の整形 = haiku、
 ② implement = sonnet / verify = sonnet、③ review = セッション継承 / 反証 = sonnet。
-変えるときは `args.models` に `{"research": "sonnet"}` のように部分的に渡す。
+変えるときは `args.models` に `{"research": "sonnet", "webResearch": {"verify": "sonnet"}}` のように
+部分的に渡す。
 
 `confirmed` に入れた軸は再オープンされない。2 周目以降は前回の `decisions.json` の `confirmed` と
 `open` をそのまま渡す。
 
 **調査の振り分け**: 小問は並列に調べる。`kind: "codebase"`（既定）は `researcher`、`kind: "web"` は
-同梱の `/deep-research`（Web 検索を角度ごとに並列 → 出典を照合 → 主張ごとに 3 票の反証投票）を
-`/deliberate` の中から呼び、結果を researcher と同じ報告形式に整形する。**deep-research は 1 回で
-100 体前後のエージェントを回し、実測で 1,000〜1,400 万トークン・数時間かかった**（2026-09-23 の追試）。
-既定の `maxDeepResearch` は 0 で、**人間が明示的に数を渡したときだけ**回る。超過分は researcher
-（WebSearch 可）で代替される。deep-research を回すときは PC をスリープさせない（合成段階が
-「computer went to sleep」で失敗し、`resumeFromRunId` でもキャッシュが当たらず全再実行になった）。
+`/web-research`（同梱 `/deep-research` の写しで、段階ごとにモデルを固定したもの。Web 検索を角度ごとに
+並列 → 出典を照合 → 主張ごとに 3 票の反証投票）を `/deliberate` の中から呼び、結果を researcher と同じ
+報告形式に整形する。**1 回で 100 体前後のエージェントを回し、実測で 1,000〜1,400 万トークン・数時間
+かかった**（2026-09-23 の追試、同梱版）。既定の `maxDeepResearch` は 0 で、**人間が明示的に数を渡した
+ときだけ**回る。超過分は researcher（WebSearch 可）で代替される。回すときは PC をスリープさせない
+（合成段階が「computer went to sleep」で失敗し、`resumeFromRunId` でもキャッシュが当たらず全再実行になった）。
+単独で使うなら `/web-research` に質問を渡す（`args` は文字列か `{question, models}`）。同梱の
+`/deep-research` はモデルを固定できないので使わない。
 
 **案ごとの調査**: designer は 1 周目に「案を比べるのに足りない事実」を `researchNeeded`（案 / 小問 / 種別）
 として返す。`optionResearch` が真なら同じ周で並列に調べ、designer が改訂してから critic に渡る。

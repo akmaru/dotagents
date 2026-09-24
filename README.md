@@ -48,7 +48,7 @@ user/
 ├── settings.json  # Claude Code settings
 ├── rules/         # Claude-only, path-scoped rules (recursive, paths: frontmatter)
 ├── agents/        # agent role definitions (researcher / designer / critic / verifier / reviewer), one file per role
-├── workflows/     # saved dynamic workflows, one per SCC (/deliberate, /build, /review)
+├── workflows/     # saved dynamic workflows: one per SCC (/deliberate, /build, /review) + /web-research (model-pinned copy of /deep-research)
 ├── bin/           # hook and status-line scripts (workflow-graph-*.sh, hindsight-retain-hook.sh, ...)
 └── install.sh     # symlinks the above into ~/.claude and ~/.config/opencode
 ```

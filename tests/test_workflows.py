@@ -19,16 +19,25 @@ ROOT = Path(__file__).parent.parent
 WORKFLOWS_DIR = ROOT / "user" / "workflows"
 AGENTS_DIR = ROOT / "user" / "agents"
 
-# SCC ごとに 1 本（docs/adr/0018 の ① deliberate / ② build / ③ review）
-EXPECTED = {"deliberate", "build", "review"}
+# SCC ごとに 1 本（docs/adr/0018 の ① deliberate / ② build / ③ review）と、
+# ① の research ノードが kind: 'web' で呼ぶ web-research（同梱 /deep-research の model 固定版）
+EXPECTED = {"deliberate", "build", "review", "web-research"}
 
 
 def _scripts():
     return sorted(WORKFLOWS_DIR.glob("*.js")) if WORKFLOWS_DIR.exists() else []
 
 
-def test_one_workflow_per_scc():
+def test_expected_workflows_exist():
     assert {p.stem for p in _scripts()} == EXPECTED
+
+
+def test_deliberate_calls_web_research_not_bundled_deep_research():
+    """同梱 /deep-research は model を渡せずセッションのモデルで 100 体前後が回る。
+    kind: 'web' の小問は model 固定版の web-research を呼ぶ。"""
+    text = (WORKFLOWS_DIR / "deliberate.js").read_text()
+    assert "workflow('web-research'" in text
+    assert "workflow('deep-research'" not in text
 
 
 @pytest.mark.parametrize("script", _scripts(), ids=lambda p: p.stem)
@@ -50,9 +59,11 @@ class TestWorkflowScript:
     def test_phase_titles_match_meta(self, script):
         text = script.read_text()
         meta_block = text.split("export const meta = {", 1)[1].split("\n}", 1)[0]
-        declared = set(re.findall(r"title:\s*'([^']+)'", meta_block))
-        used = set(re.findall(r"phase\('([^']+)'\)", text))
-        used |= set(re.findall(r"phase:\s*'([^']+)'", text))
+        # 同梱スクリプトの写し（web-research）は二重引用符なので、どちらの引用符も受ける
+        declared = set(re.findall(r"""title['"]?:\s*['"]([^'"]+)['"]""", meta_block))
+        used = set(re.findall(r"""phase\(['"]([^'"]+)['"]\)""", text))
+        used |= set(re.findall(r"""phase:\s*['"]([^'"]+)['"]""", text))
+        assert declared, "meta.phases が空か、引用符の形式が想定外"
         assert used == declared, f"meta.phases {declared} と phase() 呼び出し {used} を一致させる"
 
     def test_no_nondeterministic_calls(self, script):
@@ -66,7 +77,10 @@ class TestWorkflowScript:
         assert used <= defined, f"未定義の役割 {used - defined} を agentType に渡している"
 
     def test_uses_ledger_dir_arg(self, script):
-        # 台帳と報告の置き場は main が args.ledgerDir で渡す（docs/adr/0020）
+        # 台帳と報告の置き場は main が args.ledgerDir で渡す（docs/adr/0020）。
+        # web-research は deliberate から呼ばれる下請けで、報告は deliberate 側が ledgerDir に書く
+        if script.stem == "web-research":
+            pytest.skip("SCC のワークフローではない（deliberate の下請け）")
         assert "args.ledgerDir" in script.read_text()
 
     def test_every_agent_call_names_its_model(self, script):
@@ -101,7 +115,9 @@ def _agent_calls(text: str):
             elif c == ")":
                 depth -= 1
                 if depth == 0:
-                    calls.append(text[m.start():i + 1])
+                    call = text[m.start():i + 1]
+                    if call != "agent()":  # コメント中の「agent()」への言及は呼び出しではない
+                        calls.append(call)
                     break
             i += 1
     return calls

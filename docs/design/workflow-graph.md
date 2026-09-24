@@ -93,11 +93,13 @@
 | 種別 | 実装 | 向く問い |
 |---|---|---|
 | `codebase` | `researcher` 1 体（`agentType`） | このリポジトリ・ローカルの事実。ADR・テスト・特定ツールの仕様をバージョン固定で |
-| `web` | 同梱 `/deep-research` を `workflow()` で 1 段ネスト呼び出し → 結果を軽いエージェントが researcher の報告形式に整形 | 外部ツール・技術の仕様や比較。出典同士が食い違う問い |
+| `web` | `/web-research`（同梱 `/deep-research` の写し。段階ごとにモデル固定）を `workflow()` で 1 段ネスト呼び出し → 結果を軽いエージェントが researcher の報告形式に整形 | 外部ツール・技術の仕様や比較。出典同士が食い違う問い |
 
-deep-research は Scope → Search（5 角度並列）→ Fetch（最大 15 出典）→ Verify（主張ごと 3 票の反証）→
-Synthesize の 5 段で、1 回に最大 100 体近くを回す。`maxDeepResearch`（既定 2）で本数を抑え、超過分は
-researcher で代替する。
+web-research は Scope → Search（5 角度並列）→ Fetch（最大 15 出典）→ Verify（主張ごと 3 票の反証）→
+Synthesize の 5 段で、1 回に最大 100 体近くを回す。同梱の `/deep-research` は `agent()` に `model` を
+渡さないためセッションのモデルで全段階が動く。それだけを変えるために `user/workflows/web-research.js` に
+写しを置き、既定を全段階 opus にした（他は同梱版と同一に保ち、Claude Code 更新時に差分を追えるようにする）。
+`maxDeepResearch`（既定 0）で本数を抑え、超過分は researcher で代替する。
 
 小問は 2 経路で入る。(1) main が `args.researchQuestions` で事前に渡す、(2) designer が 1 周目に
 「案を比べるのに足りない事実」を `researchNeeded`（案 / 小問 / 種別）で返し、同じ周で並列に調べて
@@ -196,8 +198,9 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 | ノード | 実行主体 | モデル（既定） |
 |---|---|---|
 | intake / decide / record / human-op / human-review / merge / beads | メインセッション（skill の規約） | セッション |
-| research | `researcher`（`/deliberate` 内） | opus |
-| deep-research 結果の整形 | `/deliberate` 内の通常エージェント | haiku |
+| research（codebase） | `researcher`（`/deliberate` 内） | opus |
+| research（web） | `/web-research` の 5 段階（`/deliberate` から 1 段ネスト） | 全段階 opus |
+| web-research 結果の整形 | `/deliberate` 内の通常エージェント | haiku |
 | design / critique | `designer` / `critic`（`/deliberate` 内） | セッション継承 |
 | implement / fix | `/build` 内の通常エージェント（役割ファイル無し。この worktree で編集） | sonnet |
 | verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） | sonnet |
@@ -211,7 +214,8 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 ADR 0001 の見直しで外れる制約の 1 つ）。既定は各スクリプトの `MODELS` にあり、`args.models` で部分上書きできる。
 判断が結果を左右するノード（design / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
 1 件を判定するノードは sonnet、機械的な整形は haiku。同梱の `/deep-research` は `model` を渡していないため
-セッションのモデルで 100 体前後が回る（2026-09-23 の追試で全 206 体が Fable 5.1 だった）。
+セッションのモデルで 100 体前後が回る（2026-09-23 の追試で全 206 体が Fable 5.1 だった）。これが
+`/web-research` を写しとして持つ理由。
 
 `verifier` の Bash は検証コマンドの実行を許す（他の役割は読み取り専用）。役割の `disallowedTools` は
 Bash 経由の書き込みを防げないので、起動前後の `git status --short` の一致を報告させて検知する。

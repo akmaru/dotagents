@@ -7,7 +7,7 @@ export const meta = {
   description: 'SCC ①: research → design → critique を回し、人間が決められる状態（未確定行）を返す',
   whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須',
   phases: [
-    { title: 'Research', detail: '小問ごとに並列。codebase は researcher、web は deep-research（上限あり）' },
+    { title: 'Research', detail: '小問ごとに並列。codebase は researcher、web は web-research（上限あり）' },
     { title: 'Design', detail: 'designer が代替案・推奨・未決事項と、案ごとに足りない事実を出す' },
     { title: 'Critique', detail: 'critic が反対の立場で検証。致命的が残れば designer を呼び直す' },
   ],
@@ -22,13 +22,13 @@ export const meta = {
 //   open: [{axis, question, options}],             前回の未確定行（2 周目以降）
 //   reports: string[],       先行する報告の絶対パス
 //   researchQuestions: (string | {question, kind})[],
-//                            事前に埋める小問。kind は 'codebase'（既定。researcher）か 'web'（deep-research）
+//                            事前に埋める小問。kind は 'codebase'（既定。researcher）か 'web'（web-research）
 //   optionResearch: boolean, designer が案ごとに求めた小問を同じ周で調べて改訂させる（既定 true）
-//   maxDeepResearch: number, 1 回の実行で deep-research を回す上限（既定 0 = 明示したときだけ。
+//   maxDeepResearch: number, 1 回の実行で web-research を回す上限（既定 0 = 明示したときだけ。
 //                            1 回で 100 体前後・1,000 万トークン級になり得るため。超過分は researcher で代替）
 //   ledgerDir: string,       報告と台帳の置き場（絶対パス）
 //   maxRounds: number,       design ⇄ critique の周回数の上限（既定 2。空転は別に検知する）
-//   models: {research, design, critique, integrate},
+//   models: {research, design, critique, integrate, webResearch: {scope, search, fetch, verify, synthesize}},
 //                            ノードごとのモデル上書き。省略した項目は下の既定（undefined = セッション継承）
 // }
 // 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、
@@ -37,7 +37,8 @@ const MODELS = {
   research: 'opus',      // 事実集めだが一次情報の読み違えが決定を狂わせる
   design: undefined,     // 推論の質が結果を左右する。セッション継承
   critique: undefined,
-  integrate: 'haiku',    // deep-research 結果の機械的な整形
+  integrate: 'haiku',    // web-research 結果の機械的な整形
+  webResearch: undefined, // web-research 側の既定（全段階 opus）に任せる。{scope, search, fetch, verify, synthesize} で上書き
   ...(args && args.models ? args.models : {}),
 }
 if (!args || !args.goal || !args.ledgerDir) {
@@ -81,9 +82,10 @@ const REPORT_RULE = (path) => `報告の全文は Bash のヒアドキュメン�
 let researchSeq = 0
 const normalizeQuestion = (q) => (typeof q === 'string' ? { question: q, kind: 'codebase' } : { question: q.question, kind: q.kind === 'web' ? 'web' : 'codebase', option: q.option })
 
-// 1 小問を調べて RESEARCH_SCHEMA の形で返す。web は deep-research（同梱ワークフロー。args は文字列の質問、
-// 戻りは {summary, findings[], caveats, openQuestions[], sources[], stats}）を 1 段ネストで呼び、
-// 結果を軽いエージェントに報告ファイルへ書かせて形を揃える。使えなければ researcher に落とす。
+// 1 小問を調べて RESEARCH_SCHEMA の形で返す。web は web-research（同梱 deep-research の写し。段階ごとに
+// モデルを固定。args は {question, models}、戻りは {summary, findings[], caveats, openQuestions[],
+// refuted[], unverified[], sources[], stats}）を 1 段ネストで呼び、結果を軽いエージェントに報告ファイルへ
+// 書かせて形を揃える。使えなければ researcher に落とす。
 async function research(q) {
   const n = ++researchSeq
   const path = `${ledgerDir}/research-${n}.md`
@@ -97,9 +99,12 @@ async function research(q) {
       deepBudget--
       let dr = null
       try {
-        dr = await workflow('deep-research', `${q.question}\n\n（背景: ${args.goal}。一次情報を優先し、2026 年時点の状況を確かめる）`)
+        dr = await workflow('web-research', {
+          question: `${q.question}\n\n（背景: ${args.goal}。一次情報を優先し、2026 年時点の状況を確かめる）`,
+          models: MODELS.webResearch,
+        })
       } catch (e) {
-        log(`deep-research を呼べなかった（${e && e.message ? e.message : e}）。researcher で代替する`)
+        log(`web-research を呼べなかった（${e && e.message ? e.message : e}）。researcher で代替する`)
       }
       if (dr && !dr.error) {
         const summaryOf = JSON.stringify({
@@ -108,15 +113,15 @@ async function research(q) {
         }).slice(0, 24000)
         return agent(
           context +
-          `## deep-research の結果（Web 出典を照合・投票で検証済み。JSON）\n${summaryOf}\n\n` +
+          `## web-research の結果（Web 出典を照合・投票で検証済み。JSON）\n${summaryOf}\n\n` +
           `## 作業\n上の結果を、researcher の報告形式（結論の要約 / 事実の一覧（事実・出典 URL・確度: findings の confidence をそのまま）/ 判断に効く差分 / 未決事項）に整形する。` +
           `refuted と unverified は「却下された主張」「未検証の主張」として末尾に残す。openQuestions は未決事項に含める。事実を足したり削ったりしない。\n${REPORT_RULE(path)}`,
           { phase: 'Research', label, model: MODELS.integrate, effort: 'low', schema: RESEARCH_SCHEMA },
         )
       }
-      if (dr && dr.error) log(`deep-research がエラーを返した: ${dr.error}。researcher で代替する`)
+      if (dr && dr.error) log(`web-research がエラーを返した: ${dr.error}。researcher で代替する`)
     } else {
-      log(`deep-research の上限（maxDeepResearch）に達したので「${q.question.slice(0, 40)}…」は researcher で代替する`)
+      log(`web-research の上限（maxDeepResearch）に達したので「${q.question.slice(0, 40)}…」は researcher で代替する`)
     }
   }
   return agent(context + REPORT_RULE(path), { agentType: 'researcher', phase: 'Research', label, model: MODELS.research, schema: RESEARCH_SCHEMA })
