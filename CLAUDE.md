@@ -50,6 +50,7 @@ compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
 | スキル | 説明 |
 |--------|------|
 | [grill-me](packages/grill-me/.apm/skills/grill-me/SKILL.md) | プランや設計をリレントレスに質問して検証する |
+| [grill-with-docs](packages/grill-with-docs/.apm/skills/grill-with-docs/SKILL.md) | リポジトリの中でラウンド形式に問い詰めつつ、用語を `CONTEXT.md`、戻しにくい決定を ADR（MADR）にその場で書き残す |
 | [beads](packages/beads/.apm/skills/beads/SKILL.md) | タスクごとに beads issue を作成・更新・クローズするワークフロー |
 | [rust](packages/rust/.apm/skills/rust/SKILL.md) | rust-analyzer LSP を用いた Rust 開発ワークフロー |
 | [madr-writer](packages/madr-writer/.apm/skills/madr-writer/SKILL.md) | MADR 形式で ADR を作成・レビューするスキル |

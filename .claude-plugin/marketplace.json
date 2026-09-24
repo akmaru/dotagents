@@ -12,6 +12,12 @@
       "source": "./packages/grill-me"
     },
     {
+      "name": "grill-with-docs",
+      "description": "Interview the user relentlessly about a plan or design in a repo, writing resolved terms into CONTEXT.md and hard-to-reverse decisions into ADRs as you go.",
+      "version": "1.0.0",
+      "source": "./packages/grill-with-docs"
+    },
+    {
       "name": "beads",
       "description": "Beads issue tracking workflow for Claude Code. Always create a beads issue before starting any task, update it during work, and close it on completion.",
       "version": "1.0.0",
