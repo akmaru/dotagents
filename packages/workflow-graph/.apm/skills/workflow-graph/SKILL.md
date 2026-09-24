@@ -55,8 +55,11 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 
 ユーザーが「既定でいい」「聞かなくていい」と言ったら、その指示があったセッション中は聞かずに既定で回す。
 
-同じ指示は各ワークフローの `meta.whenToUse`（Claude がコマンドを呼ぶ前に読む説明）にも書いてあるので、
-この skill を読んでいないセッションが `/deliberate` 等を直接叩いても聞く。
+この skill をユーザーが先に叩く必要はない。プロンプトに `/deliberate` `/build` `/review` `/web-research` が
+含まれたターンに、`UserPromptSubmit` hook（`workflow-graph-state.sh`）がこの本文をそのまま注入する
+（セッションにつき 1 回）。同じ指示は各ワークフローの `meta.whenToUse` にもある。そして
+`PreToolUse` hook（`workflow-graph-guard.sh`）が、`args.models` の無い起動を拒否する。
+既定のまま回すときも `"models": {}` を渡す（聞いた証拠）。
 
 ## 1. ① deliberate
 
@@ -192,9 +195,13 @@ CI でしか走らない項目はここに入れず、③ の verify-CI に委�
 
 - `UserPromptSubmit`: 台帳があるタスクでは毎ターン `[workflow-graph] task=… scc=… 未確定 n / 未pass n / 未対応 n` を注入する。
   **この行を見て今どの SCC にいるかを判断する**。記憶に頼らない。
+- `UserPromptSubmit`: プロンプトにワークフローのコマンド名があるターンに、この skill の本文を注入する
+  （セッションにつき 1 回）。skill を叩き忘れても規約が載る。
+- `PreToolUse`（Workflow）: `/deliberate` `/build` `/review` `/web-research` を `args.models` 無しで起動
+  しようとしたら拒否する。同梱 `/deep-research` は `/web-research` に誘導して拒否する。
 - `PreToolUse`（Bash）: `gh pr create` は `verify.json` 全 pass、`gh pr merge` は `review.json` 未対応 0 を要求し、
   満たさなければ理由付きで拒否する。拒否されたら台帳を直すのが先で、hook を外す判断は人間がする。
-- 台帳ディレクトリが無い作業には一切干渉しない。グラフを使わない作業は普段どおりでよい。
+- 台帳ディレクトリが無い作業には Bash 側は一切干渉しない。グラフを使わない作業は普段どおりでよい。
 
 ## 5. やってはいけないこと
 

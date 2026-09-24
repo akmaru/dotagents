@@ -360,4 +360,4 @@ def test_workflow_graph_hooks_added_once_and_keep_existing(tmp_path):
         assert len(entries) == 1, f"{event} の {cmd} は 1 つだけ"
         assert (tmp_path / ".local" / "bin" / cmd).resolve() == (USER_DIR / "bin" / cmd).resolve()
     guard = _entries_with_command(merged, "PreToolUse", "workflow-graph-guard.sh")[0]
-    assert guard["matcher"] == "Bash", "guard は Bash の gh pr create/merge だけ見る"
+    assert guard["matcher"] == "Bash|Workflow", "guard は Bash の gh pr create/merge と、Workflow の起動を見る"

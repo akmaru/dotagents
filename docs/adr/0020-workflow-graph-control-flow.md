@@ -73,6 +73,11 @@ decision-makers: akmaru
   `gh pr create` を `verify.json` 全 pass まで、`gh pr merge` を `review.json` 未対応 0 まで拒否する。
 - **現在地は hook で注入**。`user/bin/workflow-graph-state.sh`（`UserPromptSubmit`）が
   `[workflow-graph] task=… scc=… 未確定 n / 未pass n / 未対応 n` を毎ターン 1 行注入する。
+- **規約も hook で注入し、起動条件も hook で守る**（2026-09-24 追記。ユーザー決定「skill を先に叩く前提は
+  嫌だ」）。同 hook がプロンプトにコマンド名を見つけたターンに skill 本文を注入し（セッションにつき 1 回）、
+  `workflow-graph-guard.sh` が `Workflow` ツールの起動を `args.models` の有無で拒否する。モデルは
+  ワークフロー実行中には選べないので、起動前に `AskUserQuestion` で聞き、答え（既定なら `{}`）を
+  `args.models` に渡すことを機械的に要求する。
 - **hook は台帳ディレクトリが無い作業に干渉しない**。台帳は `<作業ツリー>/.claude/workflow-graph/<task>/`
   （タスク = worktree と寿命を揃える。`.claude/` は gitignore 済み）。
 - **② ③ の実行主体**: `verifier`（新規役割。Bash で検証コマンドを実行できる。fail の原因を
@@ -113,10 +118,13 @@ implement ⇄ verify のループがスクリプトに閉じ、役割ファイ�
   `name` がファイル名と一致すること、`phase()` の題名が `meta.phases` と一致すること、
   `Date.now()` / `Math.random()` / `new Date()` / `import()` を使わないこと、`agentType` が
   `user/agents/` に実在する役割であること、`args.ledgerDir` を使うことを検証する。
-* `tests/test_workflow_graph_hooks.py`: 台帳が無ければ両 hook が黙ること、`workflow-graph-state.sh` が
-  SCC と件数を注入すること、`workflow-graph-guard.sh` が `gh pr create` を `verify.json` 未実行・fail で
-  拒否し全 pass で通すこと、`gh pr merge` を `review.json` 未実行・`open` 残で拒否し 0 で通すこと、
-  `deferred` / `rejected` を未対応に数えないこと、複数タスクでは最近更新されたものを見ることを検証する。
+* `tests/test_workflow_graph_hooks.py`: 台帳が無ければ両 hook の台帳部分が黙ること、`workflow-graph-state.sh` が
+  SCC と件数を注入すること、コマンド名を含むプロンプトで skill 本文をセッションにつき 1 回注入すること、
+  `workflow-graph-guard.sh` が `gh pr create` を `verify.json` 未実行・fail で拒否し全 pass で通すこと、
+  `gh pr merge` を `review.json` 未実行・`open` 残で拒否し 0 で通すこと、`deferred` / `rejected` を未対応に
+  数えないこと、複数タスクでは最近更新されたものを見ること、4 本のワークフローを `args.models` 無し
+  （`name` / `scriptPath` どちらの経路でも）で起動したら拒否し `{}` でも通すこと、同梱 `deep-research` を
+  拒否することを検証する。
 * `tests/test_install.py`: `test_workflow_is_linked_per_file` / `test_removes_dangling_dotagents_workflow_links_only`
   がワークフローのファイル単位 symlink を、`test_workflow_graph_hooks_added_once_and_keep_existing` が
   hook の登録が 1 回だけで既存エントリを残すことを、一時 HOME で検証する。
