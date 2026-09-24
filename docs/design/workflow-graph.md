@@ -171,8 +171,11 @@ daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に
 |---|---|---|---|
 | SCC 内（機械ノード間の周回） | スクリプト | 保存ワークフロー `/deliberate` `/build` `/review`。役割は `agent(..., {agentType})` で呼び、台帳の行は `schema` で JSON として返す | `user/workflows/*.js` → `~/.claude/workflows/`（ファイル単位 symlink） |
 | 人間ノードと SCC 間 | メインセッション | `workflow-graph` skill の規約に従い、`AskUserQuestion` で人間に聞き、戻り値を台帳に書く | `packages/workflow-graph/.apm/skills/workflow-graph/SKILL.md` |
-| 抜ける条件の強制 | hook | `PreToolUse`（Bash）: `gh pr create` は `verify.json` 全 pass、`gh pr merge` は `review.json` 未対応 0 を要求 | `user/bin/workflow-graph-guard.sh` |
-| 現在地の把握 | hook | `UserPromptSubmit`: 台帳の件数を毎ターン 1 行注入 | `user/bin/workflow-graph-state.sh` |
+| 抜ける条件・起動条件の強制 | hook | `PreToolUse`（Bash）: `gh pr create` は `verify.json` 全 pass、`gh pr merge` は `review.json` 未対応 0 を要求。（Workflow）: 4 本を `args.models` 無しで起動したら拒否、同梱 `/deep-research` は `/web-research` に誘導 | `user/bin/workflow-graph-guard.sh` |
+| 規約と現在地の注入 | hook | `UserPromptSubmit`: プロンプトにコマンド名があればセッションにつき 1 回 skill 本文を注入。台帳があれば件数を毎ターン 1 行注入 | `user/bin/workflow-graph-state.sh` |
+
+skill をユーザーが先に叩く前提は置かない（忘れる）。規約は hook が注入し、起動条件は hook が守る。
+`apm install workflow-graph` は「`/workflow-graph` と打って読み直せる」ためのもので、無くても回る。
 
 ワークフローは**実行中にユーザー入力を受けられない**（[公式](https://code.claude.com/docs/en/workflows#behavior-and-limits)）。
 この制約が人間ノードを SCC の硬い境界にする。1 周 = ワークフロー 1 回 → 人間の判断 → 次の周。

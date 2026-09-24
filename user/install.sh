@@ -60,8 +60,8 @@ jq --arg cmd "${CONTEXT_HOOK_CMD}" '
 ' "${SETTINGS}" > "${SETTINGS}.tmp"
 mv "${SETTINGS}.tmp" "${SETTINGS}"
 
-# ワークフローグラフの hook（docs/adr/0020）。現在地の注入（UserPromptSubmit）と
-# 抜ける条件の強制（PreToolUse, Bash）。どちらも他ツールが書き得る配列なので、
+# ワークフローグラフの hook（docs/adr/0020）。規約と現在地の注入（UserPromptSubmit）と、
+# 抜ける条件・起動条件の強制（PreToolUse, Bash と Workflow）。どちらも他ツールが書き得る配列なので、
 # SessionStart と同じく「無ければ末尾に足す」。
 ln -sfn "${USER_DIR}/bin/workflow-graph-state.sh" "${HOME}/.local/bin/workflow-graph-state.sh"
 ln -sfn "${USER_DIR}/bin/workflow-graph-guard.sh" "${HOME}/.local/bin/workflow-graph-guard.sh"
@@ -76,7 +76,7 @@ add_hook_once() {
   mv "${SETTINGS}.tmp" "${SETTINGS}"
 }
 add_hook_once "UserPromptSubmit" "*"    "workflow-graph-state.sh"
-add_hook_once "PreToolUse"       "Bash" "workflow-graph-guard.sh"
+add_hook_once "PreToolUse"       "Bash|Workflow" "workflow-graph-guard.sh"
 
 # --- workflows (~/.claude/workflows) ---
 # 保存ワークフロー（SCC ごとに 1 本、docs/adr/0020）をファイル単位で symlink する。
