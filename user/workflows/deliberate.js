@@ -28,7 +28,18 @@ export const meta = {
 //                            1 回で 100 体前後・1,000 万トークン級になり得るため。超過分は researcher で代替）
 //   ledgerDir: string,       報告と台帳の置き場（絶対パス）
 //   maxRounds: number,       design ⇄ critique の周回数の上限（既定 2。空転は別に検知する）
+//   models: {research, design, critique, integrate},
+//                            ノードごとのモデル上書き。省略した項目は下の既定（undefined = セッション継承）
 // }
+// 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、
+// モデルは呼び出しごとに指定する（優先度 1 位。docs/en/sub-agents「Choose a model」）
+const MODELS = {
+  research: 'opus',      // 事実集めだが一次情報の読み違えが決定を狂わせる
+  design: undefined,     // 推論の質が結果を左右する。セッション継承
+  critique: undefined,
+  integrate: 'haiku',    // deep-research 結果の機械的な整形
+  ...(args && args.models ? args.models : {}),
+}
 if (!args || !args.goal || !args.ledgerDir) {
   throw new Error('args.goal と args.ledgerDir は必須（docs/design/workflow-graph.md「/deliberate の入力」）')
 }
@@ -100,7 +111,7 @@ async function research(q) {
           `## deep-research の結果（Web 出典を照合・投票で検証済み。JSON）\n${summaryOf}\n\n` +
           `## 作業\n上の結果を、researcher の報告形式（結論の要約 / 事実の一覧（事実・出典 URL・確度: findings の confidence をそのまま）/ 判断に効く差分 / 未決事項）に整形する。` +
           `refuted と unverified は「却下された主張」「未検証の主張」として末尾に残す。openQuestions は未決事項に含める。事実を足したり削ったりしない。\n${REPORT_RULE(path)}`,
-          { phase: 'Research', label, effort: 'low', schema: RESEARCH_SCHEMA },
+          { phase: 'Research', label, model: MODELS.integrate, effort: 'low', schema: RESEARCH_SCHEMA },
         )
       }
       if (dr && dr.error) log(`deep-research がエラーを返した: ${dr.error}。researcher で代替する`)
@@ -108,7 +119,7 @@ async function research(q) {
       log(`deep-research の上限（maxDeepResearch）に達したので「${q.question.slice(0, 40)}…」は researcher で代替する`)
     }
   }
-  return agent(context + REPORT_RULE(path), { agentType: 'researcher', phase: 'Research', label, schema: RESEARCH_SCHEMA })
+  return agent(context + REPORT_RULE(path), { agentType: 'researcher', phase: 'Research', label, model: MODELS.research, schema: RESEARCH_SCHEMA })
 }
 
 async function researchAll(items, what) {
@@ -155,7 +166,7 @@ for (round = 1; round <= maxRounds; round++) {
     ? `\n\n## 前回の批評（必ず読み、致命的な指摘に答える）\n絶対パス: ${critique.reportPath}\n致命的: ${bullets(critique.fatal, f => f.title)}\n重要: ${bullets(critique.important, f => f.title)}`
     : ''
 
-  design = await agent(designPrompt(round, '', revision), { agentType: 'designer', phase: 'Design', label: `design:v${round}`, schema: DESIGN_SCHEMA })
+  design = await agent(designPrompt(round, '', revision), { agentType: 'designer', phase: 'Design', label: `design:v${round}`, model: MODELS.design, schema: DESIGN_SCHEMA })
   if (!design) { stoppedBecause = 'designer-failed'; break }
   reports.push(design.reportPath)
 
@@ -164,7 +175,7 @@ for (round = 1; round <= maxRounds; round++) {
     await researchAll(design.researchNeeded.map(normalizeQuestion), '案ごと')
     const revised = await agent(
       designPrompt(round, 'b', `\n\n## 改訂の指示\n第 ${round} 版（${design.reportPath}）を、案ごとの調査結果を反映して改訂する。案の追加・削除・推奨の変更があれば理由を書く。researchNeeded は空にする。`),
-      { agentType: 'designer', phase: 'Design', label: `design:v${round}b`, schema: DESIGN_SCHEMA },
+      { agentType: 'designer', phase: 'Design', label: `design:v${round}b`, model: MODELS.design, schema: DESIGN_SCHEMA },
     )
     if (revised) { design = revised; reports.push(design.reportPath) }
     else log('改訂版の designer が結果を返さなかった。第 1 版のまま批評に進む')
@@ -174,7 +185,7 @@ for (round = 1; round <= maxRounds; round++) {
     `批評対象: 設計報告（絶対パス: ${design.reportPath}）。目的は「${args.goal}」。\n\n## 確定済み事項（覆さない。食い違いは食い違いとして指摘する）\n${confirmedText}\n\n` +
     `## 設計報告が挙げた未決事項の軸名（同じ論点なら**この軸名をそのまま使う**。新しい論点だけ新しい軸名にする）\n${bullets(design.open, o => o.axis)}\n\n` +
     `## 参照できる先行報告\n${reportsText()}\n\n${REPORT_RULE(critiquePath)}`,
-    { agentType: 'critic', phase: 'Critique', label: `critique:v${round}`,
+    { agentType: 'critic', phase: 'Critique', label: `critique:v${round}`, model: MODELS.critique,
       schema: { type: 'object', required: ['fatal', 'important', 'minorCount', 'acceptableIf', 'open', 'reportPath'], properties: {
         fatal: { type: 'array', items: { type: 'object', required: ['title', 'summary'], properties: { title: { type: 'string' }, summary: { type: 'string' } } }, description: '採用を覆す指摘。無ければ空配列' },
         important: { type: 'array', items: { type: 'object', required: ['title', 'summary'], properties: { title: { type: 'string' }, summary: { type: 'string' } } } },

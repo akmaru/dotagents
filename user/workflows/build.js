@@ -21,7 +21,14 @@ export const meta = {
 //   prevCause: string|null,  前回の /build で最後に fail した原因（周を跨いだ同一原因の判定用）
 //   notes: string,           実装者への補足
 //   maxRounds: number,       backstop（既定 6）。離脱条件は回数ではなく再発
+//   models: {implement, verify}, ノードごとのモデル上書き（undefined = セッション継承）
 // }
+// 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、呼び出しごとに指定する
+const MODELS = {
+  implement: 'sonnet',   // 決定どおりに書く作業。判断は ① で済んでいる
+  verify: 'sonnet',      // コマンド実行と原因の分類
+  ...(args && args.models ? args.models : {}),
+}
 if (!args || !args.decision || !args.checks || !args.ledgerDir) {
   throw new Error('args.decision / args.checks / args.ledgerDir は必須（docs/design/workflow-graph.md「/build の入力」）')
 }
@@ -70,7 +77,7 @@ for (round = 1; round <= maxRounds; round++) {
     `\n## 通すべき検証項目\n${checksText}${prevText}\n\n` +
     `ルール: 要求された範囲だけを変える。認証・デプロイ・課金・対話が要る操作（特権操作）に当たったら実行せず、needsHumanOp にコマンドと理由を入れて止まる。` +
     `テストを追加・修正した場合はその理由を報告に書く。${REPORT_RULE(implPath)}`,
-    { phase: 'Implement', label: `implement:r${round}`,
+    { phase: 'Implement', label: `implement:r${round}`, model: MODELS.implement,
       schema: { type: 'object', required: ['summary', 'filesChanged', 'needsHumanOp', 'reportPath'], properties: {
         summary: { type: 'string', description: '何をどう変えたか 3〜5 行' },
         filesChanged: { type: 'array', items: { type: 'string' } },
@@ -88,7 +95,7 @@ for (round = 1; round <= maxRounds; round++) {
     `検証項目を実行し、結果と原因を報告する。\n\n## 検証項目\n${checksText}\n\n` +
     `## 直前の実装の要約\n${impl.summary}\n変更ファイル: ${impl.filesChanged.join(', ') || '（報告なし）'}\n\n` +
     `## 前回の失敗原因（同じ原因かどうかを必ず判定する）\n${lastCause || '（なし）'}\n\n${REPORT_RULE(verifyPath)}`,
-    { agentType: 'verifier', phase: 'Verify', label: `verify:r${round}`,
+    { agentType: 'verifier', phase: 'Verify', label: `verify:r${round}`, model: MODELS.verify,
       schema: { type: 'object', required: ['items', 'escape', 'humanOp', 'treeChanged', 'reportPath'], properties: {
         items: { type: 'array', items: VERIFY_ITEM },
         escape: { type: 'string', enum: ['continue', 'deliberate'], description: '離脱の推奨' },

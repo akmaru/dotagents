@@ -52,9 +52,15 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
   "optionResearch": true,
   "maxDeepResearch": 0,
   "ledgerDir": "<絶対パス>",
-  "maxRounds": 2
+  "maxRounds": 2,
+  "models": {}
 }
 ```
+
+**モデルはノードごとに呼び出し側で決まる**（役割ファイルに `model:` は書けない。ADR 0014）。既定は
+① research = opus / design・critique = セッション継承 / deep-research 結果の整形 = haiku、
+② implement = sonnet / verify = sonnet、③ review = セッション継承 / 反証 = sonnet。
+変えるときは `args.models` に `{"research": "sonnet"}` のように部分的に渡す。
 
 `confirmed` に入れた軸は再オープンされない。2 周目以降は前回の `decisions.json` の `confirmed` と
 `open` をそのまま渡す。
@@ -99,7 +105,8 @@ Decision Outcome、`options` が Considered Options になる）→ ②へ。
   "ledgerDir": "<絶対パス>",
   "prevCause": null,
   "notes": "実装者への補足",
-  "maxRounds": 6
+  "maxRounds": 6,
+  "models": {}
 }
 ```
 
@@ -132,7 +139,8 @@ CI でしか走らない項目はここに入れず、③ の verify-CI に委�
   "confirmed": [ "decisions.json の confirmed" ],
   "adrPath": "<ADR の絶対パス>",
   "ledgerDir": "<絶対パス>",
-  "verifyFindings": true
+  "verifyFindings": true,
+  "models": {}
 }
 ```
 

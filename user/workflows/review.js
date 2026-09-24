@@ -20,7 +20,14 @@ export const meta = {
 //   adrPath: string|null,
 //   ledgerDir: string,
 //   verifyFindings: boolean, 反証検証を行うか（既定 true）
+//   models: {review, refute}, ノードごとのモデル上書き（undefined = セッション継承）
 // }
+// 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、呼び出しごとに指定する
+const MODELS = {
+  review: undefined,     // 差分全体と決定を突き合わせる。セッション継承
+  refute: 'sonnet',      // 1 件の指摘を該当箇所で真偽判定する局所作業
+  ...(args && args.models ? args.models : {}),
+}
 if (!args || !args.range || !args.ledgerDir) {
   throw new Error('args.range / args.ledgerDir は必須（docs/design/workflow-graph.md「/review の入力」）')
 }
@@ -53,7 +60,7 @@ const review = await agent(
   `${args.description ? `\n## PR / MR の説明\n${args.description}\n` : ''}` +
   `\n## 決定（差分が守るべきもの）\n${confirmedText}\n${args.adrPath ? `ADR: ${args.adrPath}\n` : ''}` +
   `\n${REPORT_RULE(reviewPath)}`,
-  { agentType: 'reviewer', phase: 'Review', label: 'review:v1',
+  { agentType: 'reviewer', phase: 'Review', label: 'review:v1', model: MODELS.review,
     schema: { type: 'object', required: ['summary', 'consistency', 'items', 'testsAssessment', 'mergeOpinion', 'reportPath'], properties: {
       summary: { type: 'string' },
       consistency: { type: 'array', items: { type: 'string' }, description: '実装されていない決定 / 反する実装 / スコープ外' },
@@ -76,7 +83,7 @@ if (verifyFindings && toVerify.length) {
     agent(
       `次のレビュー指摘を反証せよ。差分の範囲は \`${args.range}\`。該当箇所を実際に読み、指摘が「起きない」「既に対処されている」「差分の外の話」なら refuted=true。` +
       `迷う場合は refuted=false（人間に見せる側に倒す）。\n\n指摘: ${f.file}:${f.line} [${f.severity}] ${f.what}\n提案された直し方: ${f.fix}`,
-      { phase: 'Verify', label: `verify:${i + 1}`,
+      { phase: 'Verify', label: `verify:${i + 1}`, model: MODELS.refute,
         schema: { type: 'object', required: ['refuted', 'reason'], properties: { refuted: { type: 'boolean' }, reason: { type: 'string' } } } },
     ).then(v => ({ f, v })),
   )

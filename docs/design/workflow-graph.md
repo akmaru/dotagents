@@ -193,14 +193,25 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 
 ## 役割と実行主体の対応
 
-| ノード | 実行主体 |
-|---|---|
-| intake / decide / record / human-op / human-review / merge / beads | メインセッション（skill の規約） |
-| research / design / critique | `researcher` / `designer` / `critic`（`/deliberate` 内） |
-| implement / fix | `/build` 内の通常エージェント（役割ファイル無し。この worktree で編集） |
-| verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） |
-| 差分の提示 | `reviewer`（`/review` 内） |
-| explainer | 常駐セッション（未実装。[ADR 0016](../adr/0016-explainer-pane-transcript-digest.md)） |
+| ノード | 実行主体 | モデル（既定） |
+|---|---|---|
+| intake / decide / record / human-op / human-review / merge / beads | メインセッション（skill の規約） | セッション |
+| research | `researcher`（`/deliberate` 内） | opus |
+| deep-research 結果の整形 | `/deliberate` 内の通常エージェント | haiku |
+| design / critique | `designer` / `critic`（`/deliberate` 内） | セッション継承 |
+| implement / fix | `/build` 内の通常エージェント（役割ファイル無し。この worktree で編集） | sonnet |
+| verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） | sonnet |
+| 差分の提示 | `reviewer`（`/review` 内） | セッション継承 |
+| 指摘の反証 | `/review` 内の通常エージェント（指摘 1 件につき 1 体） | sonnet |
+| explainer | 常駐セッション（未実装。[ADR 0016](../adr/0016-explainer-pane-transcript-digest.md)） | — |
+
+モデルは**呼び出しごと**に `agent(..., {model})` で指定する（優先度 1 位。
+[Choose a model](https://code.claude.com/docs/en/sub-agents#choose-a-model)）。役割ファイルの `model:` は
+`tests/test_user_config.py` が禁止しているため使えない（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)。
+ADR 0001 の見直しで外れる制約の 1 つ）。既定は各スクリプトの `MODELS` にあり、`args.models` で部分上書きできる。
+判断が結果を左右するノード（design / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
+1 件を判定するノードは sonnet、機械的な整形は haiku。同梱の `/deep-research` は `model` を渡していないため
+セッションのモデルで 100 体前後が回る（2026-09-23 の追試で全 206 体が Fable 5.1 だった）。
 
 `verifier` の Bash は検証コマンドの実行を許す（他の役割は読み取り専用）。役割の `disallowedTools` は
 Bash 経由の書き込みを防げないので、起動前後の `git status --short` の一致を報告させて検知する。

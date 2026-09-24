@@ -68,3 +68,40 @@ class TestWorkflowScript:
     def test_uses_ledger_dir_arg(self, script):
         # 台帳と報告の置き場は main が args.ledgerDir で渡す（docs/adr/0020）
         assert "args.ledgerDir" in script.read_text()
+
+    def test_every_agent_call_names_its_model(self, script):
+        """役割ファイルの model: は書けない（tests/test_user_config.py が禁止）ので、ノードごとの
+        モデルは呼び出しごとに指定する。指定が無い agent() はセッションのモデルに落ち、
+        機械的な段階まで最上位モデルで回る（deep-research の追試で 1 回 1,000 万トークン）。"""
+        text = script.read_text()
+        assert re.search(r"^const MODELS = \{", text, re.M), "MODELS（既定 + args.models で上書き）が要る"
+        assert "args.models" in text
+        calls = _agent_calls(text)
+        assert calls, "agent() の呼び出しが見つからない"
+        for call in calls:
+            assert "model: MODELS." in call, f"agent() の引数に model が無い: {call[:100]!r}"
+
+
+def _agent_calls(text: str):
+    """`agent(` から対応する `)` までを括弧の対応で切り出す（文字列内の括弧は数えない）。"""
+    calls = []
+    for m in re.finditer(r"\bagent\(", text):
+        depth, i, quote = 0, m.start(), None
+        while i < len(text):
+            c = text[i]
+            if quote:
+                if c == "\\":
+                    i += 1
+                elif c == quote:
+                    quote = None
+            elif c in "'\"`":
+                quote = c
+            elif c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    calls.append(text[m.start():i + 1])
+                    break
+            i += 1
+    return calls
