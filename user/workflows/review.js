@@ -4,7 +4,7 @@
 export const meta = {
   name: 'review',
   description: 'SCC ③: reviewer が差分を読み、指摘を反証検証で絞ってから人間レビュー用の一覧を返す',
-  whenToUse: 'PR を出した後の人間レビューの前、または他人の MR / PR のレビューを頼まれたとき。args に range / ledgerDir が必須',
+  whenToUse: 'PR を出した後の人間レビューの前、または他人の MR / PR のレビューを頼まれたとき。args に range / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: review（既定は継承）/ refute（sonnet）。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
   phases: [
     { title: 'Review', detail: 'reviewer が決定との整合・正しさ・テストの観点で読む' },
     { title: 'Verify', detail: '止める / 直す の指摘を 1 件ずつ反証し、残ったものだけ返す' },

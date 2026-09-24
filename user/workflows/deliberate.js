@@ -5,7 +5,7 @@
 export const meta = {
   name: 'deliberate',
   description: 'SCC ①: research → design → critique を回し、人間が決められる状態（未確定行）を返す',
-  whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須',
+  whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: research（既定 opus）/ design（継承）/ critique（継承）/ integrate（haiku）、kind: web の小問があれば webResearch（全段階 opus）と「回してよいか」。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
   phases: [
     { title: 'Research', detail: '小問ごとに並列。codebase は researcher、web は web-research（上限あり）' },
     { title: 'Design', detail: 'designer が代替案・推奨・未決事項と、案ごとに足りない事実を出す' },

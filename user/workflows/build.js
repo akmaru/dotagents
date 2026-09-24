@@ -4,7 +4,7 @@
 export const meta = {
   name: 'build',
   description: 'SCC ②: implement → verify を、全 pass か「同一原因 2 回 / ベンチ未達」の離脱まで回す',
-  whenToUse: '決定（ADR）が出た後、この worktree で実装と検証を回すとき。args に decision / checks / ledgerDir が必須',
+  whenToUse: '決定（ADR）が出た後、この worktree で実装と検証を回すとき。args に decision / checks / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: implement（既定 sonnet）/ verify（sonnet）。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
   phases: [
     { title: 'Implement', detail: 'この worktree で決定どおりに実装する（commit はしない）' },
     { title: 'Verify', detail: 'verifier が検証項目を実行し、fail の原因を実装 / 設計の前提で分類する' },

@@ -56,6 +56,15 @@ class TestWorkflowScript:
     def test_meta_has_description(self, script):
         assert re.search(r"^\s*description:\s*'[^']+'", script.read_text(), re.M)
 
+    def test_when_to_use_tells_claude_to_ask_models_before_launch(self, script):
+        """ワークフローは実行中に人間に聞けないので、モデルの選択は起動前にしかできない。
+        skill を読んでいないセッションが /<name> を直接叩いても聞くように、指示は各コマンドの
+        meta.whenToUse（Claude が呼ぶ前に読む説明）に持たせる（ユーザー決定 2026-09-24）。"""
+        m = re.search(r"^\s*whenToUse:\s*'([^']+)'", script.read_text(), re.M)
+        assert m, "meta.whenToUse が要る"
+        assert "AskUserQuestion" in m.group(1)
+        assert "args.models" in m.group(1)
+
     def test_phase_titles_match_meta(self, script):
         text = script.read_text()
         meta_block = text.split("export const meta = {", 1)[1].split("\n}", 1)[0]
