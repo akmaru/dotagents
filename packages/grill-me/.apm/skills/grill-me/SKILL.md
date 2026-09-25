@@ -1,7 +1,7 @@
 ---
 name: grill-me
 description: 計画や設計について、決定木の各分岐を解消しながら共通理解に至るまで、ユーザーをリレントレスに問い詰める。計画をストレステストしたいとき、設計を厳しく問い詰めてほしいとき、または「grill me」と言われたときに使う。
-compatibility: Designed for Claude Code and OpenCode
+compatibility: Designed for Claude Code
 ---
 
 AskUserQuestion ツールを使い、1 問ずつ焦点を絞った質問で、ユーザーの計画や設計をインタビューする。

@@ -1,7 +1,7 @@
 ---
 name: grill-with-docs
 description: リポジトリの中で計画や設計を、設計木の分岐が尽きるまでラウンド形式（1 ラウンドに複数問 + 推奨回答）で問い詰め、決まった用語をその場で CONTEXT.md に、戻しにくい決定を ADR（MADR 形式）に書き残す。変更の計画がまだ曖昧なとき、用語が定まっていないとき、ドキュメントの無いリポジトリに用語集と ADR を起こしたいとき、「grill with docs」と言われたときに使う。コードの無い話題の問い詰めは grill-me。
-compatibility: Designed for Claude Code and OpenCode
+compatibility: Designed for Claude Code
 ---
 
 ユーザーの計画・設計を、共通理解に至るまでリレントレスにインタビューする。`grill-me` と違い、このスキルは

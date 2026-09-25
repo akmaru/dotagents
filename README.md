@@ -38,7 +38,7 @@ apm install grill-me@dotagents
 
 ## User-level agent config (`user/`)
 
-`user/` holds personal user-scope config shared across agents (Claude Code / OpenCode). It is **not** an
+`user/` holds personal user-scope config for Claude Code. It is **not** an
 APM package and is not listed in the marketplace — it is distributed by native symlink instead of `apm compile`
 (see [docs/adr/0004](docs/adr/0004-user-config-distribution-symlink-import.md)).
 
@@ -51,7 +51,7 @@ user/
 ├── agents/        # agent role definitions (researcher / designer / critic / verifier / reviewer), one file per role
 ├── workflows/     # saved dynamic workflows: one per SCC (/deliberate, /build, /review) + /web-research (model-pinned copy of /deep-research)
 ├── bin/           # hook and status-line scripts (workflow-graph-*.sh, hindsight-retain-hook.sh, ...)
-└── install.sh     # symlinks the above into ~/.claude and ~/.config/opencode
+└── install.sh     # symlinks the above into ~/.claude
 ```
 
 ## Setup (`install.sh`, `mcp/`, `hindsight/`)
@@ -73,12 +73,10 @@ exercise them against a throwaway HOME).
 `hindsight/compose`); the client only needs the API key registered locally (Keychain / libsecret / file — the
 script prints the options and skips itself when the key is missing, so the rest of the install still completes).
 
-- `AGENTS.md` is the single source of truth. `CLAUDE.md` imports it so Claude and OpenCode read the same
-  content without duplication ([docs/adr/0005](docs/adr/0005-agents-md-canonical.md)).
-- `paths:`-scoped rules are Claude-only; OpenCode has no equivalent mechanism
-  ([docs/adr/0006](docs/adr/0006-file-scoped-rules-claude-only.md)).
-- `agents/*.md` are role definitions the main session delegates to (sub-agents). One file serves both
-  Claude Code (`disallowedTools`) and OpenCode (`permission`); they are symlinked per file into
+- `AGENTS.md` is the single source of truth. `CLAUDE.md` imports it without duplication
+  ([docs/adr/0005](docs/adr/0005-agents-md-canonical.md)).
+- `agents/*.md` are role definitions the main session delegates to (sub-agents), gated by
+  `disallowedTools`; they are symlinked per file into
   `~/.claude/agents/` ([docs/adr/0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)). Generic
   names such as `critic` can be shadowed by a project's own `.claude/agents/`. The `explainer` role runs as a
   persistent session in a herdr pane ([docs/design/explainer-pane.md](docs/design/explainer-pane.md)).
