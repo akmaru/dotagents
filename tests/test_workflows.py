@@ -105,6 +105,28 @@ class TestWorkflowScript:
             assert "model: MODELS." in call, f"agent() の引数に model が無い: {call[:100]!r}"
 
 
+@pytest.mark.parametrize("script", _scripts(), ids=lambda p: p.stem)
+def test_role_backed_calls_take_their_default_model_from_the_role_file(script):
+    """役割（agentType）で動くノードの既定モデルは user/agents/<role>.md の model: が決める
+    （docs/adr/0021 で可能になった）。スクリプトの MODELS 既定は undefined にして、args.models で
+    上書きされたときだけ呼び出しごとの指定（優先度 1 位）が frontmatter を上書きする。
+    役割ファイルの無いノード（implement / integrate / refute 等）だけがスクリプトに既定を持つ。"""
+    text = script.read_text()
+    m = re.search(r"^const MODELS = \{(.*?)^\}", text, re.M | re.S)
+    if not m:
+        pytest.skip("MODELS を持たない")
+    defaults = dict(re.findall(r"^\s*(\w+):\s*([^,]+),", m.group(1), re.M))
+    for call in _agent_calls(text):
+        role = re.search(r"agentType:\s*'([^']+)'", call)
+        key = re.search(r"model:\s*MODELS\.(\w+)", call)
+        if not role or not key:
+            continue
+        assert defaults.get(key.group(1), "").strip() == "undefined", (
+            f"{script.stem}: 役割 {role.group(1)} のノードは MODELS.{key.group(1)} を undefined にし、"
+            f"既定は user/agents/{role.group(1)}.md の model: に置く"
+        )
+
+
 def _agent_calls(text: str):
     """`agent(` から対応する `)` までを括弧の対応で切り出す（文字列内の括弧は数えない）。"""
     calls = []

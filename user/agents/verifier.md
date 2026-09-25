@@ -1,6 +1,7 @@
 ---
 name: verifier
 description: 検証担当。渡された検証項目（テスト・ビルド・ベンチマーク・起動確認）を実行し、項目ごとに pass / fail と失敗原因を報告する。fail の原因が「実装の問題」か「設計の前提の問題」かを分類し、build ループを続けるべきか deliberate に戻すべきかの材料を返す。実装の直後に結果を確かめたいとき、CI が落ちた原因を切り分けたいときに使う。修正は行わない。設計の是非も判断しない。
+model: sonnet
 disallowedTools:
   - Edit
   - Write

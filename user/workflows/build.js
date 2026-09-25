@@ -4,7 +4,7 @@
 export const meta = {
   name: 'build',
   description: 'SCC ②: implement → verify を、全 pass か「同一原因 2 回 / ベンチ未達」の離脱まで回す',
-  whenToUse: '決定（ADR）が出た後、この worktree で実装と検証を回すとき。args に decision / checks / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: implement（既定 sonnet）/ verify（sonnet）。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
+  whenToUse: '決定（ADR）が出た後、この worktree で実装と検証を回すとき。args に decision / checks / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: implement（既定 sonnet）/ verify（既定 sonnet、verifier.md の model:）。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
   phases: [
     { title: 'Implement', detail: 'この worktree で決定どおりに実装する（commit はしない）' },
     { title: 'Verify', detail: 'verifier が検証項目を実行し、fail の原因を実装 / 設計の前提で分類する' },
@@ -24,9 +24,11 @@ export const meta = {
 //   models: {implement, verify}, ノードごとのモデル上書き（undefined = セッション継承）
 // }
 // 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、呼び出しごとに指定する
+// verify は役割（verifier.md の model: = sonnet）が既定を持つので undefined。implement は役割ファイルが
+// 無いのでここが既定
 const MODELS = {
   implement: 'sonnet',   // 決定どおりに書く作業。判断は ① で済んでいる
-  verify: 'sonnet',      // コマンド実行と原因の分類
+  verify: undefined,
   ...(args && args.models ? args.models : {}),
 }
 if (!args || !args.decision || !args.checks || !args.ledgerDir) {

@@ -181,6 +181,17 @@ class TestAgentDefinition:
             f"{agent_file.name} に permissionMode を書かない"
         )
 
+    def test_model_when_set_is_a_known_value(self, agent_file):
+        """役割の既定モデルは役割ファイルの model: で決める（docs/adr/0021 で可能になった）。
+        値は sub-agents docs の alias（opus / sonnet / haiku / fable）、inherit、またはフル ID。
+        タイポは Claude が無言で無視して session のモデルに落ちるので、ここで止める。"""
+        model = _agent_frontmatter(agent_file).get("model")
+        if model is None:
+            return  # 未指定 = セッション継承
+        assert model in {"opus", "sonnet", "haiku", "fable", "inherit"} or model.startswith("claude-"), (
+            f"{agent_file.name} の model '{model}' は alias / inherit / フル ID のどれでもない"
+        )
+
     def test_body_ends_with_open_questions(self, agent_file):
         body = _agent_body(agent_file)
         assert body.strip(), f"{agent_file.name} の本文が空"
