@@ -22,7 +22,7 @@ decision-makers: akmaru
 ユーザーは 2026-09-23 に「Claude Code を前提にしてよい。OpenCode は当面考えない」と決めた。
 決めるべきは、4 箇所のどれを畳み、どれを残し、どの順で畳むかである。
 
-この決定は `/deliberate`（[ADR 0020](0020-workflow-graph-control-flow.md)）を 1 周回して得た。
+この決定は `/design`（[ADR 0020](0020-workflow-graph-control-flow.md)）を 1 周回して得た。
 designer の設計報告、critic の批評、`/web-research` による一次情報の裏取り（agents.md の互換一覧に
 Claude Code は載っていない、AGENTS.md 仕様に frontmatter / @import は無い）を台帳に持つ。
 

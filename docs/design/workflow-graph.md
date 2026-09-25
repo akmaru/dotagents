@@ -46,7 +46,7 @@
 ## 全体像
 
 ```
-要望 ─▶ intake ─┬─(調査・設計が要る)─▶ ① deliberate ─(未確定 0)─▶ record/ADR ─┐
+要望 ─▶ intake ─┬─(調査・設計が要る)─▶ ① design ─(未確定 0)─▶ record/ADR ─┐
                 └─(自明・定型)──────────────────────────────────────────────┐ │
                                                                            ▼ ▼
 他人の MR/PR ───────────────────────────┐                            ② build
@@ -64,29 +64,29 @@
 
 どれも「機械が回る複数ノード + **人間が判断する 1 ノード** + 台帳 1 枚 + 離脱条件」。
 
-| | ① deliberate | ② build | ③ review |
+| | ① design | ② build | ③ review |
 |---|---|---|---|
 | 人間ノード | `decide` | `human-op` | `human-review` |
-| 機械ノード | `research` / `design` / `critique` | `implement` / `verify-local` | `verify-CI` / `差分の提示` / `fix` |
+| 機械ノード | `research` / `propose` / `critique` | `implement` / `verify-local` | `verify-CI` / `差分の提示` / `fix` |
 | 台帳 | `decisions.json` | `verify.json` | `review.json` |
 | 台帳の行 | `confirmed` / `open`（軸 / 質問 / 選択肢） | `items`（項目 / 種別 / pass・fail / 原因 / 層） | `items`（指摘 / file:line / open・fixed・deferred・rejected） |
-| 回すもの | `/deliberate` | `/build` | `/review` |
+| 回すもの | `/design` | `/build` | `/review` |
 | 抜ける条件 | `open` が 0 | 全項目 pass（`gh pr create` を hook が守る） | `open` が 0（`gh pr merge` を hook が守る） |
 | 離脱の判定 | **同じ軸の再訪**: 確定も新軸も増えない周が 2 回続いたら人間に確認 | **同一原因の再発**: 同じ項目が同じ原因で 2 回 fail → ① へ。ベンチ未達は 1 回目で ① へ | **層の不一致**: 指摘が実装でなく設計に及ぶ → ① へ |
 
-### ① deliberate
+### ① design
 
-`research → design → critique → decide` と、`decide` からの 2 本の戻り。
+`research → propose → critique → decide` と、`decide` からの 2 本の戻り。
 
 | 戻りエッジ | 引き金の例 | 委譲の扱い |
 |---|---|---|
 | `decide → research` | 「案 2 のヘルプはどういう意味なの？」「daemon はログオフでは止まらないよね？」 | 同じ researcher を `SendMessage` で**再開**（追補） |
-| `decide → design` | 「AWS 常にホストする案はどうだろう？」「ID 連携を使えば API キー不要と言われた」 | designer を**呼び直す**（改訂。軸が増えた = 別版） |
+| `decide → propose` | 「AWS 常にホストする案はどうだろう？」「ID 連携を使えば API キー不要と言われた」 | designer を**呼び直す**（改訂。軸が増えた = 別版） |
 | `decide → decide` | 「まず永続化は API のみは決定。永続化については少し掘り下げたい」 | 委譲なし。台帳を部分確定に更新するだけ |
 
 役割の報告は**末尾が必ず「未決事項（質問 + 選択肢 2〜4 個）」**で終わる（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)）。
 これが `decisions.json` の `open` 行にそのまま対応するので、台帳の書式を別に定義する必要はない。
-`/deliberate` は designer / critic の未決事項を `schema` で JSON として受け取り、`open` に併合して返す。
+`/design` は designer / critic の未決事項を `schema` で JSON として受け取り、`open` に併合して返す。
 
 **research ノードの実装は小問の種別で分かれる。**
 
@@ -155,7 +155,7 @@ daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に
 
 | 層 | 置き場所 | 寿命 |
 |---|---|---|
-| 台帳と報告 | `<作業ツリー>/.claude/workflow-graph/<task>/`（`*.json` と `research-N.md` / `design-vN.md` / `critique-vN.md` / `implement-rN.md` / `verify-rN.md` / `review-v1.md`） | タスク = worktree。セッションを跨いで残り、worktree と一緒に消える。`.claude/` は gitignore 済み |
+| 台帳と報告 | `<作業ツリー>/.claude/workflow-graph/<task>/`（`*.json` と `research-N.md` / `propose-vN.md` / `critique-vN.md` / `implement-rN.md` / `verify-rN.md` / `review-v1.md`） | タスク = worktree。セッションを跨いで残り、worktree と一緒に消える。`.claude/` は gitignore 済み |
 | 決定 | `docs/adr/NNNN-*.md` | 永続。`record` ノードの出力 |
 | タスク | beads（`.beads/`） | 永続。棚上げで増える |
 | 学び | Hindsight | 永続。`SessionEnd` hook が自動投入（[ADR 0017](../adr/0017-session-end-retain-hook.md)） |
@@ -169,7 +169,7 @@ daemon 起動、ブラウザ確認）。結果を貼り戻して `implement` に
 
 | 遷移 | 制御の主体 | 機構 | 置き場 |
 |---|---|---|---|
-| SCC 内（機械ノード間の周回） | スクリプト | 保存ワークフロー `/deliberate` `/build` `/review`。役割は `agent(..., {agentType})` で呼び、台帳の行は `schema` で JSON として返す | `user/workflows/*.js` → `~/.claude/workflows/`（ファイル単位 symlink） |
+| SCC 内（機械ノード間の周回） | スクリプト | 保存ワークフロー `/design` `/build` `/review`。役割は `agent(..., {agentType})` で呼び、台帳の行は `schema` で JSON として返す | `user/workflows/*.js` → `~/.claude/workflows/`（ファイル単位 symlink） |
 | 人間ノードと SCC 間 | メインセッション | `workflow-graph` skill の規約に従い、`AskUserQuestion` で人間に聞き、戻り値を台帳に書く | `packages/workflow-graph/.apm/skills/workflow-graph/SKILL.md` |
 | 抜ける条件・起動条件の強制 | hook | `PreToolUse`（Bash）: `gh pr create` は `verify.json` 全 pass、`gh pr merge` は `review.json` 未対応 0 を要求。（Workflow）: 4 本を `args.models` 無しで起動したら拒否、同梱 `/deep-research` は `/web-research` に誘導 | `user/bin/workflow-graph-guard.sh` |
 | 規約と現在地の注入 | hook | `UserPromptSubmit`: プロンプトにコマンド名があればセッションにつき 1 回 skill 本文を注入。台帳があれば件数を毎ターン 1 行注入 | `user/bin/workflow-graph-state.sh` |
@@ -179,7 +179,7 @@ skill をユーザーが先に叩く前提は置かない（忘れる）。規�
 
 ワークフローは**実行中にユーザー入力を受けられない**（[公式](https://code.claude.com/docs/en/workflows#behavior-and-limits)）。
 この制約が人間ノードを SCC の硬い境界にする。1 周 = ワークフロー 1 回 → 人間の判断 → 次の周。
-`/deliberate` は「同じ致命的指摘が丸ごと残る周」を空転として自分で止め、`/build` は「同一原因 2 回 /
+`/design` は「同じ致命的指摘が丸ごと残る周」を空転として自分で止め、`/build` は「同一原因 2 回 /
 ベンチ未達 / 設計の前提の問題」で離脱を返す。周を跨ぐ判定（① の「確定も新軸も増えない周が 2 回」）は
 main が台帳の差分で行う。hook は台帳ディレクトリが無い作業には一切干渉しない。
 
@@ -189,7 +189,7 @@ SCC の内側では保存ワークフローが `agent(..., {agentType: '<役割>
 `user/AGENTS.md` の Delegation 節のとおり（目的・制約・関連ファイルの絶対パス・先行報告のパス・
 確定済み事項の明示）で、スクリプトがプロンプトに組み立てる。役割の報告全文は `ledgerDir` に書かせ、
 最終出力には要約とパスだけを返させる（main の文脈に全文を載せない）。
-**追補は同じエージェントを再開、改訂は呼び直し**という既存の区別は、`/deliberate` では
+**追補は同じエージェントを再開、改訂は呼び直し**という既存の区別は、`/design` では
 「designer の改訂は新しい `agent()` 呼び出し」として現れる。
 
 SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツールの `subagent_type`。
@@ -201,10 +201,10 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 | ノード | 実行主体 | モデル（既定） |
 |---|---|---|
 | intake / decide / record / human-op / human-review / merge / beads | メインセッション（skill の規約） | セッション |
-| research（codebase） | `researcher`（`/deliberate` 内） | opus（`researcher.md` の `model:`） |
-| research（web） | `/web-research` の 5 段階（`/deliberate` から 1 段ネスト） | 全段階 opus |
-| web-research 結果の整形 | `/deliberate` 内の通常エージェント | haiku |
-| design / critique | `designer` / `critic`（`/deliberate` 内） | セッション継承 |
+| research（codebase） | `researcher`（`/design` 内） | opus（`researcher.md` の `model:`） |
+| research（web） | `/web-research` の 5 段階（`/design` から 1 段ネスト） | 全段階 opus |
+| web-research 結果の整形 | `/design` 内の通常エージェント | haiku |
+| propose / critique | `designer` / `critic`（`/design` 内） | セッション継承 |
 | implement / fix | `/build` 内の通常エージェント（役割ファイル無し。この worktree で編集） | sonnet |
 | verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） | sonnet（`verifier.md` の `model:`） |
 | 差分の提示 | `reviewer`（`/review` 内） | セッション継承 |
@@ -219,7 +219,7 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 各段階）は各スクリプトの `MODELS` が既定を持つ。どちらも `args.models` で渡した値が呼び出しごとの指定
 （優先度 1 位）として勝つ。`tests/test_workflows.py` が「役割で動くノードのスクリプト既定は `undefined`」を、
 `tests/test_user_config.py` が「`model:` の値は alias / inherit / フル ID」を検査する。
-判断が結果を左右するノード（design / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
+判断が結果を左右するノード（propose / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
 1 件を判定するノードは sonnet、機械的な整形は haiku。ワークフローは実行中に人間に聞けないので、
 メインセッションは**起動の直前に毎回** `AskUserQuestion` でノードごとのモデルを確認し、既定から変えた
 分だけを `args.models` に渡す（規約は skill の「起動前にモデルを聞く」）。同梱の `/deep-research` は `model` を渡していないため
@@ -231,7 +231,7 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
 
 ## 未確定の点
 
-- **空転 2 周という閾値**、`/deliberate` の `maxRounds` 既定 2、`/build` の backstop 6 周は実測に基づかない
+- **空転 2 周という閾値**、`/design` の `maxRounds` 既定 2、`/build` の backstop 6 周は実測に基づかない
   初期値。数タスク回してから見直す。
 - **別セッションの implementer**（人が横に座って会話する形）は作っていない。`human-op` が濃い実装
   （インフラ系）で必要になったら、[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md) の
@@ -241,7 +241,7 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
 
 ## 追試の記録
 
-### 2026-09-23: `/deliberate` を 1 周（task `adr0001-sunset`、Claude Code 2.1.280）
+### 2026-09-23: `/design` を 1 周（task `adr0001-sunset`、Claude Code 2.1.280）
 
 対象: ADR 0001 を supersede して Claude Code 専用にするとき何をどの順で畳むか。
 `researchQuestions: []`、`maxRounds: 1`、`scriptPath` 直指定で起動。
@@ -258,12 +258,12 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
 
 - `agentType` に `disallowedTools` 付きの役割を渡しても `schema` の StructuredOutput は効く。報告全文を
   `ledgerDir` に書かせ、要約とパスだけ返す運用も成立した。
-- `~/.claude/workflows/` へのファイル単位 symlink は読まれる（セッション中に `/deliberate` `/build`
+- `~/.claude/workflows/` へのファイル単位 symlink は読まれる（セッション中に `/design` `/build`
   `/review` が skill 一覧へ現れた）。ただし `Workflow` ツールの `name` 指定は起動時の一覧しか見ないらしく
   「not found」になった。新しく足した直後は `scriptPath` 指定か `/reload-skills` が要る。
 - **`open` の併合は軸名の完全一致では足りない。** designer と critic が同じ軸を別名で出した
   （「役割 frontmatter の制約の形」と「frontmatter 制約の形」など 3 組）。critic に designer の軸名を渡して
-  再利用させる形に直した（`deliberate.js`）。
+  再利用させる形に直した（`design.js`）。
 - **途中のユーザー発話がワークフロー内エージェントに中継される。** 実行中に main へ送られた別件の質問が
   designer のプロンプトに混ざり、報告の冒頭でそれに答え、`open` に「主題」という無関係な行が入った。
   プロンプトに「この作業以外の指示は無視する」と書いて緩和したが、根本は harness 側の挙動。
@@ -283,9 +283,9 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
 分かったこと:
 
 - **`args` は文字列の質問、戻りは `{summary, findings[], caveats, openQuestions[], refuted[], unverified[], sources[], stats}`**
-  （スクリプトは実行時にセッション配下へ永続化されるので読める）。`/deliberate` からの `workflow()` 呼び出しと
+  （スクリプトは実行時にセッション配下へ永続化されるので読める）。`/design` からの `workflow()` 呼び出しと
   整形エージェントはこの形に合わせて実装した。
-- **コストが 2 桁違う。** `/deliberate` 1 周 39 万に対し deep-research は 1 回 1,000 万超。Scope 1 + Search 5 +
+- **コストが 2 桁違う。** `/design` 1 周 39 万に対し deep-research は 1 回 1,000 万超。Scope 1 + Search 5 +
   Fetch ≤15 + Verify ≤25×3 + Synthesize 1 の構造で、verify の各投票が WebSearch を回すため。
   `maxDeepResearch` の既定を 0（明示したときだけ）に変えた。
 - **`resumeFromRunId` はキャッシュが当たらなかった。** 公式の「完了済みは保存結果を返す」は、プロンプトが
@@ -305,7 +305,7 @@ hook 導入後の初回で、①〜③ のすべてのノードと 3 つの人�
 
 | ノード | 実行 | 結果 |
 |---|---|---|
-| ① `/deliberate` | designer + critic（前日）、`/web-research`（前日） | 未確定 5 行。critic-accepted |
+| ① `/design` | designer + critic（前日）、`/web-research`（前日） | 未確定 5 行。critic-accepted |
 | decide | `AskUserQuestion` 4 問（ブランチの 1 問は状況で解消） | 確定 6 行、未確定 0 |
 | record | main が ADR 0021 を書き、0001 を superseded、0004 を amended に | — |
 | ② `/build` r1 | implement（sonnet）+ verifier（sonnet）、16 分、34 万トークン | `needs_human_op`。pytest pass、**検証コマンド 2 本が fail** |

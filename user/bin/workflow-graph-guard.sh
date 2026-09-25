@@ -2,7 +2,7 @@
 #
 # Claude Code PreToolUse hook (matcher: Bash|Workflow): ワークフローグラフの規則を機械的に守る。
 #
-#   Workflow … うちの 4 本（deliberate / build / review / web-research）を args.models 無しで起動しようと
+#   Workflow … うちの 4 本（design / build / review / web-research）を args.models 無しで起動しようと
 #              したら拒否する。models は「起動前にモデルを聞いた」ことの機械的な証拠（既定なら {}）。
 #              同梱の deep-research は model を固定できないので、web-research に誘導して拒否する。
 #   gh pr create … verify.json が全 pass でなければ拒否（② build を抜ける条件）
@@ -37,7 +37,7 @@ if [ "${tool}" = "Workflow" ]; then
     deep-research)
       deny "[workflow-graph] 同梱の /deep-research は model を固定できず、セッションのモデルで 100 体前後が回る。/web-research（段階ごとに model を固定した写し）を args {question, models} で使う"
       ;;
-    deliberate|build|review|web-research)
+    design|build|review|web-research)
       has_models="$(printf '%s' "${input}" | jq -r '.tool_input.args | if type == "object" and (.models | type) == "object" then "yes" else "no" end' 2>/dev/null || printf 'no')"
       if [ "${has_models}" != "yes" ]; then
         deny "[workflow-graph] /${name} は起動の直前に AskUserQuestion でノードごとのモデルを聞き、その答えを args.models（既定のままなら {}）に渡してから起動する。args は object にする（web-research も {question, models}）"

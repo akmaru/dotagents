@@ -85,9 +85,9 @@ frontmatter は Claude Code のフィールドを自由に書けるが、`disall
 
 ## ワークフローグラフ
 
-作業全体を 3 つの強連結成分（deliberate / build / review）としてモデル化し、各 SCC は台帳 1 枚と
+作業全体を 3 つの強連結成分（design / build / review）としてモデル化し、各 SCC は台帳 1 枚と
 「再発」による離脱条件を持つ（[ADR 0018](docs/adr/0018-workflow-graph-three-sccs.md)）。
-SCC の内側は保存ワークフロー `/deliberate` `/build` `/review`（`user/workflows/*.js`、`install.sh` が
+SCC の内側は保存ワークフロー `/design` `/build` `/review`（`user/workflows/*.js`、`install.sh` が
 `~/.claude/workflows/` へ symlink）が回し、人間ノードと SCC 間は `workflow-graph` skill に従って
 メインセッションが担い、抜ける条件は hook（`user/bin/workflow-graph-guard.sh`）が守る
 （[ADR 0020](docs/adr/0020-workflow-graph-control-flow.md)）。

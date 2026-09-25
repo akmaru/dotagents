@@ -118,7 +118,7 @@ def test_state_hook_picks_review_scc_when_review_exists(tmp_path):
 
 # --- state hook: skill 本文の注入 ------------------------------------------
 
-@pytest.mark.parametrize("cmd", ["/deliberate", "/build", "/review", "/web-research"])
+@pytest.mark.parametrize("cmd", ["/design", "/build", "/review", "/web-research"])
 def test_state_hook_injects_skill_body_when_a_workflow_command_is_typed(tmp_path, cmd):
     """ユーザーが skill を先に叩かなくても、コマンドを打った時点で規約が載る。台帳が無くても出す。"""
     r = _run(STATE_HOOK, _prompt(tmp_path, f"{cmd} ADR 0001 の見直しを回して"), _state_env(tmp_path))
@@ -132,8 +132,8 @@ def test_state_hook_injects_skill_body_when_a_workflow_command_is_typed(tmp_path
 def test_state_hook_injects_skill_body_once_per_session(tmp_path):
     """毎ターン 150 行を積むとコンテキストを食うので、セッションにつき 1 回。別セッションは別。"""
     env = _state_env(tmp_path)
-    assert SKILL_MARKER in _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/deliberate x", "s1"), env))
-    assert SKILL_MARKER not in _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/deliberate y", "s1"), env))
+    assert SKILL_MARKER in _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/design x", "s1"), env))
+    assert SKILL_MARKER not in _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/design y", "s1"), env))
     assert SKILL_MARKER in _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/build z", "s2"), env))
 
 
@@ -145,7 +145,7 @@ def test_state_hook_does_not_inject_skill_for_unrelated_prompts(tmp_path):
 def test_state_hook_combines_skill_and_ledger_state(tmp_path):
     d = _ledger_dir(tmp_path)
     _decisions(d, open_rows=3)
-    ctx = _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/deliberate 続き"), _state_env(tmp_path)))
+    ctx = _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/design 続き"), _state_env(tmp_path)))
     assert SKILL_MARKER in ctx and "未確定 3" in ctx
 
 
@@ -155,7 +155,7 @@ def _workflow(tool_input: dict, cwd: Path):
     return {"hook_event_name": "PreToolUse", "cwd": str(cwd), "tool_name": "Workflow", "tool_input": tool_input}
 
 
-@pytest.mark.parametrize("name", ["deliberate", "build", "review", "web-research"])
+@pytest.mark.parametrize("name", ["design", "build", "review", "web-research"])
 def test_guard_denies_our_workflow_launched_without_models(tmp_path, name):
     """起動前にモデルを聞いた証拠は args.models（既定なら {}）。無ければ起動させない。"""
     r = _run(GUARD_HOOK, _workflow({"name": name, "args": {"goal": "g", "ledgerDir": "/x"}}, tmp_path))
@@ -164,7 +164,7 @@ def test_guard_denies_our_workflow_launched_without_models(tmp_path, name):
 
 
 def test_guard_allows_our_workflow_with_models_even_if_empty(tmp_path):
-    r = _run(GUARD_HOOK, _workflow({"name": "deliberate", "args": {"goal": "g", "ledgerDir": "/x", "models": {}}}, tmp_path))
+    r = _run(GUARD_HOOK, _workflow({"name": "design", "args": {"goal": "g", "ledgerDir": "/x", "models": {}}}, tmp_path))
     assert _decision(r) is None
 
 

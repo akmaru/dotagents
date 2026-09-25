@@ -2,7 +2,7 @@
 #
 # Claude Code UserPromptSubmit hook: ワークフローグラフの規約と現在地を main に見せる。
 #
-# 1. 規約の注入: プロンプトに /deliberate /build /review /web-research のどれかが含まれていたら、
+# 1. 規約の注入: プロンプトに /design /build /review /web-research のどれかが含まれていたら、
 #    workflow-graph skill の本文（frontmatter を除いた SKILL.md）を additionalContext で注入する。
 #    ユーザーが skill を先に叩かなくても、skill を install していなくても、コマンドを打った時点で
 #    規約（起動前にモデルを聞く、台帳の書き方、人間ノードの手順）が載る。
@@ -36,13 +36,13 @@ skill_md="${WORKFLOW_GRAPH_SKILL:-${repo_root}/packages/workflow-graph/.apm/skil
 parts=()
 
 # ---- 1. 規約の注入（コマンドを打ったターン、セッションにつき 1 回） ----
-if printf '%s' "${prompt}" | grep -qE '(^|[^[:alnum:]/])/(deliberate|build|review|web-research)([^[:alnum:]-]|$)'; then
+if printf '%s' "${prompt}" | grep -qE '(^|[^[:alnum:]/])/(design|build|review|web-research)([^[:alnum:]-]|$)'; then
   marker_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/workflow-graph/injected"
   marker="${marker_dir}/${session:-no-session}"
   if [ ! -e "${marker}" ] && [ -f "${skill_md}" ]; then
     # frontmatter（先頭の --- ... ---）を落として本文だけ
     body="$(awk 'BEGIN{n=0} /^---$/ && n<2 {n++; next} n>=2 {print}' "${skill_md}")"
-    parts+=("[workflow-graph] 以下はワークフローグラフの規約（workflow-graph skill の本文）。/deliberate /build /review /web-research を呼ぶ前にこれに従う。特に「起動前にモデルを聞く」は必須で、聞かずに起動すると hook が拒否する。
+    parts+=("[workflow-graph] 以下はワークフローグラフの規約（workflow-graph skill の本文）。/design /build /review /web-research を呼ぶ前にこれに従う。特に「起動前にモデルを聞く」は必須で、聞かずに起動すると hook が拒否する。
 
 ${body}")
     if [ -n "${session}" ]; then
@@ -75,7 +75,7 @@ if [ -d "${root}" ]; then
     scc=""
     if [ -f "${review}" ]; then scc="③ review"
     elif [ -f "${verify}" ]; then scc="② build"
-    elif [ -f "${decisions}" ]; then scc="① deliberate"
+    elif [ -f "${decisions}" ]; then scc="① design"
     fi
     if [ -n "${scc}" ]; then
       open="$(count "${decisions}" '.open // [] | length')"
