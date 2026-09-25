@@ -51,7 +51,10 @@ tab_id=$(jq -r '.result.pane.tab_id // ""' <<<"$info")
 # herdr のエージェント名はライブなもの同士で一意である必要がある
 # (fork-claude-session.sh 参照)。固定名 "explainer" だと別タブで explainer が
 # 生きている間はこのタブで agent start が失敗するので、タブ ID を name に含める。
-name="explainer-${tab_id}"
+# 名前に使えるのは小文字・数字・'-'・'_' の 1〜32 文字（herdr の invalid_agent_name）。
+# タブ ID は "w5:t6" のように ':' を含むので、使えない文字は '-' に落とす。
+name="explainer-$(printf '%s' "$tab_id" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9_-' '-')"
+name="${name:0:32}"
 
 # フォーカス pane に main ラベルを付け、同タブの他 pane から main を外す（常に 1 つにする）
 "$HERDR" pane rename "$pane" main >/dev/null 2>&1 || die "main ラベルの付与に失敗した"
