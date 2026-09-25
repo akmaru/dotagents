@@ -45,9 +45,12 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 
 | ワークフロー | ノード（既定） |
 |---|---|
-| `/deliberate` | research（opus）/ design（継承）/ critique（継承）/ integrate（haiku）/ webResearch（全段階 opus。`kind: "web"` の小問があるときだけ） |
-| `/build` | implement（sonnet）/ verify（sonnet） |
+| `/deliberate` | research（opus ※）/ design（継承）/ critique（継承）/ integrate（haiku）/ webResearch（全段階 opus。`kind: "web"` の小問があるときだけ） |
+| `/build` | implement（sonnet）/ verify（sonnet ※） |
 | `/review` | review（継承）/ refute（sonnet） |
+
+※ 役割で動くノードの既定は `user/agents/<役割>.md` の `model:` が決める（researcher = opus、verifier = sonnet、
+他は未指定 = 継承）。`args.models` で渡した値は呼び出しごとの指定として frontmatter に勝つ。
 | `/web-research` 単独 | scope / search / fetch / verify / synthesize（すべて opus） |
 
 `/web-research` は 1 回で 100 体前後・1,000 万トークン級になるので、モデルと一緒に**回してよいか**も
@@ -85,8 +88,8 @@ SCC の内側（機械ノードの周回）は保存ワークフローが回し�
 }
 ```
 
-**モデルはノードごとに呼び出し側で決まる**（役割ファイルに `model:` を書くことは ADR 0021 で可能になったが、
-今は呼び出しごとの指定を続けている。役割側へ移すかは別途決める）。既定は
+**モデルはノードごとに決まる**。役割で動くノードは役割ファイルの `model:` が既定（ADR 0021 で可能になった）、
+役割ファイルの無いノード（implement / integrate / refute / web-research の各段階）はスクリプトが既定を持つ。既定は
 「起動前にモデルを聞く」の表のとおり。`args.models` には起動前の質問で既定から変えたノードだけを
 `{"research": "sonnet", "webResearch": {"verify": "sonnet"}}` のように部分的に渡す。
 

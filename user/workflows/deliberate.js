@@ -5,7 +5,7 @@
 export const meta = {
   name: 'deliberate',
   description: 'SCC ①: research → design → critique を回し、人間が決められる状態（未確定行）を返す',
-  whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: research（既定 opus）/ design（継承）/ critique（継承）/ integrate（haiku）、kind: web の小問があれば webResearch（全段階 opus）と「回してよいか」。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
+  whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: research（既定 opus、researcher.md の model:）/ design（継承）/ critique（継承）/ integrate（haiku）、kind: web の小問があれば webResearch（全段階 opus）と「回してよいか」。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
   phases: [
     { title: 'Research', detail: '小問ごとに並列。codebase は researcher、web は web-research（上限あり）' },
     { title: 'Design', detail: 'designer が代替案・推奨・未決事項と、案ごとに足りない事実を出す' },
@@ -33,9 +33,12 @@ export const meta = {
 // }
 // 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、
 // モデルは呼び出しごとに指定する（優先度 1 位。docs/en/sub-agents「Choose a model」）
+// 役割で動くノード（research / design / critique）の既定は user/agents/<役割>.md の model: が決める
+// （researcher = opus、designer / critic = 未指定 = セッション継承）。ここは undefined にして、
+// args.models で上書きされたときだけ呼び出しごとの指定が frontmatter に勝つ
 const MODELS = {
-  research: 'opus',      // 事実集めだが一次情報の読み違えが決定を狂わせる
-  design: undefined,     // 推論の質が結果を左右する。セッション継承
+  research: undefined,
+  design: undefined,
   critique: undefined,
   integrate: 'haiku',    // web-research 結果の機械的な整形
   webResearch: undefined, // web-research 側の既定（全段階 opus）に任せる。{scope, search, fetch, verify, synthesize} で上書き

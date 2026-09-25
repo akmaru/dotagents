@@ -201,21 +201,24 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 | ノード | 実行主体 | モデル（既定） |
 |---|---|---|
 | intake / decide / record / human-op / human-review / merge / beads | メインセッション（skill の規約） | セッション |
-| research（codebase） | `researcher`（`/deliberate` 内） | opus |
+| research（codebase） | `researcher`（`/deliberate` 内） | opus（`researcher.md` の `model:`） |
 | research（web） | `/web-research` の 5 段階（`/deliberate` から 1 段ネスト） | 全段階 opus |
 | web-research 結果の整形 | `/deliberate` 内の通常エージェント | haiku |
 | design / critique | `designer` / `critic`（`/deliberate` 内） | セッション継承 |
 | implement / fix | `/build` 内の通常エージェント（役割ファイル無し。この worktree で編集） | sonnet |
-| verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） | sonnet |
+| verify-local、CI が落ちたときの原因切り分け | `verifier`（`/build` 内、または単発） | sonnet（`verifier.md` の `model:`） |
 | 差分の提示 | `reviewer`（`/review` 内） | セッション継承 |
 | 指摘の反証 | `/review` 内の通常エージェント（指摘 1 件につき 1 体） | sonnet |
 | explainer | 常駐セッション（未実装。[ADR 0016](../adr/0016-explainer-pane-transcript-digest.md)） | — |
 
-モデルは**呼び出しごと**に `agent(..., {model})` で指定する（優先度 1 位。
-[Choose a model](https://code.claude.com/docs/en/sub-agents#choose-a-model)）。役割ファイルの `model:` は
-以前 `tests/test_user_config.py` が禁止していた（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)）が、
-[ADR 0021](../adr/0021-target-claude-code-only.md) で禁止は外れた。今は呼び出しごとの指定を続けており、
-役割側へ移すかは別途決める。既定は各スクリプトの `MODELS` にあり、`args.models` で部分上書きできる。
+モデルの決まり方は 2 段（[Choose a model](https://code.claude.com/docs/en/sub-agents#choose-a-model)）。
+**役割で動くノード**は役割ファイルの `model:` が既定（`researcher.md` = opus、`verifier.md` = sonnet、他は
+未指定 = セッション継承）。この frontmatter は以前 `tests/test_user_config.py` が禁止していた
+（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)）が、[ADR 0021](../adr/0021-target-claude-code-only.md)
+で外れたので役割側へ移した。**役割ファイルの無いノード**（implement / integrate / refute / web-research の
+各段階）は各スクリプトの `MODELS` が既定を持つ。どちらも `args.models` で渡した値が呼び出しごとの指定
+（優先度 1 位）として勝つ。`tests/test_workflows.py` が「役割で動くノードのスクリプト既定は `undefined`」を、
+`tests/test_user_config.py` が「`model:` の値は alias / inherit / フル ID」を検査する。
 判断が結果を左右するノード（design / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
 1 件を判定するノードは sonnet、機械的な整形は haiku。ワークフローは実行中に人間に聞けないので、
 メインセッションは**起動の直前に毎回** `AskUserQuestion` でノードごとのモデルを確認し、既定から変えた
