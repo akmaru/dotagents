@@ -239,6 +239,7 @@ class TestServerAssets:
         assert "HINDSIGHT_API_LLM_PROVIDER: anthropic" in compose, "unset provider falls back to openai -> 401"
         assert "HINDSIGHT_API_LLM_OUTPUT_LANGUAGE" not in compose, "pinning the output language strips identifier protection (ADR 0019)"
         assert "HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5" in compose, "haiku fabricates on reflect"
+        assert "HINDSIGHT_API_REFLECT_WALL_TIMEOUT: 900" in compose, "the 300s default cuts off normal page builds"
 
     def test_env_is_ignored(self):
         assert ".env" in (self.COMPOSE_DIR / ".gitignore").read_text().split()
