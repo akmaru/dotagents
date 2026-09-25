@@ -33,6 +33,10 @@ services:
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY:?set in .env}
       # reflect は上位モデル。既定の haiku は記憶にない情報を捏造し directive も無視する
       HINDSIGHT_API_REFLECT_LLM_MODEL: claude-sonnet-5
+      # 既定 300 秒は正常系を切る。タグで絞れないナレッジページの生成が実測 276 秒で、
+      # 記憶が増えれば確実に超える。探索は REFLECT_MAX_ITERATIONS=10 で打ち切られるので、
+      # 時間を与えても無限には走らない (README の既知の罠)
+      HINDSIGHT_API_REFLECT_WALL_TIMEOUT: 900
       # 出力言語は固定しない。固定すると retain / consolidation の識別子保護が巻き添えで外れる
       # (docs/adr/0019)。言語はバンクの retain_mission で地の文に合わせる
       # observation 生成の上位モデルは据え置く。識別子破損が本当に止まったかを見極めるまでの保険
