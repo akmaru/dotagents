@@ -23,7 +23,6 @@ EXPECTED_LINKS = {
     ".claude/AGENTS.md": "AGENTS.md",
     ".claude/CLAUDE.md": "CLAUDE.md",
     ".claude/rules": "rules",
-    ".config/opencode/AGENTS.md": "AGENTS.md",
     ".config/herdr/config.toml": "herdr/config.toml",
     ".config/herdr/scripts": "herdr/scripts",
 }
@@ -108,6 +107,11 @@ def test_removes_dangling_dotagents_agent_links_only(tmp_path):
     assert not (agents_dir / "retired.md").is_symlink()
     assert (agents_dir / "foreign-link.md").resolve() == foreign
     assert (agents_dir / "foreign-file.md").read_text() == "mine\n"
+
+
+def test_does_not_create_opencode_config(installed):
+    """OpenCode 向けの配布は畳んだ（docs/adr/0021）。~/.config/opencode を作らない。"""
+    assert not (installed / ".config" / "opencode").exists()
 
 
 def test_claude_import_target_resolves(installed):
