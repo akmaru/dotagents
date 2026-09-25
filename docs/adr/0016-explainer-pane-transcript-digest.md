@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-09-22
 decision-makers: akmaru
 ---
@@ -57,8 +57,26 @@ decision-makers: akmaru
 
 ### Confirmation
 
-段階 1b で追加する（本 ADR は proposed）。予定は設計書の「テスト」節のとおりで、実装時に本節を実在する
-テスト名へ更新する。現時点で存在する自動チェックは無い。
+段階 1b で追加した（設計書は [docs/design/explainer-pane.md](../design/explainer-pane.md)）。
+
+* `tests/test_herdr.py`: `test_explainer_keybinding_points_at_an_executable_script` が
+  `prefix+alt+f` のバインドが `type = "shell"` で実行可能な `explainer-pane.sh` を指すことを、
+  `test_explainer_pane_script_starts_a_role_that_exists` が同スクリプトの `--agent <x>` の `<x>` が
+  `user/agents/<x>.md` に実在することを検証する。
+* `tests/test_user_config.py`: `test_main_digest_script_is_executable` /
+  `test_main_digest_script_is_distributed_by_install_sh` が `claude-main-digest.sh` の実行権と
+  `install.sh` による `~/.local/bin` への配布を、`test_explainer_description_says_it_is_not_a_subagent`
+  が `explainer.md` の description に「サブエージェントとしては起動しない」の趣旨があることを検証する。
+  `TestAgentDefinition`（`user/agents/*.md` 共通）は `explainer` にも及ぶが、
+  `INTERACTIVE_AGENTS` に含めているため「未決事項」の必須化は対象外にしている。
+* `tests/test_transcript_digest.py` + `tests/fixtures/transcript-sample.jsonl`: `--file` 経路で
+  選別規則（`isSidechain` / `isMeta` / tool_result ラッパー / thinking / 壊れた行の除外、
+  `message.id` によるブロック束ね）、`--turns` の窓、`--since`（既知 UUID と未知 UUID の
+  フォールバック警告）、`--max-chars` の古い側からの切り詰め、`--resolve-only`、
+  終了コード（0 / 5 / 4）を検証する。`DOTAGENTS_REAL_TRANSCRIPT=1` のときだけ手元の最新
+  トランスクリプトに対するスモークが走り、形式ドリフトを早期検知する。
+* 実機（未実施、手動確認の予定）: 設計書「テスト」節の手動シナリオ（`prefix+alt+f` でのラベル付け、
+  pane 再利用、`/clear` 後の session id の引き直し）。
 
 ## Pros and Cons of the Options
 

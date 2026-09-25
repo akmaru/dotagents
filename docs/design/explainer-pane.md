@@ -145,7 +145,7 @@ cursor: <最後の uuid>
   `role:explainer`）、`/clear` で区切るようユーザーに伝える（自分では実行できない）。話題の開始時に
   同じタグで recall する。共通規則の retain とは重複させない。
 - description に「サブエージェントとしては起動しない。`claude --agent explainer` で常駐起動する専用」と書き、
-  自動委譲を防ぐ。OpenCode 側は `mode: primary` で Task の候補から外れる。
+  自動委譲を防ぐ。
 - `initialPrompt` で `claude-main-digest.sh --resolve-only` を実行し、メインの pane とセッションを 1 行で
   報告して待機する。紐付けの不備が起動直後に見える。
 
@@ -179,4 +179,3 @@ cursor: <最後の uuid>
 - `herdr pane get` の `agent_session` が Claude 終了後に残るか（`agent` フィールドで弾くので影響は小さい）。
 - compaction 後のトランスクリプトの形（`isCompactSummary` 行）。
 - `/clear` 後も `--agent` のプロンプトとツール制限が保たれるか。
-- OpenCode 側で `initialPrompt` が provider options に流れて拒否されないか（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)）。

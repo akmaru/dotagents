@@ -1,0 +1,15 @@
+{"type": "user", "uuid": "u1", "timestamp": "2026-09-25T06:01:00.000Z", "message": {"content": "質問1: これは何?"}}
+{"type": "assistant", "uuid": "u2", "timestamp": "2026-09-25T06:01:05.000Z", "message": {"id": "msg1", "content": [{"type": "text", "text": "回答1のテキストです。"}]}}
+{"type": "assistant", "uuid": "u3", "timestamp": "2026-09-25T06:01:06.000Z", "message": {"id": "msg1", "content": [{"type": "tool_use", "name": "Bash", "input": {"command": "ls -la && echo done"}}]}}
+{"type": "user", "uuid": "u4", "timestamp": "2026-09-25T06:01:07.000Z", "message": {"content": [{"type": "tool_result", "content": "SECRET-TOOL-RESULT-ONLY-WITH-FLAG"}]}}
+{"type": "assistant", "uuid": "u5", "timestamp": "2026-09-25T06:01:10.000Z", "message": {"id": "msg2", "content": [{"type": "text", "text": "回答1の続き(ツール実行後)。"}]}}
+{"type": "user", "uuid": "u6", "timestamp": "2026-09-25T06:05:00.000Z", "message": {"content": "質問2: 別の話題について教えて"}}
+{"type": "assistant", "uuid": "u7", "timestamp": "2026-09-25T06:05:03.000Z", "message": {"id": "msg3", "content": [{"type": "text", "text": "回答2のテキストです。"}]}}
+{"type": "user", "uuid": "u8", "timestamp": "2026-09-25T06:05:10.000Z", "isMeta": true, "message": {"content": "<local-command-stdout>SECRET-META-OUTPUT</local-command-stdout>"}}
+{"type": "assistant", "uuid": "u9", "timestamp": "2026-09-25T06:05:11.000Z", "isSidechain": true, "message": {"id": "msg-side", "content": [{"type": "text", "text": "SECRET-SIDECHAIN-TEXT"}]}}
+{"type": "system", "uuid": "u10", "timestamp": "2026-09-25T06:05:12.000Z", "content": "SECRET-SYSTEM-EVENT"}
+{"type":"user","uuid":"u11","message":{"content":"壊れた行、閉じ括弧が無い
+{"type": "user", "uuid": "u12", "timestamp": "2026-09-25T06:10:00.000Z", "message": {"content": "質問3: 三つ目の質問です"}}
+{"type": "assistant", "uuid": "u13", "timestamp": "2026-09-25T06:10:03.000Z", "message": {"id": "msg4", "content": [{"type": "thinking", "thinking": "SECRET-THINKING-CONTENT"}, {"type": "text", "text": "回答3のテキストです。"}]}}
+{"type": "user", "uuid": "u14", "timestamp": "2026-09-25T06:15:00.000Z", "message": {"content": "質問4: 四つ目の質問、最後です"}}
+{"type": "assistant", "uuid": "u15", "timestamp": "2026-09-25T06:15:04.000Z", "message": {"id": "msg5", "content": [{"type": "text", "text": "回答4のテキストです。これで話題は一通り終わりです。"}]}}

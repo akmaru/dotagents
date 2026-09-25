@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 HERDR_DIR = ROOT / "user" / "herdr"
 SCRIPT = HERDR_DIR / "scripts" / "fork-claude-session.sh"
+EXPLAINER_PANE_SCRIPT = HERDR_DIR / "scripts" / "explainer-pane.sh"
+AGENTS_DIR = ROOT / "user" / "agents"
 INSTALL_SH = ROOT / "user" / "install.sh"
 
 
@@ -42,6 +44,30 @@ def test_keybinding_points_at_an_executable_script():
     assert fork["command"] == "$HOME/.config/herdr/scripts/fork-claude-session.sh"
     assert SCRIPT.is_file()
     assert SCRIPT.stat().st_mode & 0o111, "keybinding から直接起動するため実行権が要る"
+
+
+def test_explainer_keybinding_points_at_an_executable_script():
+    """prefix+alt+f が explainer-pane.sh を指し、実行可能であること（docs/adr/0016）。"""
+    commands = _commands()
+    explainer = next(c for c in commands if "explainer-pane" in c["command"])
+
+    assert explainer["type"] == "shell", "フォーカスを奪わないよう shell 実行にする"
+    assert explainer["command"] == "$HOME/.config/herdr/scripts/explainer-pane.sh"
+    assert EXPLAINER_PANE_SCRIPT.is_file()
+    assert EXPLAINER_PANE_SCRIPT.stat().st_mode & 0o111, (
+        "keybinding から直接起動するため実行権が要る"
+    )
+
+
+def test_explainer_pane_script_starts_a_role_that_exists():
+    """`--agent <x>` の <x> が user/agents/<x>.md に無いと、起動した瞬間に落ちる。"""
+    body = EXPLAINER_PANE_SCRIPT.read_text()
+    match = re.search(r"--agent\s+(\S+)", body)
+    assert match, "explainer-pane.sh に --agent <role> の起動が無い"
+    role = match.group(1)
+    assert (AGENTS_DIR / f"{role}.md").is_file(), (
+        f"--agent {role} に対応する役割定義が user/agents/ に無い"
+    )
 
 
 def test_settings_json_carries_no_machine_specific_hook():

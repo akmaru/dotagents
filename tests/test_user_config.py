@@ -84,6 +84,28 @@ def test_statusline_command_is_distributed_by_install_sh():
     )
 
 
+def test_main_digest_script_is_executable():
+    """explainer（user/agents/explainer.md）が質問のたびに呼ぶ整形スクリプト（docs/adr/0016）。"""
+    script = USER_DIR / "bin" / "claude-main-digest.sh"
+    assert script.is_file(), "user/bin/claude-main-digest.sh must exist"
+    assert os.access(script, os.X_OK), "claude-main-digest.sh must be executable"
+
+
+def test_main_digest_script_is_distributed_by_install_sh():
+    install = (USER_DIR / "install.sh").read_text()
+    assert "${HOME}/.local/bin/claude-main-digest.sh" in install, (
+        "install.sh が claude-main-digest.sh を ~/.local/bin へ配布していない"
+    )
+
+
+def test_explainer_description_says_it_is_not_a_subagent():
+    """自動委譲を防ぐための一文。無いと Agent ツールからも起動できてしまう（docs/design/explainer-pane.md）。"""
+    description = yaml.safe_load(
+        (USER_DIR / "agents" / "explainer.md").read_text().split("---", 2)[1]
+    )["description"]
+    assert "サブエージェントとしては起動しない" in description
+
+
 @pytest.mark.parametrize(
     "rule_file",
     sorted((USER_DIR / "rules").rglob("*.md")) if (USER_DIR / "rules").exists() else [],
