@@ -295,6 +295,46 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
   @import が無いこと、Codex / Gemini CLI / Cursor / Copilot CLI の読み込み位置が一次情報で確認できた。
   ADR 0001 見直しの decide に使える。
 
+### 2026-09-25: グラフを ① → record → ② → PR → ③ → merge まで通した（task `adr0001-sunset`、PR #40）
+
+対象: ADR 0001（Claude Code と OpenCode の両対応）を supersede して Claude Code 専用にする。
+hook 導入後の初回で、①〜③ のすべてのノードと 3 つの人間ノードを 1 度ずつ踏んだ。
+
+| ノード | 実行 | 結果 |
+|---|---|---|
+| ① `/deliberate` | designer + critic（前日）、`/web-research`（前日） | 未確定 5 行。critic-accepted |
+| decide | `AskUserQuestion` 4 問（ブランチの 1 問は状況で解消） | 確定 6 行、未確定 0 |
+| record | main が ADR 0021 を書き、0001 を superseded、0004 を amended に | — |
+| ② `/build` r1 | implement（sonnet）+ verifier（sonnet）、16 分、34 万トークン | `needs_human_op`。pytest pass、**検証コマンド 2 本が fail** |
+| ② `/build` r2 | 検証コマンドを直して `resumeFromRunId`、3 分、20 万トークン | 全 pass |
+| commit / PR | main が 3 コミットに分けて積み、`gh pr create` | guard hook が `verify.json` 全 pass を確認して通した |
+| ③ `/review` | reviewer（opus）+ 反証 2 体（sonnet）、4 分、31 万トークン | 指摘 5（直す 2 / 任意 3）、反証で落ちたもの 0、「指摘対応後に可」 |
+| human-review | `AskUserQuestion` 5 問（2 問は「それは何？」の聞き返しを挟んで再質問） | fixed 3 / rejected 2 |
+| merge | main が直して push、CI pass、`gh pr merge` | guard hook が `review.json` 未対応 0 を確認して通した |
+
+分かったこと:
+
+- **hook は設計どおりに効いた。** 毎ターン `[workflow-graph] task=… scc=…` の 1 行が入り、現在地を忘れずに済んだ。
+  `gh pr create` / `gh pr merge` の前に台帳が確認され、`Workflow` の起動は `args.models` 無しでは拒否される
+  （今回は毎回 `AskUserQuestion` で聞いてから `{}` を渡した）。
+- **② の r1 の fail は 2 件とも検証コマンド側の欠陥だった。** (1) harness の `grep` は ugrep で `./` を前置しない
+  ため除外パターンが効かず、(2) `apm pack --check-clean` は外部 API の 404 で失敗した。verifier が両方を
+  「設計の前提」と分類して `needs_human_op` で返し、main が原因を確かめてコマンドを直した。
+  「実装の問題 / 設計の前提の問題」の分類は、この場面で正しく効いた。**検証コマンドは `git grep`
+  （追跡ファイルのみ、gitignore 尊重）で書く**のが教訓。
+- **`resumeFromRunId` はここでは効いた。** `checks` を変えると implement のプロンプトも変わるので implement も
+  再実行されたが、「実装済みなら差分を確認するだけ」と指示したので 3 分で済んだ。
+- **③ の反証で落ちた指摘は 0 件。** reviewer（opus）の 5 件はすべて実在した。うち 2 件は「ADR 0021 で外れた
+  制約を、設計書と SKILL.md がまだ『禁止』と書いている」で、ADR の Confirmation の grep が `opencode` しか
+  探さないため漏れたもの。決定の帰結（何が可能になったか）は語で grep できないので、reviewer の
+  「決定との整合」観点が要る。
+- **human-review で「それは何？」が 2 回出た。** `review.json` の `what` は reviewer の言葉のままで、
+  人間には前提（「役割ファイル」= `user/agents/*.md`）が抜けていた。指摘を人間に見せるときは
+  main が用語と背景を補ってから聞く。
+- **棚上げ先が無かった。** `br`（beads_rust）がこのマシンに無く、`bd`（別実装）は別形式の DB を作るので
+  使えない。apm の 404 は `review.json` の `deferred` に留めた。beads を使うなら `br` を入れる。
+- `bd` を試したときに `.beads/` 配下に別実装の成果物（`embeddeddolt/` 等）ができた。消して戻した。
+
 ## 測り直し方
 
 本書の「根拠」節の数字は次で再現できる（`jq` が要る）。
