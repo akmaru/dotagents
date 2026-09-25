@@ -17,11 +17,20 @@ dotagents/
 │       ├── apm.yml                  # パッケージマニフェスト
 │       ├── README.md
 │       ├── LICENSE
+│       ├── docs/internal/specs/     # このパッケージ固有の仕様書
 │       └── .apm/skills/<name>/SKILL.md  # スキル定義（agentskills.io spec 準拠）
 ├── user/                            # 個人ユーザースコープ設定（非 APM・symlink 配布）
 │   └── agents/<role>.md             # 役割定義（researcher / designer / critic）。~/.claude/agents/ へファイル単位 symlink
-└── docs/adr/                        # Architecture Decision Records
+├── CONTEXT.md                       # 用語集
+└── docs/
+    ├── internal/specs/              # dotagents 全体に関わる仕様書（最初の 1 本を書くときに作る）
+    └── adr/                         # Architecture Decision Records
 ```
+
+仕様書は、話題のスコープで置き場を分ける。特定のパッケージに関わる仕様は `packages/<name>/docs/internal/specs/`、
+dotagents 全体に関わる仕様は `docs/internal/specs/` に置き、連番は置き場ごとに 0001 から振る。
+ADR と用語集も同じ規則へ移す予定（未作成の仕様書。決まった点は
+[grill-spec の仕様書](packages/grill-spec/docs/internal/specs/0001-grill-spec.md)のスコープ外にある）。
 
 各プリミティブは必ず `.apm/<type>/` 配下に置くこと。パッケージルート直下に置くと `apm pack` は通るが `apm install` 時に黙って欠落する。
 
