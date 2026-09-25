@@ -70,6 +70,14 @@ type = "shell"
 command = "$HOME/.config/herdr/scripts/fork-claude-session.sh"
 description = "fork focused claude session"
 
+# メインの隣に解説役 (explainer) を常駐させる。既にあれば main ラベルの付け替えと
+# フォーカスだけ行う（docs/design/explainer-pane.md）
+[[keys.command]]
+key = "prefix+alt+f"
+type = "shell"
+command = "$HOME/.config/herdr/scripts/explainer-pane.sh"
+description = "explainer pane"
+
 # エージェントが変更したツリーを lazygit で確認する
 # popup はタブレイアウトを変えず、lazygit が多用する Escape も転送される
 # herdr サーバはデーモン化時に PATH=/usr/bin:/bin:/usr/sbin:/sbin まで削られており、

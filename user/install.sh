@@ -44,6 +44,8 @@ mv "${SETTINGS}.tmp" "${SETTINGS}"
 mkdir -p "${HOME}/.local/bin"
 ln -sfn "${USER_DIR}/bin/claude-statusline.sh"    "${HOME}/.local/bin/claude-statusline.sh"
 ln -sfn "${USER_DIR}/bin/claude-context.py"       "${HOME}/.local/bin/claude-context.py"
+# explainer（user/agents/explainer.md）が質問のたびに呼ぶトランスクリプト整形（docs/adr/0016）。
+ln -sfn "${USER_DIR}/bin/claude-main-digest.sh"   "${HOME}/.local/bin/claude-main-digest.sh"
 # SessionEnd hook。SessionStart と違い herdr が書かない配列なので、登録は
 # user/settings.json 側の deep merge に任せられる（docs/adr/0017）。
 ln -sfn "${USER_DIR}/bin/hindsight-retain-hook.sh" "${HOME}/.local/bin/hindsight-retain-hook.sh"

@@ -72,7 +72,7 @@ frontmatter は Claude Code のフィールドを自由に書けるが、`disall
 | [critic](user/agents/critic.md) | 別文脈から反対の立場で成果物を検証する |
 | [verifier](user/agents/verifier.md) | 検証項目を実行し、fail の原因を「実装 / 設計の前提」で分類する |
 | [reviewer](user/agents/reviewer.md) | 差分を決定との整合・正しさ・テストの観点で読み、file:line 付きで指摘する |
-| explainer（段階 1b） | herdr の固定 pane に常駐する解説役（[設計書](docs/design/explainer-pane.md)） |
+| [explainer](user/agents/explainer.md) | herdr の固定 pane に常駐する解説役（[設計書](docs/design/explainer-pane.md)） |
 
 ## ワークフローグラフ
 
