@@ -103,8 +103,10 @@ Claude Code は載っていない、AGENTS.md 仕様に frontmatter / @import �
   `test_agents_md_has_no_claude_specific_identifiers` は残り、docstring の理由が agents.md 準拠になっている。
 * `tests/test_install.py`: `EXPECTED_LINKS` に `.config/opencode` が無く、`test_does_not_create_opencode_config`
   が一時 HOME で `~/.config/opencode` が作られないことを検証する。
-* `grep -rniE 'opencode' --include='*.md' --include='*.yml' --include='*.py' --include='*.sh' . | grep -v '^./docs/adr/'`
-  の残りが `docs/design/explainer-pane.md` の 2 行だけであること（ADR 本文は履歴として残す）。
+* `git grep -niE 'opencode' -- . ':(exclude)docs/adr' ':(exclude)docs/design/explainer-pane.md'` の残りが
+  `tests/test_install.py` の `test_does_not_create_opencode_config`（「作らない」ことの検証に語が要る）の
+  行だけであること。ADR 本文と `explainer-pane.md` の 2 行は意図して残す。追跡ファイルだけを対象にする
+  （`.claude/workflow-graph/` の台帳や `.venv/` は対象外）。
 * 実機: `user/install.sh` を実行して Claude Code を再起動し、`mode:` / `permission:` を消した役割が
   `Agent` ツールから起動でき、`Edit` / `Write` が剥がれていることを確認する。
 
