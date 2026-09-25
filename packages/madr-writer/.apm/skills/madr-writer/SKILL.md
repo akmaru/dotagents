@@ -1,7 +1,7 @@
 ---
 name: madr-writer
 description: Architecture Decision Record (ADR) を MADR 形式で作成する。設計上の決定を記録したいとき、プラン時にある設計案を選択した理由を残したいとき、既存の ADR を改訂したいとき、または「ADR」「architecture decision record」「設計判断」などに言及したときに使う。
-compatibility: Designed for Claude Code and OpenCode
+compatibility: Designed for Claude Code
 ---
 
 Architecture Decision Record (ADR) を書き、重要な設計判断とその理由、その判断がもたらす設計上のトレードオフ、検討した選択肢とそれぞれのpros/consなどの判断に至った経緯を記述する。

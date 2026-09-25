@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ユーザーレベルのエージェント設定を ~/.claude / ~/.config/opencode / ~/.config/herdr へ配布する。
+# ユーザーレベルのエージェント設定を ~/.claude / ~/.config/herdr へ配布する。
 # settings.json のみマージ、それ以外は symlink。
 # べき等: 何度実行しても同じ結果になる。ランタイムデータ（cache, projects 等）には触れない。
 #
@@ -97,9 +97,7 @@ done
 
 # --- agents (~/.claude/agents) ---
 # 役割定義（サブエージェント）はファイル単位で symlink する（docs/adr/0014）。
-# ディレクトリごと張ると /agents UI が書いた定義が repo に入り、OpenCode が読めない
-# frontmatter（tools: "Read, Grep" 等）を配ってしまう。OpenCode 側への配布は、
-# Claude 固有キーが provider に流れて拒否されないことを検証してから足す。
+# ディレクトリごと張ると /agents UI が書いた定義が repo に入る。
 AGENTS_LINK_DIR="${HOME}/.claude/agents"
 mkdir -p "${AGENTS_LINK_DIR}"
 # repo 側で消した役割の壊れたリンクを掃除する（dotagents 由来のものだけ）
@@ -118,10 +116,6 @@ for src in "${USER_DIR}"/agents/*.md; do
   fi
   ln -sfn "${src}" "${dst}"
 done
-
-# --- OpenCode (~/.config/opencode) ---
-mkdir -p "${HOME}/.config/opencode"
-ln -sfn "${USER_DIR}/AGENTS.md" "${HOME}/.config/opencode/AGENTS.md"
 
 # --- herdr (~/.config/herdr) ---
 # 設定とスクリプトだけを symlink する。socket / log / session.json などのランタイムには触らない

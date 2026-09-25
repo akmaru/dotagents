@@ -12,8 +12,6 @@ AGENTS.md の Memory が言う「セッション終了時の自動投入」は�
 （`hindsight-retain-hook.sh`）が担う。transcript から会話の地の文だけを抜き出して Hindsight に
 POST する。設計と判断の経緯は `docs/adr/0017-session-end-retain-hook.md`。
 
-OpenCode には対応する経路がないため、そちらでは記憶が増えない。
-
 ## Delegation（Claude Code 固有の対応）
 
 AGENTS.md の Delegation を Claude Code で実行するときの対応表。

@@ -1,8 +1,8 @@
 """
 Validate the personal user-level agent config under user/.
 
-user/ holds native (non-APM) config that install.sh symlinks into ~/.claude and
-~/.config/opencode. See docs/adr/0004-0006.
+user/ holds native (non-APM) config that install.sh symlinks into ~/.claude.
+See docs/adr/0004-0006.
 """
 
 import json
@@ -106,14 +106,11 @@ class TestRuleFrontmatter:
 
 # --- agents: user/agents/*.md（docs/adr/0014） ---
 #
-# 1 ファイルを Claude Code と OpenCode の両方が読む。frontmatter は両ツールで形が衝突しない
-# キーだけに絞る（tools: "Read, Grep" のような Claude 形式は OpenCode の設定ロード全体を壊す）。
+# Claude Code は未知の frontmatter キーを無言で無視する。defaultMode: auto 下の防壁は
+# disallowedTools なので、その欠落だけを検査で止める（docs/adr/0021）。
 
 AGENTS_DIR = USER_DIR / "agents"
 AGENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
-# Claude の disallowedTools と OpenCode の permission を同居させる（dual-key）。
-# 追加するときは OpenCode の provider options への流出を確認してから増やす。
-AGENT_FRONTMATTER_KEYS = {"name", "description", "mode", "disallowedTools", "permission", "initialPrompt"}
 # defaultMode: auto ではプロンプトの「書かない」は防壁にならない。ツールごと剥がす
 AGENT_REQUIRED_DISALLOWED = {"Edit", "Write", "NotebookEdit", "Agent"}
 # ユーザーと対話できる役割は「未決事項」で返す必要が無い
@@ -137,8 +134,8 @@ def _agent_body(path: Path) -> str:
 
 
 def test_agents_dir_has_only_markdown():
-    """description の無い .md は Claude が黙ってスキップし OpenCode は agent として読む。
-    README 等を混ぜると両ツールで見えるものが食い違うので、役割定義以外を置かない。"""
+    """README 等を混ぜると Claude が意図しないファイルを役割として読み込むので、
+    役割定義以外を置かない。"""
     assert _agent_files(), "user/agents/ に役割定義が 1 つ以上あること"
     extras = [p.name for p in AGENTS_DIR.iterdir() if p.suffix != ".md"]
     assert not extras, f"user/agents/ には .md 以外を置かない: {extras}"
@@ -154,8 +151,8 @@ def test_delegation_table_lists_every_agent():
 
 
 def test_agents_md_has_no_claude_specific_identifiers():
-    """Delegation の文面は OpenCode でも読まれる。Claude 固有のツール名・組み込みエージェント名は
-    user/CLAUDE.md の対応表に置く（docs/adr/0005 と同じ分離）。"""
+    """AGENTS.md はツール非依存の共通指示（agents.md 形式）。Claude 固有のツール名・組み込み
+    エージェント名は user/CLAUDE.md の対応表に置く（docs/adr/0005、docs/adr/0021）。"""
     agents_md = (USER_DIR / "AGENTS.md").read_text()
     for ident in ("AskUserQuestion", "SendMessage", "ListAgents", "EnterPlanMode", "Agent ツール"):
         assert ident not in agents_md, f"AGENTS.md に Claude 固有の識別子 {ident!r} を書かない"
@@ -164,7 +161,7 @@ def test_agents_md_has_no_claude_specific_identifiers():
 @pytest.mark.parametrize("agent_file", _agent_files(), ids=lambda p: p.stem)
 class TestAgentDefinition:
     def test_name_matches_file_stem(self, agent_file):
-        # OpenCode は name で ID を上書きするので、ファイル名とずれると二重登録になる
+        # name が subagent_type として使われるので、ファイル名とずれると呼び出しと定義が食い違う
         name = _agent_frontmatter(agent_file).get("name")
         assert name == agent_file.stem, f"name '{name}' はファイル名 '{agent_file.stem}' と一致させる"
         assert AGENT_NAME_PATTERN.match(name)
@@ -173,25 +170,16 @@ class TestAgentDefinition:
         desc = _agent_frontmatter(agent_file).get("description")
         assert isinstance(desc, str) and desc.strip()
 
-    def test_frontmatter_keys_are_cross_tool_safe(self, agent_file):
-        extra = set(_agent_frontmatter(agent_file)) - AGENT_FRONTMATTER_KEYS
-        assert not extra, (
-            f"{agent_file.name} の {extra} は両ツールで形が衝突する、または未検証のキー。"
-            "tools / color / model は OpenCode の設定ロードを壊す（docs/adr/0014）"
-        )
-
-    def test_mode_is_an_opencode_mode(self, agent_file):
-        assert _agent_frontmatter(agent_file).get("mode") in {"subagent", "primary", "all"}
-
     def test_disallowed_tools_block_writes_and_redelegation(self, agent_file):
         disallowed = set(_agent_frontmatter(agent_file).get("disallowedTools") or [])
         missing = AGENT_REQUIRED_DISALLOWED - disallowed
         assert not missing, f"{agent_file.name} の disallowedTools に {missing} が要る"
 
-    def test_permission_denies_edit_and_task(self, agent_file):
-        permission = _agent_frontmatter(agent_file).get("permission") or {}
-        assert permission.get("edit") == "deny", "OpenCode 側の書き込み禁止"
-        assert permission.get("task") == "deny", "OpenCode 側の再委譲禁止"
+    def test_permission_mode_is_not_set(self, agent_file):
+        """defaultMode: auto 下では無視されセッション間で権限クラスが割れる（docs/adr/0014）。"""
+        assert "permissionMode" not in _agent_frontmatter(agent_file), (
+            f"{agent_file.name} に permissionMode を書かない"
+        )
 
     def test_body_ends_with_open_questions(self, agent_file):
         body = _agent_body(agent_file)

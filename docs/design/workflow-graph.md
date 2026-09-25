@@ -213,8 +213,9 @@ SCC の外で役割を単発で呼ぶときは従来どおり `Agent` ツール�
 
 モデルは**呼び出しごと**に `agent(..., {model})` で指定する（優先度 1 位。
 [Choose a model](https://code.claude.com/docs/en/sub-agents#choose-a-model)）。役割ファイルの `model:` は
-`tests/test_user_config.py` が禁止しているため使えない（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)。
-ADR 0001 の見直しで外れる制約の 1 つ）。既定は各スクリプトの `MODELS` にあり、`args.models` で部分上書きできる。
+以前 `tests/test_user_config.py` が禁止していた（[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md)）が、
+[ADR 0021](../adr/0021-target-claude-code-only.md) で禁止は外れた。今は呼び出しごとの指定を続けており、
+役割側へ移すかは別途決める。既定は各スクリプトの `MODELS` にあり、`args.models` で部分上書きできる。
 判断が結果を左右するノード（design / critique / reviewer）はセッション継承、決定どおりに書く・実行する・
 1 件を判定するノードは sonnet、機械的な整形は haiku。ワークフローは実行中に人間に聞けないので、
 メインセッションは**起動の直前に毎回** `AskUserQuestion` でノードごとのモデルを確認し、既定から変えた
@@ -232,8 +233,8 @@ Bash 経由の書き込みを防げないので、起動前後の `git status --
 - **別セッションの implementer**（人が横に座って会話する形）は作っていない。`human-op` が濃い実装
   （インフラ系）で必要になったら、[ADR 0014](../adr/0014-agent-roles-dual-key-per-file-symlink.md) の
   別セッション協調プロトコルを起こす。
-- ワークフローと hook は Claude Code 専用。OpenCode 側の対応は
-  [ADR 0001](../adr/0001-target-claude-code-and-opencode.md) の見直しに委ねる。
+- ワークフローと hook は Claude Code 専用（[ADR 0021](../adr/0021-target-claude-code-only.md) で
+  Claude Code のみをターゲットにした）。
 
 ## 追試の記録
 

@@ -1,7 +1,7 @@
 ---
 name: refine-design
 description: 設計判断・実装アプローチを検討・比較する際に、代替案の洗い出し・トレードオフの明確化・既存の設計判断（docs/adr）との整合／シナジー／矛盾の確認・弱い根拠への指摘を通じて、判断を批判的にリファインする。機能開発やプランで設計方針やアプローチを議論・決定するとき、設計をレビュー・ブラッシュアップしたいとき、または「この設計どうする」「アプローチ比較」などに言及したときに使う。
-compatibility: Designed for Claude Code and OpenCode
+compatibility: Designed for Claude Code
 ---
 
 設計判断が固まる前に、それを批判的に検証してリファインする。迎合せず、代替案とトレードオフを明確にし、

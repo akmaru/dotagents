@@ -1,7 +1,7 @@
 # dotagents
 
 個人用 AI エージェントの SKILL/AGENTS をまとめた APM マーケットプレイス。
-[APM (Agent Package Manager)](https://github.com/microsoft/apm) で管理し、Claude Code と OpenCode の両方で使用できる。
+[APM (Agent Package Manager)](https://github.com/microsoft/apm) で管理し、Claude Code で使用する。
 
 ## 構造
 
@@ -25,7 +25,7 @@ dotagents/
 
 各プリミティブは必ず `.apm/<type>/` 配下に置くこと。パッケージルート直下に置くと `apm pack` は通るが `apm install` 時に黙って欠落する。
 
-`user/` は marketplace とは別概念の個人ユーザーレベル設定（グローバルプロンプト・rules・settings・herdr 設定）で、`apm compile` ではなくネイティブ symlink で `~/.claude` / `~/.config/opencode` / `~/.config/herdr` へ配布する（`settings.json` のみ、マシン固有のキーを残すため symlink ではなく jq マージ）。詳細は [docs/adr/](docs/adr/) 参照。
+`user/` は marketplace とは別概念の個人ユーザーレベル設定（グローバルプロンプト・rules・settings・herdr 設定）で、`apm compile` ではなくネイティブ symlink で `~/.claude` / `~/.config/herdr` へ配布する（`settings.json` のみ、マシン固有のキーを残すため symlink ではなく jq マージ）。詳細は [docs/adr/](docs/adr/) 参照。
 
 ## スキルの追加
 
@@ -36,7 +36,7 @@ dotagents/
 ---
 name: <name>
 description: <何をするか、いつ使うかを 1024 文字以内で>
-compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
+compatibility: Designed for Claude Code  # 必要な場合のみ
 ---
 
 ## スキルの指示（Markdown）
@@ -61,8 +61,9 @@ compatibility: Designed for Claude Code and OpenCode  # 必要な場合のみ
 ## 役割（サブエージェント）
 
 `user/agents/` の役割定義をメインセッションが委譲先として使う（[ADR 0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)）。
-frontmatter は Claude 用 `disallowedTools` と OpenCode 用 `permission` を同居させ、`tools` / `color` / `model` は
-書かない（OpenCode の設定ロードを壊す）。委譲の指示は `user/AGENTS.md` の Delegation 節。
+frontmatter は Claude Code のフィールドを自由に書けるが、`disallowedTools` に `Edit` / `Write` / `NotebookEdit` /
+`Agent` を必ず含め、`permissionMode` は書かない（[ADR 0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)
+の独立した理由）。委譲の指示は `user/AGENTS.md` の Delegation 節。
 
 | 役割 | 用途 |
 |------|------|
@@ -106,13 +107,6 @@ dependencies:
 ```bash
 mkdir -p ~/.claude/skills/grill-me
 cp packages/grill-me/.apm/skills/grill-me/SKILL.md ~/.claude/skills/grill-me/
-```
-
-### 手動インストール（OpenCode）
-
-```bash
-mkdir -p ~/.config/opencode/skills/grill-me
-cp packages/grill-me/.apm/skills/grill-me/SKILL.md ~/.config/opencode/skills/grill-me/
 ```
 
 <!-- br-agent-instructions-v1 -->
