@@ -33,7 +33,7 @@ explainer-pane.sh ──起動──▶ 固定 pane: claude --agent explainer -n
 
 | 部品 | 置き場所 | 役割 |
 |---|---|---|
-| 役割定義 `explainer.md` | `user/agents/`（`~/.claude/agents/` へ symlink） | system prompt、`mode: primary`、`disallowedTools`、`initialPrompt` |
+| 役割定義 `explainer.md` | `user/agents/`（`~/.claude/agents/` へ symlink） | system prompt、`disallowedTools`、`initialPrompt` |
 | 起動スクリプト `explainer-pane.sh` | `user/herdr/scripts/` | メイン pane の指定、固定 pane の作成・再利用、explainer の起動 |
 | 整形スクリプト `claude-main-digest.sh` | `user/bin/`（`~/.local/bin/` へ symlink） | メインのセッション特定とトランスクリプトの整形 |
 | キーバインド | `user/herdr/config.toml` | `prefix+alt+f` → `explainer-pane.sh` |

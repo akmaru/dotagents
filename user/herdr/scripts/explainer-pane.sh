@@ -48,6 +48,11 @@ cwd=$(jq -r '.result.pane.foreground_cwd // .result.pane.cwd // ""' <<<"$info")
 tab_id=$(jq -r '.result.pane.tab_id // ""' <<<"$info")
 [[ -n "$tab_id" ]] || die "タブ ID を特定できない ($pane)"
 
+# herdr のエージェント名はライブなもの同士で一意である必要がある
+# (fork-claude-session.sh 参照)。固定名 "explainer" だと別タブで explainer が
+# 生きている間はこのタブで agent start が失敗するので、タブ ID を name に含める。
+name="explainer-${tab_id}"
+
 # フォーカス pane に main ラベルを付け、同タブの他 pane から main を外す（常に 1 つにする）
 "$HERDR" pane rename "$pane" main >/dev/null 2>&1 || die "main ラベルの付与に失敗した"
 
@@ -78,7 +83,7 @@ start_explainer() {
   # $1: 起動先 pane_id
   local target="$1" out
   for _ in $(seq 1 40); do
-    if out=$("$HERDR" agent start explainer --kind claude --pane "$target" --timeout 60000 \
+    if out=$("$HERDR" agent start "$name" --kind claude --pane "$target" --timeout 60000 \
       -- --agent explainer -n explainer 2>&1); then
       break
     fi
@@ -111,7 +116,7 @@ else
   }
 
   for _ in $(seq 1 40); do
-    if out=$("$HERDR" agent start explainer --kind claude --pane "$new" --timeout 60000 \
+    if out=$("$HERDR" agent start "$name" --kind claude --pane "$new" --timeout 60000 \
       -- --agent explainer -n explainer 2>&1); then
       break
     fi
@@ -123,7 +128,8 @@ else
   "$HERDR" pane rename "$new" explainer >/dev/null 2>&1 || true
 fi
 
-# explainer にそのまま質問できるようフォーカスを移す
-"$HERDR" agent focus explainer >/dev/null 2>&1 || true
+# explainer にそのまま質問できるようフォーカスを移す。名前 (name) はタブ毎に変わるので
+# pane id ($new) で指定する（agent focus が pane id を受けるかは実機未確認）。
+"$HERDR" agent focus "$new" >/dev/null 2>&1 || true
 
 notify "explainer" "$new に常駐 (main は ${sid:0:8})" done

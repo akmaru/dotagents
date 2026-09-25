@@ -117,6 +117,10 @@ if [[ -z "${file_arg}" ]]; then
   fi
 
   session_id=$(jq -r '.result.pane.agent_session | if .kind == "id" then .value else "" end' <<<"${info}")
+  if [[ -z "${session_id}" ]]; then
+    echo "セッション ID 未報告 (pane ${pane})" >&2
+    exit 3
+  fi
   cwd=$(jq -r '.result.pane.foreground_cwd // .result.pane.cwd // ""' <<<"${info}")
   claude_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
   transcript=$(find "${claude_root}/projects" -maxdepth 2 -name "${session_id}.jsonl" -print -quit 2>/dev/null || true)
@@ -174,7 +178,6 @@ entries_json=$(jq -n -c --argjson with_results "${with_results}" '
 
   [inputs] as $rows
   | ($rows | map(select(.__parse_error__ != true))) as $valid
-  | ($valid | if length > 0 then .[-1].uuid // "" else "" end) as $last_uuid
   | (
       [ $valid[]
         | select((.isSidechain // false) | not)
@@ -232,7 +235,7 @@ entries_json=$(jq -n -c --argjson with_results "${with_results}" '
         }
       else . end
     )) as $final
-  | {entries: $final, last_uuid: $last_uuid}
+  | {entries: $final, last_uuid: ($final | if length > 0 then .[-1].uuid // "" else "" end)}
 ' <<<"${parsed_stream}")
 
 total=$(jq '.entries | length' <<<"${entries_json}")
@@ -311,6 +314,10 @@ done
 final_count=$(jq 'length' <<<"${window_json}")
 if [[ "${total}" -eq 0 ]]; then
   range="0/0"
+elif [[ "${final_count}" -eq 0 ]]; then
+  # --since が直近エントリと一致した場合など、窓に新規エントリが無い状態。
+  # total 番目以降が無いだけで異常ではないので「新規 0 件」として区別する。
+  range="0 new/${total}"
 else
   final_start=$((total - final_count))
   range="$((final_start + 1))–${total}/${total}"
@@ -328,6 +335,10 @@ printf '%s\n' "${body}"
 
 if [[ "${final_count}" -gt 0 ]]; then
   cursor_uuid=$(jq -r '.[-1].uuid' <<<"${window_json}")
+elif [[ -n "${since_uuid}" && -z "${since_warning}" ]]; then
+  # --since が末尾エントリと一致し窓が空になったケース。呼び出し元の --since を
+  # そのまま返し、次回も同じ位置から差分が取れるようにする（cursor を進めない）。
+  cursor_uuid="${since_uuid}"
 else
   cursor_uuid="${last_uuid}"
 fi
