@@ -331,6 +331,36 @@ def test_removes_dangling_dotagents_workflow_links_only(tmp_path):
     assert (wf_dir / "mine.js").read_text() == "export const meta = {}\n"
 
 
+# --- AGENTS.md が参照する skill: checkout の packages/ から apm install -g（docs/adr/0023） ---
+
+def _agents_md_skills():
+    m = re.search(r"AGENTS_MD_SKILLS=\(([^)]*)\)", INSTALL_SH.read_text())
+    return m.group(1).split() if m else []
+
+
+def test_agents_md_skills_are_declared():
+    assert "clear-writing" in _agents_md_skills(), "install.sh の AGENTS_MD_SKILLS に宣言が要る"
+
+
+@pytest.mark.parametrize("name", _agents_md_skills())
+def test_agents_md_skill_is_apm_installed_from_checkout(installed, name):
+    """GitHub ではなく checkout の packages/<name> を入れ、AGENTS.md と同じ版にする。"""
+    deployed = installed / ".claude" / "skills" / name / "SKILL.md"
+    source = ROOT / "packages" / name / ".apm" / "skills" / name / "SKILL.md"
+    assert deployed.is_file() and not deployed.is_symlink(), "apm はコピーで配置する"
+    assert deployed.read_text() == source.read_text()
+    user_manifest = (installed / ".apm" / "apm.yml").read_text()
+    assert str(ROOT / "packages" / name) in user_manifest, "ユーザースコープの依存は checkout の絶対パス"
+
+
+def test_agents_md_skill_dependency_is_not_duplicated_on_rerun(tmp_path):
+    assert _run_install(tmp_path).returncode == 0
+    assert _run_install(tmp_path).returncode == 0
+    user_manifest = (tmp_path / ".apm" / "apm.yml").read_text()
+    for name in _agents_md_skills():
+        assert user_manifest.count(str(ROOT / "packages" / name)) == 1
+
+
 # --- workflow-graph hooks（docs/adr/0020） ---
 
 WORKFLOW_GRAPH_HOOKS = {
