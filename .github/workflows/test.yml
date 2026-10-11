@@ -19,5 +19,13 @@ jobs:
       - name: Sync dev tools
         run: uv sync
 
+      # Claude Code CLI lets the e2e test check that an installed skill is listed as a slash command
+      # (the system/init line of a headless run). No API key is set: the init line comes before any API
+      # call, and the call that follows fails without cost.
+      - name: Install Claude Code
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Run tests
         run: uv run pytest tests/ -v

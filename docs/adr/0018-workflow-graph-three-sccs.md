@@ -49,7 +49,7 @@ decision-makers: akmaru
 
 適用するルール:
 
-- ワークフローを 3 つの SCC に分ける。**① deliberate**（`research` / `design` / `critique` / `decide`）、
+- ワークフローを 3 つの SCC に分ける。**① design**（`research` / `propose` / `critique` / `decide`）、
   **② build**（`implement` / `verify-local` / `human-op`）、**③ review**（`verify-CI` / `差分の提示` /
   `human-review` / `fix`）。
 - 3 つとも同じ形にする: **機械が回る複数ノード + 人間が判断する 1 ノード + 台帳 1 枚 + 離脱条件**。

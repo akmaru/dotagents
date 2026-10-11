@@ -49,7 +49,7 @@ user/
 ├── settings.json  # Claude Code settings
 ├── rules/         # Claude-only, path-scoped rules (recursive, paths: frontmatter)
 ├── agents/        # agent role definitions (researcher / designer / critic / verifier / reviewer), one file per role
-├── workflows/     # saved dynamic workflows: one per SCC (/deliberate, /build, /review) + /web-research (model-pinned copy of /deep-research)
+├── workflows/     # saved dynamic workflows: one per SCC (/design, /build, /review) + /web-research (model-pinned copy of /deep-research)
 ├── bin/           # hook and status-line scripts (workflow-graph-*.sh, hindsight-retain-hook.sh, ...)
 └── install.sh     # symlinks the above into ~/.claude
 ```
@@ -80,7 +80,7 @@ script prints the options and skips itself when the key is missing, so the rest 
   `~/.claude/agents/` ([docs/adr/0014](docs/adr/0014-agent-roles-dual-key-per-file-symlink.md)). Generic
   names such as `critic` can be shadowed by a project's own `.claude/agents/`. The `explainer` role runs as a
   persistent session in a herdr pane ([docs/design/explainer-pane.md](docs/design/explainer-pane.md)).
-- The overall workflow is modelled as three strongly connected components (deliberate / build / review),
+- The overall workflow is modelled as three strongly connected components (design / build / review),
   each holding one ledger file and leaving on recurrence rather than an iteration cap
   ([docs/adr/0018](docs/adr/0018-workflow-graph-three-sccs.md)). Inside each SCC a saved workflow
   (`workflows/*.js`, linked into `~/.claude/workflows/`) runs the machine nodes; the main session handles the

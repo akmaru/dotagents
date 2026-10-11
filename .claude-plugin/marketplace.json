@@ -18,6 +18,12 @@
       "source": "./packages/grill-with-docs"
     },
     {
+      "name": "grill-spec",
+      "description": "Interview the developer about what to build and why in a repo, writing problems, user stories, journeys, and acceptance criteria into a versioned spec file, refining it against consistency and opposing perspectives before accepting.",
+      "version": "1.0.0",
+      "source": "./packages/grill-spec"
+    },
+    {
       "name": "beads",
       "description": "Beads issue tracking workflow for Claude Code. Always create a beads issue before starting any task, update it during work, and close it on completion.",
       "version": "1.0.0",
@@ -49,7 +55,7 @@
     },
     {
       "name": "workflow-graph",
-      "description": "Run work as a graph of three strongly connected components (deliberate / build / review) with saved workflows, ledgers, and enforced exit conditions.",
+      "description": "Run work as a graph of three strongly connected components (design / build / review) with saved workflows, ledgers, and enforced exit conditions.",
       "version": "0.1.0",
       "source": "./packages/workflow-graph"
     },
