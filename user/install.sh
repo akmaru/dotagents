@@ -7,9 +7,14 @@
 set -euo pipefail
 
 USER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "${USER_DIR}")"
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq が必要です（settings.json のマージに使用）" >&2
+  exit 1
+fi
+if ! command -v apm >/dev/null 2>&1; then
+  echo "apm が必要です（AGENTS.md が参照する skill の導入に使用）" >&2
   exit 1
 fi
 
@@ -117,6 +122,14 @@ for src in "${USER_DIR}"/agents/*.md; do
     mv "${dst}" "${AGENTS_LINK_DIR}.pre-dotagents/"
   fi
   ln -sfn "${src}" "${dst}"
+done
+
+# --- AGENTS.md が参照する skill (~/.claude/skills) ---
+# GitHub の公開版ではなく checkout の packages/ を apm install -g し、AGENTS.md と同じ版にする（docs/adr/0023）。
+# apm はコピーで配置するので、checkout を更新したらこのスクリプトを再実行するまで skill は古いまま。
+AGENTS_MD_SKILLS=(clear-writing)
+for name in "${AGENTS_MD_SKILLS[@]}"; do
+  apm install -g "${REPO_DIR}/packages/${name}" --target claude >/dev/null
 done
 
 # --- herdr (~/.config/herdr) ---

@@ -71,6 +71,31 @@ def test_at_least_one_skill():
     assert len(skill_dirs()) >= 1, "packages/ must contain at least one skill"
 
 
+# ADR などの置き場を参照する汎用のスキルと役割。置き場の決め方は project-layout だけに書き、
+# ここでは project-layout を参照させる（docs/adr/0025）。
+LAYOUT_SKILL = PACKAGES_DIR / "project-layout/.apm/skills/project-layout/SKILL.md"
+LAYOUT_CONSUMERS = [
+    PACKAGES_DIR / "madr-writer/.apm/skills/madr-writer/SKILL.md",
+    PACKAGES_DIR / "grill-with-docs/.apm/skills/grill-with-docs/SKILL.md",
+    PACKAGES_DIR / "refine-design/.apm/skills/refine-design/SKILL.md",
+    PACKAGES_DIR.parent / "user/agents/designer.md",
+    PACKAGES_DIR.parent / "user/agents/critic.md",
+]
+
+
+def test_project_layout_defines_the_adr_location_order():
+    content = LAYOUT_SKILL.read_text()
+    for word in ("AGENTS.md", "CLAUDE.md", "docs/internal/adr/", "docs/adr/"):
+        assert word in content
+
+
+@pytest.mark.parametrize("path", LAYOUT_CONSUMERS, ids=lambda p: p.parent.name if p.name == "SKILL.md" else p.stem)
+def test_layout_consumers_refer_to_project_layout(path):
+    content = path.read_text()
+    assert "project-layout" in content, "置き場は project-layout スキルに従わせる"
+    assert "docs/adr/" not in content, "置き場の決め方を自前で持たない"
+
+
 def _frontmatter(skill_dir: Path) -> dict:
     content = (skill_dir / "SKILL.md").read_text()
     parts = content.split("---", 2)

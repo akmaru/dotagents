@@ -1,9 +1,10 @@
 name: refine-design
-version: 1.0.0
+version: 1.1.0
 description: Critically pressure-test and refine a design decision — surface alternatives and trade-offs, and check consistency with existing decisions.
 author: akmaru
 license: MIT
 includes: auto
 dependencies:
-  apm: []
+  apm:
+    - ../project-layout
   mcp: []

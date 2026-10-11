@@ -28,6 +28,12 @@ marketplace:
     source: ./packages/context-budget
   - name: workflow-graph
     source: ./packages/workflow-graph
+  - name: clear-writing
+    source: ./packages/clear-writing
+  - name: project-layout
+    source: ./packages/project-layout
+  - name: init-project
+    source: ./packages/init-project
   - name: skill-creator
     source: anthropics/claude-plugins-official
     ref: f9cb226d81172f53a1787cc3ba90dc9ab51aa169

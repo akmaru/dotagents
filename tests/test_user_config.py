@@ -48,6 +48,15 @@ def test_agents_md_is_cross_agent_clean():
     )
 
 
+def test_agents_md_points_to_clear_writing_skill():
+    # 書き方の詳細は常時ロードを避けて skill に置き、AGENTS.md には核と参照だけを残す。
+    # 参照先が消えると核だけが残り、詳細に辿り着けなくなる。
+    agents = (USER_DIR / "AGENTS.md").read_text()
+    assert "`clear-writing`" in agents, "user/AGENTS.md must point to the clear-writing skill"
+    skill = ROOT / "packages" / "clear-writing" / ".apm" / "skills" / "clear-writing" / "SKILL.md"
+    assert skill.exists(), "packages/clear-writing must provide the skill AGENTS.md points to"
+
+
 def test_settings_json_is_valid():
     json.loads((USER_DIR / "settings.json").read_text())
 

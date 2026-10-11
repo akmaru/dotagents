@@ -54,9 +54,10 @@ compatibility: Designed for Claude Code
 /
 ├── CONTEXT.md
 ├── docs/
-│   └── adr/
-│       ├── 0001-event-sourced-orders.md
-│       └── 0002-postgres-for-write-model.md
+│   └── internal/
+│       └── adr/
+│           ├── 0001-event-sourced-orders.md
+│           └── 0002-postgres-for-write-model.md
 └── src/
 ```
 
@@ -64,7 +65,8 @@ compatibility: Designed for Claude Code
 [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md)）。
 
 ファイルは**遅延して**作る: 書くものができたときだけ。`CONTEXT.md` が無ければ最初の用語が決まったときに、
-`docs/adr/` が無ければ最初の ADR が要るときに作る。
+ADR ディレクトリが無ければ最初の ADR が要るときに作る。`CONTEXT.md` と ADR ディレクトリの置き場は
+`project-layout` スキルの「置き場の決め方」で決める（上の図は既定の置き場）。
 
 ### セッション中にやること
 
@@ -92,7 +94,7 @@ ADR を提案するのは、次の **3 つすべて**が真のときだけ:
 1 つでも欠けていれば書かない。戻しやすいなら戻せばよい。意外でないなら誰も理由を問わない。代替案が
 無かったなら「当たり前のことをした」以上に記録することがない。
 
-**書式は MADR**（このリポジトリの ADR の正典。`madr-writer` スキルがあればそれを呼ぶ）。`docs/adr/` を読んで
+**書式は MADR**（このリポジトリの ADR の正典。`madr-writer` スキルがあればそれを呼ぶ）。ADR ディレクトリを読んで
 次の連番を取り、`NNNN-kebab-case-title.md` に `Context and Problem Statement` / `Decision Drivers` /
 `Considered Options` / `Decision Outcome`（Consequences・Confirmation を含む）/ `Pros and Cons of the Options` の
 見出しで書く。本文はリポジトリの言語で。セッション中に出た却下案と判断軸をそのまま Considered Options に

@@ -53,6 +53,8 @@ compatibility: Designed for Claude Code  # 必要な場合のみ
 
 3. `packages/<name>/apm.yml`（name / version / description / author / license / `includes: auto`）を作成。`name` はディレクトリ名・スキルディレクトリ名と一致させること
 4. ルート `apm.yml` の `marketplace.packages` にエントリを追加し、`apm pack` で `.claude-plugin/marketplace.json` を再生成する
+5. `user/AGENTS.md` から参照する skill なら、`user/install.sh` の `AGENTS_MD_SKILLS` にも足す。install.sh が checkout の
+   `packages/<name>` を `apm install -g` し、AGENTS.md と同じ版を入れる（[ADR 0023](docs/adr/0023-agents-md-dependent-skills-from-checkout.md)）
 
 ## スキル一覧
 
@@ -67,6 +69,9 @@ compatibility: Designed for Claude Code  # 必要な場合のみ
 | [refine-design](packages/refine-design/.apm/skills/refine-design/SKILL.md) | 設計判断を代替案・トレードオフ・既存決定との整合で審議・リファインするスキル |
 | [context-budget](packages/context-budget/.apm/skills/context-budget/SKILL.md) | コンテキスト使用量を計測し、削減候補を提案・適用・再計測するスキル（計測は `user/bin/claude-context.py`） |
 | [workflow-graph](packages/workflow-graph/.apm/skills/workflow-graph/SKILL.md) | 作業を 3 つの SCC のグラフとして回すメインセッション向けの規約（ワークフロー本体は `user/workflows/`、hook は `user/bin/`） |
+| [clear-writing](packages/clear-writing/.apm/skills/clear-writing/SKILL.md) | 読み返さずに論理を追える文章の規則と例（核は `user/AGENTS.md` の Communication Style。install.sh が checkout から入れる） |
+| [project-layout](packages/project-layout/.apm/skills/project-layout/SKILL.md) | 標準構成と、ADR・仕様書・用語集・公開ドキュメントの置き場の決め方を定める参照用スキル（定義は `layout.json`。[ADR 0025](docs/adr/0025-project-layout-knowledge-skill.md)） |
+| [init-project](packages/init-project/.apm/skills/init-project/SKILL.md) | リポジトリを標準構成（[ADR 0024](docs/adr/0024-new-project-standard-layout.md)）と突き合わせ、無いファイルだけを作る。`project-layout` に依存 |
 
 ## 役割（サブエージェント）
 
