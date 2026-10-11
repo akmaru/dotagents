@@ -1,7 +1,7 @@
 # madr-writer
 
 [MADR](https://adr.github.io/madr/) 形式で Architecture Decision Record (ADR) を書くためのスキル。設計上の
-重要な決定と、却下した代替案をあわせて `docs/adr/` に残す。
+重要な決定と、却下した代替案をあわせて ADR ディレクトリ（指示ファイルの規約、無ければ `docs/internal/adr/`）に残す。
 
 ## インストール
 

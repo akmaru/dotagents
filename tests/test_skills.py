@@ -71,6 +71,24 @@ def test_at_least_one_skill():
     assert len(skill_dirs()) >= 1, "packages/ must contain at least one skill"
 
 
+# ADR の置き場を決める汎用のスキルと役割。任意のリポジトリで使うので、置き場を docs/adr/ に決め打ちせず、
+# 指示ファイルの規約 → 既存のディレクトリ → 既定の docs/internal/adr/ の順に解決させる。
+ADR_LOCATING_FILES = [
+    PACKAGES_DIR / "madr-writer/.apm/skills/madr-writer/SKILL.md",
+    PACKAGES_DIR / "grill-with-docs/.apm/skills/grill-with-docs/SKILL.md",
+    PACKAGES_DIR / "refine-design/.apm/skills/refine-design/SKILL.md",
+    PACKAGES_DIR.parent / "user/agents/designer.md",
+    PACKAGES_DIR.parent / "user/agents/critic.md",
+]
+
+
+@pytest.mark.parametrize("path", ADR_LOCATING_FILES, ids=lambda p: p.parent.name if p.name == "SKILL.md" else p.stem)
+def test_adr_location_defaults_to_docs_internal_adr(path):
+    content = path.read_text()
+    assert "docs/internal/adr/" in content, "既定の ADR の置き場は docs/internal/adr/"
+    assert "AGENTS.md" in content, "指示ファイル（AGENTS.md / CLAUDE.md）の置き場の規約を優先させる"
+
+
 def _frontmatter(skill_dir: Path) -> dict:
     content = (skill_dir / "SKILL.md").read_text()
     parts = content.split("---", 2)
