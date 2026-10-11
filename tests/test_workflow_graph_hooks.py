@@ -137,6 +137,13 @@ def test_state_hook_injects_skill_body_once_per_session(tmp_path):
     assert SKILL_MARKER in _ctx(_run(STATE_HOOK, _prompt(tmp_path, "/build z", "s2"), env))
 
 
+def test_state_hook_does_not_inject_skill_for_a_path_containing_a_command_name(tmp_path):
+    """改名で /design がパスの一部（docs/design/…、./design/x.md）と紛れやすくなった。パスでは発火させない。"""
+    r = _run(STATE_HOOK, _prompt(tmp_path, "./design/x.md を読んで"), _state_env(tmp_path))
+    assert r.returncode == 0, r.stderr
+    assert SKILL_MARKER not in _ctx(r)
+
+
 def test_state_hook_does_not_inject_skill_for_unrelated_prompts(tmp_path):
     r = _run(STATE_HOOK, _prompt(tmp_path, "このテストを直して"), _state_env(tmp_path))
     assert r.stdout.strip() == ""

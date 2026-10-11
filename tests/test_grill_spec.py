@@ -6,6 +6,7 @@ See docs/adr/0022-grill-spec-separate-self-contained-package.md and
 packages/grill-spec/docs/internal/specs/0001-grill-spec.md (AC7).
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -152,9 +153,63 @@ def test_bundled_files_do_not_cite_dotagents_internal_spec(name):
     body = (SKILL_DIR / name).read_text()
     assert "仕様書 AC" not in body
     assert "0001-grill-spec" not in body
+    # 書式の例（`AC1`、`**AC8**（手順1）`）は許し、AC 番号を根拠として指す書き方だけを禁じる
+    assert not re.search(r"AC\d+\s*(参照|の基準|に従)", body)
 
 
 def test_skill_md_resumes_a_refinement_left_running():
-    # リファインメントの途中で止まったら、再開時に保存済みの報告を取り込み、欠けた観点だけ起動し直す（設計 U11）
+    # リファインメントの途中で止まったら、再開時に保存済みの報告を取り込み、欠けた観点だけ起動し直す（仕様書 J1 手順 9、ADR 0022 の決定の適用）
     body = (SKILL_DIR / "SKILL.md").read_text()
     assert "running" in body
+
+
+class TestReviewFindings:
+    """PR #45 の機械レビューで、テストが見ていなかった指示の漏れが見つかった分（review-v1 の #1〜#9）。"""
+
+    @classmethod
+    @pytest.fixture(scope="class")
+    def skill(cls):
+        return (SKILL_DIR / "SKILL.md").read_text()
+
+    @classmethod
+    @pytest.fixture(scope="class")
+    def refinement(cls):
+        return (SKILL_DIR / "REFINEMENT.md").read_text()
+
+    @classmethod
+    @pytest.fixture(scope="class")
+    def spec_format(cls):
+        return (SKILL_DIR / "SPEC-FORMAT.md").read_text()
+
+    @pytest.mark.parametrize("section", ["この版で触ったファイル", "振り分けた発言", "足した用語", "この版で作った issue"])
+    def test_skill_md_writes_each_ledger_section(self, skill, section):
+        # 書き込む指示が無いと、セッションをまたいだとき確定のまとめや改訂の中止が空になる
+        assert section in skill
+
+    def test_skill_md_writes_version_line(self, skill):
+        assert "revising 開始" in skill and "draft 作成" in skill
+
+    def test_judgment_free_fixes_exclude_opposing_findings(self, refinement):
+        assert "反対の立場の指摘はすべて判断の要る側" in refinement
+
+    def test_revising_resume_includes_open_change_requests(self, skill):
+        assert "「変えたい点」のうち `open`" in skill
+
+    def test_context_map_rules(self, skill):
+        assert "常に読む" in skill
+        assert "shared" in skill and "common" in skill
+
+    def test_refinement_is_completed_inside_refinement_md(self, skill):
+        # 判断の要る指摘を SKILL.md と REFINEMENT.md の両方で聞かない
+        assert "その中で" in skill and "聞く" in skill
+
+    def test_minor_findings_are_asked_with_multiselect(self, refinement):
+        assert "multiSelect" in refinement
+
+    def test_spec_format_ledger_can_express_withdrawal_spec_changing_count_and_issues(self, spec_format):
+        assert "withdrawn" in spec_format
+        assert "仕様を変えた採用" in spec_format
+        assert "この版で作った issue" in spec_format
+
+    def test_spec_format_forbids_extra_sections_in_spec_body(self, spec_format):
+        assert "以外を書かない" in spec_format

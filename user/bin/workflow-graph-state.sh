@@ -36,7 +36,7 @@ skill_md="${WORKFLOW_GRAPH_SKILL:-${repo_root}/packages/workflow-graph/.apm/skil
 parts=()
 
 # ---- 1. 規約の注入（コマンドを打ったターン、セッションにつき 1 回） ----
-if printf '%s' "${prompt}" | grep -qE '(^|[^[:alnum:]/])/(design|build|review|web-research)([^[:alnum:]-]|$)'; then
+if printf '%s' "${prompt}" | grep -qE '(^|[^[:alnum:]/])/(design|build|review|web-research)([^[:alnum:]/._-]|$)'; then
   marker_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/workflow-graph/injected"
   marker="${marker_dir}/${session:-no-session}"
   if [ ! -e "${marker}" ] && [ -f "${skill_md}" ]; then

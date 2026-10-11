@@ -44,6 +44,8 @@ const MODELS = {
   webResearch: undefined, // web-research 側の既定（全段階 opus）に任せる。{scope, search, fetch, verify, synthesize} で上書き
   ...(args && args.models ? args.models : {}),
 }
+// 案出しノードを design から propose に改名した（2026-09-25）。旧キーは黙って無視せず知らせる
+if (args && args.models && 'design' in args.models) log('args.models.design は旧キーなので無視した。propose を使う')
 if (!args || !args.goal || !args.ledgerDir) {
   throw new Error('args.goal と args.ledgerDir は必須（docs/design/workflow-graph.md「/design の入力」）')
 }

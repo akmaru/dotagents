@@ -70,9 +70,10 @@ decision-makers: akmaru
 
 * `tests/test_apm.py::test_marketplace_packages_match_directories` が、`packages/` の下のディレクトリとルート
   `apm.yml` の `marketplace.packages` が一致することを検査する。`packages/grill-spec/` を登録しないと落ちる
-  （2026-10-10 時点、パッケージの骨組みが未作成のためこのテストは落ちている）
-* `CONTEXT-FORMAT.md` のバイト一致と同梱 4 ファイルの存在を検査するテスト（`tests/test_grill_spec.py`）は、
-  実装のときに先に書く。この ADR の時点ではまだ無い
+* `tests/test_grill_spec.py` が、同梱 4 ファイルとパッケージのファイルがあること、`CONTEXT-FORMAT.md` が
+  `grill-with-docs` のものとバイト一致すること、同梱ファイルが dotagents の中にしか無い仕様書を指していない
+  ことを検査する。リファインメントの観点の書き方など振る舞いの中身は検査しておらず、確かめ方は仕様書の
+  設計上の論点 D8 で決める
 
 ## Pros and Cons of the Options
 
