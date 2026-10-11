@@ -14,6 +14,8 @@ marketplace:
     source: ./packages/grill-me
   - name: grill-with-docs
     source: ./packages/grill-with-docs
+  - name: grill-spec
+    source: ./packages/grill-spec
   - name: beads
     source: ./packages/beads
   - name: rust

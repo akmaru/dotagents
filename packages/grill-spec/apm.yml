@@ -1,0 +1,9 @@
+name: grill-spec
+version: 1.0.0
+description: Interview the developer about what to build and why in a repo, writing problems, user stories, journeys, and acceptance criteria into a versioned spec file, refining it against consistency and opposing perspectives before accepting.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []

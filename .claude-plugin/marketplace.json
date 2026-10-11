@@ -18,6 +18,12 @@
       "source": "./packages/grill-with-docs"
     },
     {
+      "name": "grill-spec",
+      "description": "Interview the developer about what to build and why in a repo, writing problems, user stories, journeys, and acceptance criteria into a versioned spec file, refining it against consistency and opposing perspectives before accepting.",
+      "version": "1.0.0",
+      "source": "./packages/grill-spec"
+    },
+    {
       "name": "beads",
       "description": "Beads issue tracking workflow for Claude Code. Always create a beads issue before starting any task, update it during work, and close it on completion.",
       "version": "1.0.0",
