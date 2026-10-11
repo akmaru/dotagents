@@ -14,9 +14,11 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).parent.parent
 GRILL_SKILL = ROOT / "packages" / "grill-me" / ".apm" / "skills" / "grill-me" / "SKILL.md"
@@ -121,3 +123,61 @@ def test_claude_code_lists_grill_spec_as_slash_command(tmp_path, scope):
     assert "grill-spec" in init.get("slash_commands", []), (
         f"/grill-spec not listed ({scope}): {init.get('slash_commands')}"
     )
+
+
+# --- init-project: 相対パスの依存（../project-layout）が隣に入り、同じコミットから取られる（ADR 0025） ---
+
+INIT_PROJECT_SRC = ROOT / "packages" / "init-project" / ".apm" / "skills" / "init-project"
+LAYOUT_SRC = ROOT / "packages" / "project-layout" / ".apm" / "skills" / "project-layout" / "layout.json"
+# CI が "<owner>/<repo>@<commit>" を渡したときだけ、GitHub から clone する本番と同じ経路で確かめる。
+REMOTE = os.environ.get("DOTAGENTS_E2E_REMOTE")
+
+
+def _install_init_project(tmp_path, source, ref, scope):
+    home = tmp_path / "home"
+    consumer = tmp_path / "consumer"
+    home.mkdir()
+    consumer.mkdir()
+    add = _apm(["marketplace", "add", source, "--ref", ref], home)
+    assert add.returncode == 0, f"marketplace add failed:\n{add.stderr or add.stdout}"
+    args = ["install", "init-project@dotagents", "--target", "claude"]
+    if scope == "user":
+        args.insert(1, "-g")
+    install = _apm(args, home, cwd=consumer)
+    assert install.returncode == 0, f"install failed:\n{install.stderr or install.stdout}"
+    base = home if scope == "user" else consumer
+    lock = home / ".apm" / "apm.lock.yaml" if scope == "user" else consumer / "apm.lock.yaml"
+    return base / ".claude" / "skills", lock, install
+
+
+def _assert_init_project_runs_with_sibling_layout(skills, tmp_path, install):
+    assert (skills / "project-layout" / "layout.json").read_bytes() == LAYOUT_SRC.read_bytes(), (
+        f"project-layout not deployed next to init-project:\n{install.stdout}"
+    )
+    target = tmp_path / "repo"
+    target.mkdir()
+    r = subprocess.run(
+        [sys.executable, "-I", str(skills / "init-project" / "scripts" / "init_project.py"),
+         "--target", str(target), "--hosting", "github", "--name", "demo", "--holder", "Alice"],
+        capture_output=True, text=True,
+    )
+    assert r.returncode == 0, r.stderr
+    assert (target / "AGENTS.md").is_file() and (target / "docs/internal/adr").is_dir()
+
+
+def test_init_project_from_local_marketplace_deploys_project_layout_alongside(tmp_path):
+    """push 前でも回せる経路。ローカルの marketplace はパッケージを作業ツリーから入れるので、-g では相対パスの
+    依存が配置されない（APM 0.31.0、ADR 0025）。ここではプロジェクトスコープだけを確かめる。"""
+    skills, _, install = _install_init_project(tmp_path, str(ROOT), "HEAD", "project")
+    _assert_init_project_runs_with_sibling_layout(skills, tmp_path, install)
+
+
+@pytest.mark.skipif(not REMOTE, reason="DOTAGENTS_E2E_REMOTE (<owner>/<repo>@<commit>) is not set")
+@pytest.mark.parametrize("scope", ["project", "user"])
+def test_init_project_from_github_marketplace_pins_both_packages_to_one_commit(tmp_path, scope):
+    repo, commit = REMOTE.split("@")
+    skills, lock, install = _install_init_project(tmp_path, repo, commit, scope)
+    _assert_init_project_runs_with_sibling_layout(skills, tmp_path, install)
+    deps = {d["name"]: d for d in yaml.safe_load(lock.read_text())["dependencies"]}
+    assert deps["init-project"]["resolved_commit"] == commit
+    assert deps["project-layout"]["resolved_commit"] == commit, "project-layout が別のコミットから入った"

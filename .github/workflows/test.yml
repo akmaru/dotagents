@@ -27,5 +27,11 @@ jobs:
           curl -fsSL https://claude.ai/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      # The e2e test for init-project installs from GitHub at the commit under test (the same path as a real
+      # `apm marketplace add akmaru/dotagents`), so a relative dependency is checked against a real clone.
+      # The token lifts the unauthenticated GitHub API rate limit that apm hits.
       - name: Run tests
+        env:
+          DOTAGENTS_E2E_REMOTE: ${{ github.event.pull_request.head.repo.full_name || github.repository }}@${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: uv run pytest tests/ -v

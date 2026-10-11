@@ -53,9 +53,10 @@ decision-makers: akmaru
 * Good: 置き場の決め方と標準のツリーが `project-layout` の 1 か所だけになる
 * Good: 構成を知りたいだけの場面では、description の短い `project-layout` だけが読まれる
 * Good: `layout.json` の各項目にテンプレートがあることを、テストで機械的に確かめられる
-* Bad: APM 0.31.0 では、ディレクトリ指定の `apm install -g` で相対パスの依存が配置されない（scratchpad で確認。
-  エラーは `its install path is not a directory`）。push 前の変更を試すときは、2 つのパッケージを明示して入れる
-  （`packages/init-project/README.md` に記載）
+* Bad: APM 0.31.0 では、パッケージを作業ツリーから入れる経路（ディレクトリ指定と、ローカルのリポジトリを
+  marketplace として登録した場合）の `-g` で、相対パスの依存が配置されない（エラーは
+  `its install path is not a directory`）。GitHub から入れる経路では `-g` でも配置される。push 前の変更を `-g` で
+  試すときは、2 つのパッケージを明示して入れる（`packages/init-project/README.md` に記載）
 * Bad: APM の仕様は、ローカルパスの依存を "development only" と位置づけている。将来の版で扱いが変わったら 4.2 に
   切り替える（`apm.yml` の依存の行を書き換えるだけで済む）
 * Neutral: `project-layout` だけを別の版に固定することはできない。常に依存元と同じ ref のものが入る
@@ -72,8 +73,12 @@ decision-makers: akmaru
   あり、余分なテンプレートが無いことを確かめる。
 * `tests/test_skills.py::test_layout_consumers_refer_to_project_layout` が、参照する側の 5 ファイルが
   `project-layout` を参照し、`docs/adr/` を自前で書いていないことを確かめる。
-* marketplace 経由（`apm install -g init-project@dotagents`）で `project-layout` が隣に入ることは、push した後に
-  手で確かめる。自動のチェックは無い。
+* `tests/test_e2e_marketplace.py::test_init_project_from_github_marketplace_pins_both_packages_to_one_commit` が、
+  CI で PR の先端のコミットを GitHub から marketplace として登録し、プロジェクトと `-g` の両方で、`project-layout` が
+  隣に入ること、`apm.lock.yaml` の `resolved_commit` が 2 つともそのコミットであること、入ったスクリプトが
+  `--layout` なしで動くことを確かめる。CI が `DOTAGENTS_E2E_REMOTE` を渡さないローカルではスキップする。
+* `tests/test_e2e_marketplace.py::test_init_project_from_local_marketplace_deploys_project_layout_alongside` が、
+  ローカルの marketplace（作業ツリー）からプロジェクトスコープで入れたときに同じことを確かめる。
 
 ## Pros and Cons of the Options
 
@@ -130,5 +135,5 @@ decision-makers: akmaru
 * [ADR 0023](0023-agents-md-dependent-skills-from-checkout.md): AGENTS.md が参照するスキルをディレクトリ指定で入れる仕組み。
   `project-layout` と `init-project` は AGENTS.md から参照しないので対象外
 * 先例: `packages/rust/apm.yml` が他のパッケージに依存している
-* フォローアップ: push した後に `apm install -g init-project@dotagents` を実行し、`project-layout` が隣に入ることと、
-  `apm.lock.yaml` に記録されたコミットが 2 つで同じことを確かめる
+* 確認の記録: 2026-10-11 に push 済みのコミット `05e414b` を GitHub から登録し、プロジェクトと `-g` の両方で
+  2 つが同じコミットから入ることを手で確かめた。以後は上の e2e テストが CI で確かめる

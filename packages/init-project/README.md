@@ -23,8 +23,9 @@ apm install init-project@dotagents
 
 ## 開発中に試す
 
-push する前の変更をディレクトリ指定で `-g` インストールすると、APM 0.31.0 では相対パスの依存
-（`project-layout`）が配置されない。2 つとも指定して入れる。
+push する前の変更を作業ツリーから `-g` でインストールすると（ディレクトリ指定、ローカルの marketplace とも）、
+APM 0.31.0 では相対パスの依存（`project-layout`）が配置されない。2 つとも指定して入れる。GitHub から入れる
+通常の経路では配置される。
 
 ```bash
 apm install -g <dotagents>/packages/project-layout <dotagents>/packages/init-project
