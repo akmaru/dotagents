@@ -1,0 +1,33 @@
+{
+  "adr": {
+    "default": "docs/internal/adr",
+    "search": ["docs/internal/adr", "docs/adr"]
+  },
+  "baseline": [
+    { "id": "readme", "path": "README.md", "purpose": "何のリポジトリか、使い方" },
+    { "id": "license", "path": "LICENSE", "purpose": "利用条件（既定は MIT）" },
+    { "id": "contributing", "path": "CONTRIBUTING.md", "purpose": "人間向けの開発手順" },
+    { "id": "agents-md", "path": "AGENTS.md", "purpose": "エージェント向け指示。「置き場の規約」節を持つ" },
+    { "id": "claude-md", "path": "CLAUDE.md", "purpose": "`@AGENTS.md` の 1 行だけ" },
+    { "id": "gitignore", "path": ".gitignore", "purpose": "秘密と生成物の除外" },
+    { "id": "gitattributes", "path": ".gitattributes", "purpose": "改行コードの統一" },
+    { "id": "editorconfig", "path": ".editorconfig", "purpose": "インデントと末尾改行の統一" },
+    { "id": "docs-public", "path": "docs/public/.gitkeep", "purpose": "外部に公開するドキュメントのソース" },
+    { "id": "adr-0001", "path": "{adr_dir}/0001-record-architecture-decisions.md", "purpose": "ADR を使うことと置き場の規約を決めた ADR" },
+    { "id": "claude-dir", "path": ".claude/.gitignore", "purpose": "台帳など作業用の置き場（中身はすべて除外）" }
+  ],
+  "lazy": [
+    { "id": "glossary", "path": "CONTEXT.md", "purpose": "用語集。最初の用語が決まったときに作る" },
+    { "id": "context-map", "path": "CONTEXT-MAP.md", "purpose": "コンテキストが複数になったときだけ作る" },
+    { "id": "specs", "path": "docs/internal/specs/", "purpose": "仕様書。最初の仕様書を書くときに作る" }
+  ],
+  "optional": {
+    "security": { "label": "SECURITY.md", "purpose": "脆弱性の報告先", "path": { "github": "SECURITY.md", "gitlab": "SECURITY.md" } },
+    "code-of-conduct": { "label": "CODE_OF_CONDUCT.md", "purpose": "行動規範", "path": { "github": "CODE_OF_CONDUCT.md", "gitlab": "CODE_OF_CONDUCT.md" } },
+    "support": { "label": "SUPPORT.md", "purpose": "質問の窓口", "path": { "github": "SUPPORT.md", "gitlab": "SUPPORT.md" } },
+    "changelog": { "label": "CHANGELOG.md", "purpose": "リリースの変更履歴", "path": { "github": "CHANGELOG.md", "gitlab": "CHANGELOG.md" } },
+    "issue-template": { "label": "issue テンプレート", "purpose": "issue の記入項目", "path": { "github": ".github/ISSUE_TEMPLATE/bug_report.md", "gitlab": ".gitlab/issue_templates/Bug.md" } },
+    "pr-template": { "label": "PR / MR テンプレート", "purpose": "PR / MR の記入項目", "path": { "github": ".github/pull_request_template.md", "gitlab": ".gitlab/merge_request_templates/Default.md" } },
+    "codeowners": { "label": "CODEOWNERS", "purpose": "パスごとのレビュー担当者", "path": { "github": ".github/CODEOWNERS", "gitlab": "CODEOWNERS" } }
+  }
+}

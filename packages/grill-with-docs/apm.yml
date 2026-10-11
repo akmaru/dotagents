@@ -5,5 +5,6 @@ author: akmaru
 license: MIT
 includes: auto
 dependencies:
-  apm: []
+  apm:
+    - ../project-layout
   mcp: []

@@ -71,9 +71,10 @@ def test_at_least_one_skill():
     assert len(skill_dirs()) >= 1, "packages/ must contain at least one skill"
 
 
-# ADR の置き場を決める汎用のスキルと役割。任意のリポジトリで使うので、置き場を docs/adr/ に決め打ちせず、
-# 指示ファイルの規約 → 既存のディレクトリ → 既定の docs/internal/adr/ の順に解決させる。
-ADR_LOCATING_FILES = [
+# ADR などの置き場を参照する汎用のスキルと役割。置き場の決め方は project-layout だけに書き、
+# ここでは project-layout を参照させる（docs/adr/0025）。
+LAYOUT_SKILL = PACKAGES_DIR / "project-layout/.apm/skills/project-layout/SKILL.md"
+LAYOUT_CONSUMERS = [
     PACKAGES_DIR / "madr-writer/.apm/skills/madr-writer/SKILL.md",
     PACKAGES_DIR / "grill-with-docs/.apm/skills/grill-with-docs/SKILL.md",
     PACKAGES_DIR / "refine-design/.apm/skills/refine-design/SKILL.md",
@@ -82,11 +83,17 @@ ADR_LOCATING_FILES = [
 ]
 
 
-@pytest.mark.parametrize("path", ADR_LOCATING_FILES, ids=lambda p: p.parent.name if p.name == "SKILL.md" else p.stem)
-def test_adr_location_defaults_to_docs_internal_adr(path):
+def test_project_layout_defines_the_adr_location_order():
+    content = LAYOUT_SKILL.read_text()
+    for word in ("AGENTS.md", "CLAUDE.md", "docs/internal/adr/", "docs/adr/"):
+        assert word in content
+
+
+@pytest.mark.parametrize("path", LAYOUT_CONSUMERS, ids=lambda p: p.parent.name if p.name == "SKILL.md" else p.stem)
+def test_layout_consumers_refer_to_project_layout(path):
     content = path.read_text()
-    assert "docs/internal/adr/" in content, "既定の ADR の置き場は docs/internal/adr/"
-    assert "AGENTS.md" in content, "指示ファイル（AGENTS.md / CLAUDE.md）の置き場の規約を優先させる"
+    assert "project-layout" in content, "置き場は project-layout スキルに従わせる"
+    assert "docs/adr/" not in content, "置き場の決め方を自前で持たない"
 
 
 def _frontmatter(skill_dir: Path) -> dict:

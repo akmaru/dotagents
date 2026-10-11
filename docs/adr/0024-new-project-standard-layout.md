@@ -81,16 +81,17 @@ grill-spec の仕様書（feature/grill-spec ブランチ）は `docs/internal/{
 - 雛形に含めないもの: 言語別のファイル（`Cargo.toml` など。`cargo init` などに任せる）、CI と dependabot の設定
   （言語に依存する）、beads。
 - ADR の置き場は、(1) 指示ファイル（`AGENTS.md` / `CLAUDE.md`）の規約、(2) 既存の `docs/internal/adr/`、
-  `docs/adr/` の順、(3) どちらも無ければ `docs/internal/adr/`、で決める。madr-writer がこの順を定義し、
-  grill-with-docs・refine-design・役割 designer / critic が同じ順で探す。dotagents 自身は (2) により
-  `docs/adr/` を使い続ける。
+  `docs/adr/` の順、(3) どちらも無ければ `docs/internal/adr/`、で決める。この順と標準のツリーは
+  `project-layout` スキルが定義し、他のスキルと役割はそれを参照する（[ADR 0025](0025-project-layout-knowledge-skill.md)）。
+  dotagents 自身は (2) により `docs/adr/` を使い続ける。
 
 ### Consequences
 
 * Good: 既定が `docs/internal/adr/` に変わっても、`docs/adr/` を持つ既存リポジトリでは ADR が割れない
 * Good: 構成を変えたいリポジトリは `AGENTS.md` の置き場の規約を書き換えるだけでよく、スキルを直さなくてよい
 * Good: 空の `CONTEXT.md` や空の仕様書ディレクトリを作らないので、grill-with-docs の遅延作成と矛盾しない
-* Bad: 置き場の決め方（3 段の順）を 5 か所に書いている。順を変えるときは 5 か所を揃えて直す必要がある
+* Bad: 構成の知識を参照するスキルが複数あるので、知識の置き場と依存の管理が要る。どう持つかは
+  [ADR 0025](0025-project-layout-knowledge-skill.md) で決める
 * Bad: 要否が分かれるファイルが 7 つあるので、雛形を作るたびに 7 項目のチェックボックスに答える。Claude Code の
   質問ツールは 1 問あたり選択肢 4 つまでなので、ホスティングの質問と合わせて 3 問になる
 * Neutral: grill-spec の仕様書が提案した `packages/<name>/docs/internal/{specs,adr}/`（パッケージ固有の置き場）は
@@ -98,11 +99,15 @@ grill-spec の仕様書（feature/grill-spec ブランチ）は `docs/internal/{
 
 ### Confirmation
 
-* `tests/test_skills.py::test_adr_location_defaults_to_docs_internal_adr` が、madr-writer・grill-with-docs・
-  refine-design の SKILL.md と `user/agents/designer.md`・`user/agents/critic.md` に `docs/internal/adr/` と
-  `AGENTS.md` の両方が書かれていることを確かめる。文字列の有無だけを見るテストで、3 段の順が正しく書かれているかまでは
-  検査しない。順の正しさはレビューで確かめる。
-* 標準のツリーを作る雛形スキルはまだ無い。作るときに、作るファイルの一覧をこの ADR と突き合わせるテストを足す。
+* `tests/test_init_project.py::test_layout_matches_adr_0024` が、`project-layout` の `layout.json` に載る
+  すべてのパス（標準のツリー・作らないもの・選択式のファイル）が、この ADR に書かれていることを確かめる。
+  ADR のツリーの図と `layout.json` の構造までは突き合わせない。
+* `tests/test_init_project.py` の他のテストが、空のディレクトリに作られるファイルが標準のツリーとちょうど一致すること、
+  選択式のファイルがホスティングごとの置き場に作られること、既存のファイルを上書きしないこと、`CONTEXT.md` と
+  `docs/internal/specs/` を作らないことを、`init-project` のスクリプトを実行して確かめる。
+* `tests/test_skills.py::test_project_layout_defines_the_adr_location_order` は、`project-layout` の SKILL.md に
+  `AGENTS.md`・`CLAUDE.md`・`docs/internal/adr/`・`docs/adr/` が書かれていることだけを見る。3 段の順の正しさは
+  レビューで確かめる。
 
 ## Pros and Cons of the Options
 
@@ -150,4 +155,4 @@ grill-spec の仕様書（feature/grill-spec ブランチ）は `docs/internal/{
 * [ADR 0023](0023-agents-md-dependent-skills-from-checkout.md): AGENTS.md が参照する skill の配り方
 * GitLab の置き場の出典: [Description templates](https://docs.gitlab.com/user/project/description_templates/)、
   [Code Owners](https://docs.gitlab.com/user/project/codeowners/)（ルート → `docs/` → `.gitlab/` の順に探す）
-* フォローアップ: 標準のツリーの存在を確かめ、無ければ作る雛形スキル（未作成）
+* 標準のツリーを作るのは `init-project` スキル、定義を持つのは `project-layout` スキル（[ADR 0025](0025-project-layout-knowledge-skill.md)）

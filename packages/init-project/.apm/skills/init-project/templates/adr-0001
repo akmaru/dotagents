@@ -1,0 +1,54 @@
+---
+status: accepted
+date: {{date}}
+decision-makers: {{holder}}
+---
+
+# 設計判断を ADR として残し、文書の置き場を AGENTS.md で定める
+
+## Context and Problem Statement
+
+設計判断の理由と、却下した代替案は、コードとコミットの履歴からは読み取れない。後から判断を見直す人やエージェントが
+過去の判断と整合しているかを確かめられるよう、判断を記録する形式と置き場を決める。
+
+## Decision Drivers
+
+* 判断の理由・トレードオフ・却下した代替案を残す
+* 人間とエージェントが同じ置き場を参照できる
+
+## Considered Options
+
+1. 記録しない（コミットメッセージと PR の説明に任せる）
+2. ADR を MADR 形式で残し、置き場を `AGENTS.md` の「置き場の規約」に書く
+
+## Decision Outcome
+
+選択: **2**（却下した代替案まで 1 つのファイルに残り、置き場を 1 か所で定められるため）。
+
+- ADR は `{{adr_dir}}/NNNN-kebab-case-title.md`（ゼロ埋めの連番）に置く
+- 仕様書・用語集・公開ドキュメントの置き場も `AGENTS.md` の「置き場の規約」に従う
+
+### Consequences
+
+* Good: 判断を見直すときに、当時の前提と代替案を参照できる
+* Bad: 判断のたびに ADR を書く手間がかかる
+
+### Confirmation
+
+レビューで、戻しにくい設計判断に ADR が添えられているかを確かめる。
+
+## Pros and Cons of the Options
+
+### 1. 記録しない
+
+* Good: 手間がかからない
+* Bad: 理由と却下した代替案が履歴に散らばり、後から探せない
+
+### 2. ADR を MADR 形式で残す（採用）
+
+* Good: 判断ごとに 1 ファイルで、代替案と帰結まで揃う
+* Bad: 書く手間がかかる
+
+## More Information
+
+* [MADR](https://adr.github.io/madr/)

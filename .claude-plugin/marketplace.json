@@ -31,7 +31,7 @@
     },
     {
       "name": "madr-writer",
-      "description": "Author Architecture Decision Records (ADRs) in MADR format under docs/internal/adr/ (or the location the project's AGENTS.md / CLAUDE.md specifies).",
+      "description": "Author Architecture Decision Records (ADRs) in MADR format in the location resolved by the project-layout skill (docs/internal/adr/ by default).",
       "version": "1.1.0",
       "source": "./packages/madr-writer"
     },
@@ -58,6 +58,18 @@
       "description": "Write reports, docs, and replies so readers can follow the logic without rereading.",
       "version": "1.0.0",
       "source": "./packages/clear-writing"
+    },
+    {
+      "name": "project-layout",
+      "description": "The standard project layout (where README, AGENTS.md, ADRs, specs, the glossary and public docs live) and how to resolve each location, as a reference skill and a machine-readable layout.json.",
+      "version": "0.1.0",
+      "source": "./packages/project-layout"
+    },
+    {
+      "name": "init-project",
+      "description": "Check a repository against the standard project layout (README, LICENSE, AGENTS.md, docs/public, docs/internal/adr, ...) and create only the missing files.",
+      "version": "0.1.0",
+      "source": "./packages/init-project"
     },
     {
       "name": "skill-creator",

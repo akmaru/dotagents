@@ -1,9 +1,10 @@
 name: madr-writer
 version: 1.1.0
-description: Author Architecture Decision Records (ADRs) in MADR format under docs/internal/adr/ (or the location the project's AGENTS.md / CLAUDE.md specifies).
+description: Author Architecture Decision Records (ADRs) in MADR format in the location resolved by the project-layout skill (docs/internal/adr/ by default).
 author: akmaru
 license: MIT
 includes: auto
 dependencies:
-  apm: []
+  apm:
+    - ../project-layout
   mcp: []

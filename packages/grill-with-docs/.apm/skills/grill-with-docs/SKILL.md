@@ -65,9 +65,8 @@ compatibility: Designed for Claude Code
 [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md)）。
 
 ファイルは**遅延して**作る: 書くものができたときだけ。`CONTEXT.md` が無ければ最初の用語が決まったときに、
-ADR ディレクトリが無ければ最初の ADR が要るときに作る。ADR ディレクトリは、プロジェクトの指示ファイル
-（`AGENTS.md` / `CLAUDE.md`）に置き場の規約があればそれ、無ければ既存の `docs/internal/adr/` か `docs/adr/`、
-どちらも無ければ `docs/internal/adr/`。
+ADR ディレクトリが無ければ最初の ADR が要るときに作る。`CONTEXT.md` と ADR ディレクトリの置き場は
+`project-layout` スキルの「置き場の決め方」で決める（上の図は既定の置き場）。
 
 ### セッション中にやること
 

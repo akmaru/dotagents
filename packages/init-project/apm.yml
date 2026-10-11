@@ -1,0 +1,10 @@
+name: init-project
+version: 0.1.0
+description: Check a repository against the standard project layout (README, LICENSE, AGENTS.md, docs/public, docs/internal/adr, ...) and create only the missing files.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm:
+    - ../project-layout
+  mcp: []
