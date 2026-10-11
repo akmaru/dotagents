@@ -100,7 +100,7 @@ for (round = 1; round <= maxRounds; round++) {
     { agentType: 'verifier', phase: 'Verify', label: `verify:r${round}`, model: MODELS.verify,
       schema: { type: 'object', required: ['items', 'escape', 'humanOp', 'treeChanged', 'reportPath'], properties: {
         items: { type: 'array', items: VERIFY_ITEM },
-        escape: { type: 'string', enum: ['continue', 'deliberate'], description: '離脱の推奨' },
+        escape: { type: 'string', enum: ['continue', 'design'], description: '離脱の推奨' },
         humanOp: HUMAN_OP,
         treeChanged: { type: 'boolean', description: '起動前後で git status に差が出たか' },
         reportPath: { type: 'string' },
@@ -116,13 +116,13 @@ for (round = 1; round <= maxRounds; round++) {
   if (failing.length === 0) { status = 'pass'; break }
 
   // ---- 離脱条件（回数ではなく再発） ----
-  if (failing.some(i => i.kind === 'bench')) { status = 'escape_deliberate'; log('ベンチ未達。性能は設計の帰結なので ① に戻す'); break }
+  if (failing.some(i => i.kind === 'bench')) { status = 'escape_design'; log('ベンチ未達。性能は設計の帰結なので ① に戻す'); break }
   const cause = failing.map(i => `${i.name}: ${i.cause}`).sort().join(' | ')
   const repeated = failing.some(i => i.sameAsPrev) || (lastCause !== null && cause === lastCause)
   sameCauseCount = repeated ? sameCauseCount + 1 : 0
   lastCause = cause
-  if (sameCauseCount >= SAME_CAUSE_LIMIT || verify.escape === 'deliberate' || failing.some(i => i.layer === 'design-premise')) {
-    status = 'escape_deliberate'
+  if (sameCauseCount >= SAME_CAUSE_LIMIT || verify.escape === 'design' || failing.some(i => i.layer === 'design-premise')) {
+    status = 'escape_design'
     log(`同一原因の再発 ${sameCauseCount} 回 / 層=${failing.map(i => i.layer).join(',')}。① に戻す`)
     break
   }

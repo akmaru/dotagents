@@ -1,7 +1,7 @@
 # workflow-graph
 
-作業を 3 つの強連結成分（① deliberate / ② build / ③ review）のグラフとして回すための、
-メインセッション向けの規約スキル。SCC の内側は保存ワークフロー `/deliberate` `/build` `/review`
+作業を 3 つの強連結成分（① design / ② build / ③ review）のグラフとして回すための、
+メインセッション向けの規約スキル。SCC の内側は保存ワークフロー `/design` `/build` `/review`
 （dotagents の `user/workflows/`、`user/install.sh` が `~/.claude/workflows/` へ配布）が回し、
 人間ノードと SCC 間の遷移をこのスキルに従ってメインセッションが担う。
 抜ける条件は hook（`user/bin/workflow-graph-guard.sh`）が機械的に守る。

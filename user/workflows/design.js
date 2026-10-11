@@ -1,14 +1,14 @@
-// /deliberate — SCC ①（deliberate）の機械部分を、人間の decide の手前まで 1 周回す。
+// /design — SCC ①（design）の機械部分を、人間の decide の手前まで 1 周回す。
 // research（事前の小問 + designer が案ごとに求めた小問。種別で researcher / deep-research に振り分け）
-// → design → critique → 致命的指摘が残れば designer を呼び直す。
+// → propose → critique → 致命的指摘が残れば designer を呼び直す。
 // 戻り値が decisions.json の元になる。人間ノードは main 側（docs/adr/0020, docs/design/workflow-graph.md）。
 export const meta = {
-  name: 'deliberate',
-  description: 'SCC ①: research → design → critique を回し、人間が決められる状態（未確定行）を返す',
-  whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: research（既定 opus、researcher.md の model:）/ design（継承）/ critique（継承）/ integrate（haiku）、kind: web の小問があれば webResearch（全段階 opus）と「回してよいか」。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
+  name: 'design',
+  description: 'SCC ①: research → propose → critique を回し、人間が決められる状態（未確定行）を返す',
+  whenToUse: '調査・設計が要るタスクで、人間の decide の前に案と反対意見を揃えるとき。args に goal / ledgerDir が必須（ledgerDir は先に mkdir）。起動の直前に必ず AskUserQuestion でノードごとのモデルを聞く: research（既定 opus、researcher.md の model:）/ propose（継承）/ critique（継承）/ integrate（haiku）、kind: web の小問があれば webResearch（全段階 opus）と「回してよいか」。既定から変えた分だけ args.models に渡す。ユーザーが「既定でいい」と言った後は聞かない',
   phases: [
     { title: 'Research', detail: '小問ごとに並列。codebase は researcher、web は web-research（上限あり）' },
-    { title: 'Design', detail: 'designer が代替案・推奨・未決事項と、案ごとに足りない事実を出す' },
+    { title: 'Propose', detail: 'designer が代替案・推奨・未決事項と、案ごとに足りない事実を出す' },
     { title: 'Critique', detail: 'critic が反対の立場で検証。致命的が残れば designer を呼び直す' },
   ],
 }
@@ -27,25 +27,27 @@ export const meta = {
 //   maxDeepResearch: number, 1 回の実行で web-research を回す上限（既定 0 = 明示したときだけ。
 //                            1 回で 100 体前後・1,000 万トークン級になり得るため。超過分は researcher で代替）
 //   ledgerDir: string,       報告と台帳の置き場（絶対パス）
-//   maxRounds: number,       design ⇄ critique の周回数の上限（既定 2。空転は別に検知する）
-//   models: {research, design, critique, integrate, webResearch: {scope, search, fetch, verify, synthesize}},
+//   maxRounds: number,       propose ⇄ critique の周回数の上限（既定 2。空転は別に検知する）
+//   models: {research, propose, critique, integrate, webResearch: {scope, search, fetch, verify, synthesize}},
 //                            ノードごとのモデル上書き。省略した項目は下の既定（undefined = セッション継承）
 // }
 // 役割ファイルの model: は tests/test_user_config.py が禁止しているので（ADR 0014）、
 // モデルは呼び出しごとに指定する（優先度 1 位。docs/en/sub-agents「Choose a model」）
-// 役割で動くノード（research / design / critique）の既定は user/agents/<役割>.md の model: が決める
+// 役割で動くノード（research / propose / critique）の既定は user/agents/<役割>.md の model: が決める
 // （researcher = opus、designer / critic = 未指定 = セッション継承）。ここは undefined にして、
 // args.models で上書きされたときだけ呼び出しごとの指定が frontmatter に勝つ
 const MODELS = {
   research: undefined,
-  design: undefined,
+  propose: undefined,
   critique: undefined,
   integrate: 'haiku',    // web-research 結果の機械的な整形
   webResearch: undefined, // web-research 側の既定（全段階 opus）に任せる。{scope, search, fetch, verify, synthesize} で上書き
   ...(args && args.models ? args.models : {}),
 }
+// 案出しノードを design から propose に改名した（2026-09-25）。旧キーは黙って無視せず知らせる
+if (args && args.models && 'design' in args.models) log('args.models.design は旧キーなので無視した。propose を使う')
 if (!args || !args.goal || !args.ledgerDir) {
-  throw new Error('args.goal と args.ledgerDir は必須（docs/design/workflow-graph.md「/deliberate の入力」）')
+  throw new Error('args.goal と args.ledgerDir は必須（docs/design/workflow-graph.md「/design の入力」）')
 }
 const task = args.task || 'task'
 const ledgerDir = args.ledgerDir
@@ -142,8 +144,8 @@ async function researchAll(items, what) {
 phase('Research')
 await researchAll((args.researchQuestions || []).map(normalizeQuestion), '事前')
 
-// ---- Design ⇄ Critique -----------------------------------------------------
-const DESIGN_SCHEMA = { type: 'object', required: ['options', 'recommendation', 'open', 'researchNeeded', 'reportPath'], properties: {
+// ---- Propose ⇄ Critique -----------------------------------------------------
+const PROPOSE_SCHEMA = { type: 'object', required: ['options', 'recommendation', 'open', 'researchNeeded', 'reportPath'], properties: {
   options: { type: 'array', items: { type: 'object', required: ['name', 'summary'], properties: {
     name: { type: 'string' }, summary: { type: 'string', description: 'Good / Bad を 2〜3 行で' } } } },
   recommendation: { type: 'string', description: '推奨案と根拠（3 行以内）' },
@@ -156,13 +158,13 @@ const DESIGN_SCHEMA = { type: 'object', required: ['options', 'recommendation', 
   reportPath: { type: 'string' },
 } }
 
-const designPrompt = (round, suffix, extra) =>
+const proposePrompt = (round, suffix, extra) =>
   `目的（ゴール）: ${args.goal}\n\n## 制約\n${bullets(constraints)}\n\n## 確定済み事項（前提として扱う。再オープンしない）\n${confirmedText}\n\n` +
   `## 前回までの未決事項（今回の案で答えるか、未決のまま引き継ぐ）\n${openText}\n\n## 先行する報告\n${reportsText()}${extra}\n\n` +
   `案を比べるのに事実が足りなければ researchNeeded に「案 / 小問 / 種別」を挙げる（すぐ調べて改訂の機会がある）。足りていれば空配列。\n` +
-  `これは第 ${round}${suffix} 版。${REPORT_RULE(`${ledgerDir}/design-v${round}${suffix}.md`)}`
+  `これは第 ${round}${suffix} 版。${REPORT_RULE(`${ledgerDir}/propose-v${round}${suffix}.md`)}`
 
-let design = null
+let proposal = null
 let critique = null
 let prevFatalKey = null
 let stoppedBecause = 'max-rounds'
@@ -174,24 +176,24 @@ for (round = 1; round <= maxRounds; round++) {
     ? `\n\n## 前回の批評（必ず読み、致命的な指摘に答える）\n絶対パス: ${critique.reportPath}\n致命的: ${bullets(critique.fatal, f => f.title)}\n重要: ${bullets(critique.important, f => f.title)}`
     : ''
 
-  design = await agent(designPrompt(round, '', revision), { agentType: 'designer', phase: 'Design', label: `design:v${round}`, model: MODELS.design, schema: DESIGN_SCHEMA })
-  if (!design) { stoppedBecause = 'designer-failed'; break }
-  reports.push(design.reportPath)
+  proposal = await agent(proposePrompt(round, '', revision), { agentType: 'designer', phase: 'Propose', label: `propose:v${round}`, model: MODELS.propose, schema: PROPOSE_SCHEMA })
+  if (!proposal) { stoppedBecause = 'designer-failed'; break }
+  reports.push(proposal.reportPath)
 
   // 案ごとに足りない事実を同じ周で埋め、designer に改訂させる（1 周目だけ。ループ防止）
-  if (round === 1 && optionResearch && design.researchNeeded.length) {
-    await researchAll(design.researchNeeded.map(normalizeQuestion), '案ごと')
+  if (round === 1 && optionResearch && proposal.researchNeeded.length) {
+    await researchAll(proposal.researchNeeded.map(normalizeQuestion), '案ごと')
     const revised = await agent(
-      designPrompt(round, 'b', `\n\n## 改訂の指示\n第 ${round} 版（${design.reportPath}）を、案ごとの調査結果を反映して改訂する。案の追加・削除・推奨の変更があれば理由を書く。researchNeeded は空にする。`),
-      { agentType: 'designer', phase: 'Design', label: `design:v${round}b`, model: MODELS.design, schema: DESIGN_SCHEMA },
+      proposePrompt(round, 'b', `\n\n## 改訂の指示\n第 ${round} 版（${proposal.reportPath}）を、案ごとの調査結果を反映して改訂する。案の追加・削除・推奨の変更があれば理由を書く。researchNeeded は空にする。`),
+      { agentType: 'designer', phase: 'Propose', label: `propose:v${round}b`, model: MODELS.propose, schema: PROPOSE_SCHEMA },
     )
-    if (revised) { design = revised; reports.push(design.reportPath) }
+    if (revised) { proposal = revised; reports.push(proposal.reportPath) }
     else log('改訂版の designer が結果を返さなかった。第 1 版のまま批評に進む')
   }
 
   critique = await agent(
-    `批評対象: 設計報告（絶対パス: ${design.reportPath}）。目的は「${args.goal}」。\n\n## 確定済み事項（覆さない。食い違いは食い違いとして指摘する）\n${confirmedText}\n\n` +
-    `## 設計報告が挙げた未決事項の軸名（同じ論点なら**この軸名をそのまま使う**。新しい論点だけ新しい軸名にする）\n${bullets(design.open, o => o.axis)}\n\n` +
+    `批評対象: 設計報告（絶対パス: ${proposal.reportPath}）。目的は「${args.goal}」。\n\n## 確定済み事項（覆さない。食い違いは食い違いとして指摘する）\n${confirmedText}\n\n` +
+    `## 設計報告が挙げた未決事項の軸名（同じ論点なら**この軸名をそのまま使う**。新しい論点だけ新しい軸名にする）\n${bullets(proposal.open, o => o.axis)}\n\n` +
     `## 参照できる先行報告\n${reportsText()}\n\n${REPORT_RULE(critiquePath)}`,
     { agentType: 'critic', phase: 'Critique', label: `critique:v${round}`, model: MODELS.critique,
       schema: { type: 'object', required: ['fatal', 'important', 'minorCount', 'acceptableIf', 'open', 'reportPath'], properties: {
@@ -213,12 +215,12 @@ for (round = 1; round <= maxRounds; round++) {
   prevFatalKey = fatalKey
   log(`Critique v${round}: 致命的 ${critique.fatal.length} 件。designer を呼び直す`)
 }
-if (stoppedBecause === 'max-rounds') log(`design ⇄ critique が上限 ${maxRounds} 周に達した（backstop）。致命的指摘が残ったまま返す`)
+if (stoppedBecause === 'max-rounds') log(`propose ⇄ critique が上限 ${maxRounds} 周に達した（backstop）。致命的指摘が残ったまま返す`)
 
 // ---- 台帳（decisions.json の元） --------------------------------------------
 const mergedOpen = []
 const seenAxis = new Set()
-for (const o of [...(design ? design.open : []), ...(critique ? critique.open : [])]) {
+for (const o of [...(proposal ? proposal.open : []), ...(critique ? critique.open : [])]) {
   const key = axisKey(o.axis)
   if (seenAxis.has(key)) continue
   seenAxis.add(key)
@@ -231,8 +233,8 @@ return {
   stoppedBecause,
   confirmed,
   open: mergedOpen,
-  recommendation: design ? design.recommendation : null,
-  options: design ? design.options : [],
+  recommendation: proposal ? proposal.recommendation : null,
+  options: proposal ? proposal.options : [],
   fatalRemaining: critique ? critique.fatal : [],
   acceptableIf: critique ? critique.acceptableIf : null,
   researchCount: researchSeq,

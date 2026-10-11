@@ -57,15 +57,15 @@ decision-makers: akmaru
 
 適用するルール:
 
-- **SCC 内は保存ワークフロー**。SCC ごとに 1 本、`user/workflows/{deliberate,build,review}.js`。
-  `install.sh` が `~/.claude/workflows/<name>.js` へファイル単位で symlink し、`/deliberate` `/build`
+- **SCC 内は保存ワークフロー**。SCC ごとに 1 本、`user/workflows/{design,build,review}.js`。
+  `install.sh` が `~/.claude/workflows/<name>.js` へファイル単位で symlink し、`/design` `/build`
   `/review` として呼べる。役割は `agent(..., {agentType: '<役割>'})` で呼び、台帳の行は `schema` で
   JSON として返す。役割の報告全文は `args.ledgerDir` に書かせ、最終出力には要約とパスだけを返す。
 - **1 周 = ワークフロー 1 回 → 人間の判断 → 次の周**。人間ノードはワークフローの外（メインセッション）に
   置く。ワークフローが「実行中にユーザー入力を受けられない」制約を、人間ノードを SCC の硬い境界にする
   仕組みとして使う。
-- **周の中の離脱はスクリプトが判定**する。`/deliberate` は同じ致命的指摘が丸ごと残る周を空転として止め、
-  `/build` は同一原因 2 回 / ベンチ未達 / 設計の前提の問題で `escape_deliberate` を返す。
+- **周の中の離脱はスクリプトが判定**する。`/design` は同じ致命的指摘が丸ごと残る周を空転として止め、
+  `/build` は同一原因 2 回 / ベンチ未達 / 設計の前提の問題で `escape_design` を返す。
   周を跨ぐ判定（① の「確定も新軸も増えない周が 2 回」）はメインが台帳の差分で行う。
 - **人間ノードと SCC 間はメインセッション**。規約は `packages/workflow-graph/` の skill に置く
   （常時のコンテキストは増やさない）。戻り値を台帳に書くのもメインの仕事。
@@ -86,7 +86,7 @@ decision-makers: akmaru
   `critic` は変更しない。
 - hook の登録は `install.sh` が「無ければ足す」（[ADR 0013](0013-context-budget-monitoring.md) と同じ扱い。
   `UserPromptSubmit` / `PreToolUse` は他ツールも書き得る配列のため deep merge に載せない）。
-- 起動は「ユーザーが `/deliberate` 等を指示したときだけ」。委譲の手動指示ルールと同じ。
+- 起動は「ユーザーが `/design` 等を指示したときだけ」。委譲の手動指示ルールと同じ。
 
 ### なぜ implement を別セッションにしないか（3.2 を採らない理由）
 
@@ -104,17 +104,17 @@ implement ⇄ verify のループがスクリプトに閉じ、役割ファイ�
 * Good: `/workflows` の進捗表示と `journal.jsonl` が、台帳の変遷の監査証跡になる。
 * Bad: Claude Code 専用。[ADR 0001](0001-target-claude-code-and-opencode.md) の前提と衝突する
   （[ADR 0017](0017-session-end-retain-hook.md) と同じ扱い）。OpenCode 側は skill と役割の手動呼び出しだけ。
-* Bad: ワークフローの実行はエージェント数分のトークンを使う。`/deliberate` 1 周で 2〜4 体、
+* Bad: ワークフローの実行はエージェント数分のトークンを使う。`/design` 1 周で 2〜4 体、
   `/review` は指摘数に比例する。
 * Bad: 台帳の JSON 書式（`decisions` / `verify` / `review`）を skill・スクリプト・hook の 3 箇所が共有する。
   1 箇所を変えたら 3 箇所を揃える必要がある。
 * Bad: `~/.claude/workflows/` への symlink 読み込みは公式に記述が無い。実機では効いたが、Claude Code の
   更新で壊れ得る。
-* Neutral: `/deliberate` の `maxRounds` 既定 2、`/build` の backstop 6 周は安全網であり、離脱条件ではない。
+* Neutral: `/design` の `maxRounds` 既定 2、`/build` の backstop 6 周は安全網であり、離脱条件ではない。
 
 ### Confirmation
 
-* `tests/test_workflows.py`: SCC ごとに 1 本（`deliberate` / `build` / `review`）あること、`meta` が最初の文で
+* `tests/test_workflows.py`: SCC ごとに 1 本（`design` / `build` / `review`）あること、`meta` が最初の文で
   `name` がファイル名と一致すること、`phase()` の題名が `meta.phases` と一致すること、
   `Date.now()` / `Math.random()` / `new Date()` / `import()` を使わないこと、`agentType` が
   `user/agents/` に実在する役割であること、`args.ledgerDir` を使うことを検証する。
@@ -132,7 +132,7 @@ implement ⇄ verify のループがスクリプトに閉じ、役割ファイ�
   `test_delegation_table_lists_every_agent` が Delegation 表との整合を検証する。
 * `tests/test_skills.py` が `packages/workflow-graph/` の SKILL.md を agentskills.io spec で検証する。
 * 実機（Claude Code 2.1.280）: `~/.claude/workflows/` へ symlink した 3 本がセッション中に skill 一覧へ現れた。
-  `/deliberate` を `scriptPath` 指定で 1 回実行し（designer + critic、`maxRounds: 1`）、`agentType` と
+  `/design` を `scriptPath` 指定で 1 回実行し（designer + critic、`maxRounds: 1`）、`agentType` と
   `schema` の併用、`ledgerDir` への報告の書き出しを確認した（結果は
   [docs/design/workflow-graph.md](../design/workflow-graph.md) の追試に記録する）。
 

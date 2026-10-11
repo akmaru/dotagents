@@ -17,11 +17,20 @@ dotagents/
 │       ├── apm.yml                  # パッケージマニフェスト
 │       ├── README.md
 │       ├── LICENSE
+│       ├── docs/internal/specs/     # このパッケージ固有の仕様書
 │       └── .apm/skills/<name>/SKILL.md  # スキル定義（agentskills.io spec 準拠）
 ├── user/                            # 個人ユーザースコープ設定（非 APM・symlink 配布）
 │   └── agents/<role>.md             # 役割定義（researcher / designer / critic）。~/.claude/agents/ へファイル単位 symlink
-└── docs/adr/                        # Architecture Decision Records
+├── CONTEXT.md                       # 用語集
+└── docs/
+    ├── internal/specs/              # dotagents 全体に関わる仕様書（最初の 1 本を書くときに作る）
+    └── adr/                         # Architecture Decision Records
 ```
+
+仕様書は、話題のスコープで置き場を分ける。特定のパッケージに関わる仕様は `packages/<name>/docs/internal/specs/`、
+dotagents 全体に関わる仕様は `docs/internal/specs/` に置き、連番は置き場ごとに 0001 から振る。
+ADR と用語集も同じ規則へ移す予定（未作成の仕様書。決まった点は
+[grill-spec の仕様書](packages/grill-spec/docs/internal/specs/0001-grill-spec.md)のスコープ外にある）。
 
 各プリミティブは必ず `.apm/<type>/` 配下に置くこと。パッケージルート直下に置くと `apm pack` は通るが `apm install` 時に黙って欠落する。
 
@@ -53,6 +62,7 @@ compatibility: Designed for Claude Code  # 必要な場合のみ
 |--------|------|
 | [grill-me](packages/grill-me/.apm/skills/grill-me/SKILL.md) | プランや設計をリレントレスに質問して検証する |
 | [grill-with-docs](packages/grill-with-docs/.apm/skills/grill-with-docs/SKILL.md) | リポジトリの中でラウンド形式に問い詰めつつ、用語を `CONTEXT.md`、戻しにくい決定を ADR（MADR）にその場で書き残す |
+| [grill-spec](packages/grill-spec/.apm/skills/grill-spec/SKILL.md) | 「何を・なぜ作るか」を問い詰め、課題・ストーリー・ジャーニー・受け入れ基準を仕様書に残し、確定前にリファインメントする |
 | [beads](packages/beads/.apm/skills/beads/SKILL.md) | タスクごとに beads issue を作成・更新・クローズするワークフロー |
 | [rust](packages/rust/.apm/skills/rust/SKILL.md) | rust-analyzer LSP を用いた Rust 開発ワークフロー |
 | [madr-writer](packages/madr-writer/.apm/skills/madr-writer/SKILL.md) | MADR 形式で ADR を作成・レビューするスキル |
@@ -81,9 +91,9 @@ frontmatter は Claude Code のフィールドを自由に書けるが、`disall
 
 ## ワークフローグラフ
 
-作業全体を 3 つの強連結成分（deliberate / build / review）としてモデル化し、各 SCC は台帳 1 枚と
+作業全体を 3 つの強連結成分（design / build / review）としてモデル化し、各 SCC は台帳 1 枚と
 「再発」による離脱条件を持つ（[ADR 0018](docs/adr/0018-workflow-graph-three-sccs.md)）。
-SCC の内側は保存ワークフロー `/deliberate` `/build` `/review`（`user/workflows/*.js`、`install.sh` が
+SCC の内側は保存ワークフロー `/design` `/build` `/review`（`user/workflows/*.js`、`install.sh` が
 `~/.claude/workflows/` へ symlink）が回し、人間ノードと SCC 間は `workflow-graph` skill に従って
 メインセッションが担い、抜ける条件は hook（`user/bin/workflow-graph-guard.sh`）が守る
 （[ADR 0020](docs/adr/0020-workflow-graph-control-flow.md)）。

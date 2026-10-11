@@ -19,9 +19,9 @@ ROOT = Path(__file__).parent.parent
 WORKFLOWS_DIR = ROOT / "user" / "workflows"
 AGENTS_DIR = ROOT / "user" / "agents"
 
-# SCC ごとに 1 本（docs/adr/0018 の ① deliberate / ② build / ③ review）と、
+# SCC ごとに 1 本（docs/adr/0018 の ① design / ② build / ③ review）と、
 # ① の research ノードが kind: 'web' で呼ぶ web-research（同梱 /deep-research の model 固定版）
-EXPECTED = {"deliberate", "build", "review", "web-research"}
+EXPECTED = {"design", "build", "review", "web-research"}
 
 
 def _scripts():
@@ -32,10 +32,10 @@ def test_expected_workflows_exist():
     assert {p.stem for p in _scripts()} == EXPECTED
 
 
-def test_deliberate_calls_web_research_not_bundled_deep_research():
+def test_design_calls_web_research_not_bundled_deep_research():
     """同梱 /deep-research は model を渡せずセッションのモデルで 100 体前後が回る。
     kind: 'web' の小問は model 固定版の web-research を呼ぶ。"""
-    text = (WORKFLOWS_DIR / "deliberate.js").read_text()
+    text = (WORKFLOWS_DIR / "design.js").read_text()
     assert "workflow('web-research'" in text
     assert "workflow('deep-research'" not in text
 
@@ -87,9 +87,9 @@ class TestWorkflowScript:
 
     def test_uses_ledger_dir_arg(self, script):
         # 台帳と報告の置き場は main が args.ledgerDir で渡す（docs/adr/0020）。
-        # web-research は deliberate から呼ばれる下請けで、報告は deliberate 側が ledgerDir に書く
+        # web-research は design から呼ばれる下請けで、報告は design 側が ledgerDir に書く
         if script.stem == "web-research":
-            pytest.skip("SCC のワークフローではない（deliberate の下請け）")
+            pytest.skip("SCC のワークフローではない（design の下請け）")
         assert "args.ledgerDir" in script.read_text()
 
     def test_every_agent_call_names_its_model(self, script):

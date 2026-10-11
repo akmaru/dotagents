@@ -1,7 +1,7 @@
 // /web-research — 同梱 /deep-research（Claude Code 2.1.280 の実行時に永続化されたスクリプト）の写し。
 // 同梱版は agent() に model を渡さないためセッションのモデルで 100 体前後が回る。段階ごとにモデルを
 // 指定できるようにするためだけに複製している。それ以外の変更はしない（差分が追えるように）。
-// /deliberate の kind: 'web' の小問はこれを workflow('web-research', …) で呼ぶ（docs/adr/0020）。
+// /design の kind: 'web' の小問はこれを workflow('web-research', …) で呼ぶ（docs/adr/0020）。
 export const meta = {
   name: 'web-research',
   description: 'Deep research harness (model-pinned copy of /deep-research) — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.',
