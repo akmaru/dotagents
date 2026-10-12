@@ -72,6 +72,7 @@ compatibility: Designed for Claude Code  # 必要な場合のみ
 | [clear-writing](packages/clear-writing/.apm/skills/clear-writing/SKILL.md) | 読み返さずに論理を追える文章の規則と例（核は `user/AGENTS.md` の Communication Style。install.sh が checkout から入れる） |
 | [project-layout](packages/project-layout/.apm/skills/project-layout/SKILL.md) | 標準構成と、ADR・仕様書・用語集・公開ドキュメントの置き場の決め方を定める参照用スキル（定義は `layout.json`。[ADR 0025](docs/adr/0025-project-layout-knowledge-skill.md)） |
 | [init-project](packages/init-project/.apm/skills/init-project/SKILL.md) | リポジトリを標準構成（[ADR 0024](docs/adr/0024-new-project-standard-layout.md)）と突き合わせ、無いファイルだけを作る。`project-layout` に依存 |
+| [ontology](packages/ontology/.apm/skills/ontology/SKILL.md) | 用語集の語の間の構造（種別・is-a・排他と網羅・関係の多重度・公理・帰結・事例）を `ONTOLOGY.md` に持ち、grill・同期・検証する。検証は Markdown の静的検査か Alloy を選べる。`project-layout` に依存 |
 
 ## 役割（サブエージェント）
 

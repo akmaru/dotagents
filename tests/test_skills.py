@@ -78,6 +78,7 @@ LAYOUT_CONSUMERS = [
     PACKAGES_DIR / "madr-writer/.apm/skills/madr-writer/SKILL.md",
     PACKAGES_DIR / "grill-with-docs/.apm/skills/grill-with-docs/SKILL.md",
     PACKAGES_DIR / "refine-design/.apm/skills/refine-design/SKILL.md",
+    PACKAGES_DIR / "ontology/.apm/skills/ontology/SKILL.md",
     PACKAGES_DIR.parent / "user/agents/designer.md",
     PACKAGES_DIR.parent / "user/agents/critic.md",
 ]

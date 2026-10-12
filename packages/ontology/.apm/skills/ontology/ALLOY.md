@@ -1,0 +1,79 @@
+# Alloy による検証
+
+[Alloy](https://alloytools.org/) は、集合と関係（一階の関係論理）でモデルを書き、SAT ソルバーで「各集合の
+要素数が上限（scope）以下のすべての場合」を網羅して、実例や反例を探す道具。`verify` は ONTOLOGY.md を Alloy の
+モデルに翻訳し、Alloy 6 の CLI で走らせる。jar は初回に `~/.cache/ontology-skill/` へ取得する（環境変数
+`ALLOY_JAR` で既存の jar を指せる）。
+
+## 翻訳の対応
+
+| ONTOLOGY.md | Alloy | 外せる fact のラベル |
+|---|---|---|
+| is-a の無い語 | `sig X {}`（トップレベルの sig どうしは排他） | — |
+| `is-a: P` | `sig X in P {}` | — |
+| `is-a: P, Q` | `sig X in P {}` + `fact { X in Q }` | `isa_X_Q` |
+| `partition` / `disjoint-children` | 組の全ペアに `no A & B` | `partition1_disj_P` など |
+| `partition` / `covering` | `P = A + B + …` | `partition1_cover_P` など |
+| `disjoint: Y` | `no X & Y` | `disj_X_Y` |
+| 関係 | from の sig の field `name: set To` | — |
+| `mult` / `inverse` | `all x: From \| m x.name` / `all y: To \| m name.y` | `mult_R1` / `inv_R1` |
+| 公理 | `fact AX_<ID> { 式 }` | `AX_<ID>` |
+| 帰結 | `assert` + `check` | — |
+| 事例 | `pred` + `run` | — |
+
+検証で走るコマンド:
+
+| コマンド | 期待 | 何を確かめるか |
+|---|---|---|
+| `consistency` | 実例あり | 公理系全体が無矛盾 |
+| `inhabited_X` | 実例あり | 語 X が実例を持ちうる（定義が矛盾していない） |
+| `used_R` | 実例あり | 関係 R が成り立ちうる（失敗は warning） |
+| `overlap_A_B` | 実例あり | 重なりうると書いた A と B が実際に重なりうる |
+| `check_<ID>` | 反例なし | 帰結が公理から導かれる |
+| `scenario_<ID>` | possible なら実例あり、impossible なら実例なし | 事例の期待どおりか |
+
+## 式の書き方
+
+式の中では、語は Alloy での名前（見出しの括弧内の英語の別名、または `id`）で、関係は表の `name` で書く。
+`python3 $ONTO alloy ONTOLOGY.md` で生成されたモデルを見ると、使える名前が分かる。
+
+| 言いたいこと | 式 |
+|---|---|
+| A はすべて B | `A in B` |
+| A と B は重ならない | `no A & B` |
+| A と B は同じ集合 | `A = B` |
+| A は B か C のどちらか | `A in B + C` |
+| A のうち B でないもの | `A - B` |
+| x が r でたどれる先 | `x.r`（すべての A がたどれる先: `A.r`） |
+| x を r でたどってくる元 | `r.x` |
+| r を 1 回以上たどる | `x.^r`（推移閉包） |
+| すべての a について | `all a: A \| …` |
+| ある a について | `some a: A \| …` |
+| 高々 1 つ / ちょうど 1 つ / 無い | `lone e` / `one e` / `no e` |
+| 内包 | `{ a: A \| some a.r }` |
+
+例: 「顧客とは注文を 1 件以上出した当事者」は `Customer = places.Order`（`places.Order` は、注文に `places` で
+つながる当事者の集合）。
+
+## 結果の読み方
+
+| 指摘 | 意味 | 次にすること |
+|---|---|---|
+| `UNSAT`（衝突している制約の一覧つき） | 実例があるはずのものが、scope の範囲で 1 つも作れない | 一覧の制約のうちどれかが誤り。一覧は「これらを全部入れると矛盾し、どれか 1 つを外すと矛盾しない」極小の組。どれを緩めるか開発者に聞く |
+| `UNSAT`（consistency のため） | 公理系全体が矛盾していて、他の検査が意味を持たない | consistency を先に直す |
+| `CHECK-FAIL`（反例つき） | 帰結が成り立たない状況を作れる | 反例を言葉に直す。足りない公理を足すか、帰結の見込みを取り下げる |
+| `TOO-LOOSE`（実例つき） | impossible のはずの事例が起こりうる | 禁じる公理を足す |
+| `ALLOY-SYNTAX` | `alloy:` の式が読めない（名前の誤りなど） | 生成モデルで名前を確かめて式を直す |
+
+反例・実例の読み方: `Order$3` は注文の 3 番目の実例、`Shipment<:target={Shipment$0->Order$3}` は「発送 0 が
+注文 3 を対象にする」。空の集合と整数の行は省いてある。
+
+## 限界
+
+- **有界**: scope（既定 4）以下の大きさのモデルしか探さない。scope 内で反例が無くても、より大きいモデルで
+  反例が出ることはありうる（ただし多くの誤りは小さいモデルで現れる、というのが Alloy の前提）。疑わしい命題は
+  個別に `- scope: 6` を付けて広げる
+- **静的**: ある時点の状態どうしの関係だけを扱う。状態遷移（下書き → 確定）を検証したいときは Alloy 6 の
+  時相演算子（`always` / `after`）で別のモデルを書く必要があり、このスキルの範囲外
+- **数**: 整数の算術は bitwidth の範囲（既定 4 ビット: −8〜7）で折り返す。個数の比較は `#` より `lone` / `one` /
+  `some` で書く

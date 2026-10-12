@@ -78,6 +78,12 @@
       "source": "./packages/init-project"
     },
     {
+      "name": "ontology",
+      "description": "Keep an ONTOLOGY.md on top of the glossary (kinds, is-a, disjointness and coverage, relations with multiplicities, axioms, expected consequences, possible/impossible scenarios), grill it, sync it with specs and code, and verify it with static checks or Alloy.",
+      "version": "0.1.0",
+      "source": "./packages/ontology"
+    },
+    {
       "name": "skill-creator",
       "source": {
         "source": "git-subdir",

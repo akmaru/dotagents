@@ -27,6 +27,11 @@ jobs:
           curl -fsSL https://claude.ai/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      # The ontology package verifies ONTOLOGY.md with Alloy (Java is preinstalled on ubuntu-latest). Fetch the jar
+      # once so tests/test_ontology.py runs its Alloy tests instead of skipping them.
+      - name: Fetch Alloy for ontology tests
+        run: python3 packages/ontology/.apm/skills/ontology/scripts/ontology.py setup-alloy
+
       # The e2e test for init-project installs from GitHub at the commit under test (the same path as a real
       # `apm marketplace add akmaru/dotagents`), so a relative dependency is checked against a real clone.
       # The token lifts the unauthenticated GitHub API rate limit that apm hits.
