@@ -1,10 +1,11 @@
 name: ontology
 version: 0.1.0
-description: Keep an ONTOLOGY.md on top of the glossary (kinds, is-a, disjointness and coverage, relations with multiplicities, axioms, expected consequences, possible/impossible scenarios), grill it, sync it with specs and code, and verify it with static checks or Alloy.
+description: Add structure to the glossary (CONTEXT.md) — kinds, is-a, disjointness and coverage, relations with multiplicities, axioms, expected consequences, possible/impossible cases — grill it, sync it with specs and code, and verify it with static checks or Alloy.
 author: akmaru
 license: MIT
 includes: auto
 dependencies:
   apm:
     - ../project-layout
+    - ../glossary
   mcp: []

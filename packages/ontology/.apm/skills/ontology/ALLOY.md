@@ -1,20 +1,20 @@
 # Alloy による検証
 
 [Alloy](https://alloytools.org/) は、集合と関係（一階の関係論理）でモデルを書き、SAT ソルバーで「各集合の
-要素数が上限（scope）以下のすべての場合」を網羅して、実例や反例を探す道具。`verify` は ONTOLOGY.md を Alloy の
+要素数が上限（scope）以下のすべての場合」を網羅して、実例や反例を探す道具。`verify` は用語集の構造を Alloy の
 モデルに翻訳し、Alloy 6 の CLI で走らせる。jar は初回に `~/.cache/ontology-skill/` へ取得する（環境変数
 `ALLOY_JAR` で既存の jar を指せる）。
 
 ## 翻訳の対応
 
-| ONTOLOGY.md | Alloy | 外せる fact のラベル |
+| 用語集 | Alloy | 外せる fact のラベル |
 |---|---|---|
-| is-a の無い語 | `sig X {}`（トップレベルの sig どうしは排他） | — |
-| `is-a: P` | `sig X in P {}` | — |
-| `is-a: P, Q` | `sig X in P {}` + `fact { X in Q }` | `isa_X_Q` |
-| `partition` / `disjoint-children` | 組の全ペアに `no A & B` | `partition1_disj_P` など |
-| `partition` / `covering` | `P = A + B + …` | `partition1_cover_P` など |
-| `disjoint: Y` | `no X & Y` | `disj_X_Y` |
+| `_種別_` があり `_上位_` の無い語 | `sig X {}`（トップレベルの sig どうしは排他） | — |
+| `_上位_: P` | `sig X in P {}` | — |
+| `_上位_: P、Q` | `sig X in P {}` + `fact { X in Q }` | `isa_X_Q` |
+| `_分割_` / `_排他な下位_` | 組の全ペアに `no A & B` | `partition1_disj_P` など |
+| `_分割_` / `_網羅する下位_` | `P = A + B + …` | `partition1_cover_P` など |
+| `_排他_: Y` | `no X & Y` | `disj_X_Y` |
 | 関係 | from の sig の field `name: set To` | — |
 | `mult` / `inverse` | `all x: From \| m x.name` / `all y: To \| m name.y` | `mult_R1` / `inv_R1` |
 | 公理 | `fact AX_<ID> { 式 }` | `AX_<ID>` |
@@ -30,12 +30,12 @@
 | `used_R` | 実例あり | 関係 R が成り立ちうる（失敗は warning） |
 | `overlap_A_B` | 実例あり | 重なりうると書いた A と B が実際に重なりうる |
 | `check_<ID>` | 反例なし | 帰結が公理から導かれる |
-| `scenario_<ID>` | possible なら実例あり、impossible なら実例なし | 事例の期待どおりか |
+| `case_<ID>` | possible なら実例あり、impossible なら実例なし | 事例の期待どおりか |
 
 ## 式の書き方
 
-式の中では、語は Alloy での名前（見出しの括弧内の英語の別名、または `id`）で、関係は表の `name` で書く。
-`python3 $ONTO alloy ONTOLOGY.md` で生成されたモデルを見ると、使える名前が分かる。
+式の中では、語は Alloy での名前（見出しの括弧内の英語名、または `_ID_`）で、関係は表の `name` で書く。
+`python3 $ONTO alloy CONTEXT.md` で生成されたモデルを見ると、使える名前が分かる。
 
 | 言いたいこと | 式 |
 |---|---|
@@ -72,8 +72,8 @@
 
 - **有界**: scope（既定 4）以下の大きさのモデルしか探さない。scope 内で反例が無くても、より大きいモデルで
   反例が出ることはありうる（ただし多くの誤りは小さいモデルで現れる、というのが Alloy の前提）。疑わしい命題は
-  個別に `- scope: 6` を付けて広げる
-- **静的**: ある時点の状態どうしの関係だけを扱う。状態遷移（下書き → 確定）を検証したいときは Alloy 6 の
+  個別に `- scope: 6` を付けて広げる。用語集の frontmatter の `alloy-scope` で全体を広げることもできる
+- **静的**: ある時点の状態どうしの関係だけを扱う。`_状態_` が `open` の語・項目は制約に入れない。状態遷移（下書き → 確定）を検証したいときは Alloy 6 の
   時相演算子（`always` / `after`）で別のモデルを書く必要があり、このスキルの範囲外
 - **数**: 整数の算術は bitwidth の範囲（既定 4 ビット: −8〜7）で折り返す。個数の比較は `#` より `lone` / `one` /
   `some` で書く

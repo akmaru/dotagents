@@ -14,13 +14,13 @@
     {
       "name": "grill-with-docs",
       "description": "Interview the user relentlessly about a plan or design in a repo, writing resolved terms into CONTEXT.md and hard-to-reverse decisions into ADRs as you go.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": "./packages/grill-with-docs"
     },
     {
       "name": "grill-spec",
       "description": "Interview the developer about what to build and why in a repo, writing problems, user stories, journeys, and acceptance criteria into a versioned spec file, refining it against consistency and opposing perspectives before accepting.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source": "./packages/grill-spec"
     },
     {
@@ -68,7 +68,7 @@
     {
       "name": "project-layout",
       "description": "The standard project layout (where README, AGENTS.md, ADRs, specs, the glossary and public docs live) and how to resolve each location, as a reference skill and a machine-readable layout.json.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "./packages/project-layout"
     },
     {
@@ -78,8 +78,14 @@
       "source": "./packages/init-project"
     },
     {
+      "name": "glossary",
+      "description": "The glossary format (CONTEXT.md / CONTEXT-MAP.md) — term definitions, structure lines (kind, is-a, disjointness, coverage, overlap) and cross-term sections (relations, axioms, consequences, cases) — as a single reference skill.",
+      "version": "0.1.0",
+      "source": "./packages/glossary"
+    },
+    {
       "name": "ontology",
-      "description": "Keep an ONTOLOGY.md on top of the glossary (kinds, is-a, disjointness and coverage, relations with multiplicities, axioms, expected consequences, possible/impossible scenarios), grill it, sync it with specs and code, and verify it with static checks or Alloy.",
+      "description": "Add structure to the glossary (CONTEXT.md) — kinds, is-a, disjointness and coverage, relations with multiplicities, axioms, expected consequences, possible/impossible cases — grill it, sync it with specs and code, and verify it with static checks or Alloy.",
       "version": "0.1.0",
       "source": "./packages/ontology"
     },

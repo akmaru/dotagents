@@ -1,5 +1,5 @@
 name: grill-with-docs
-version: 1.1.0
+version: 1.2.0
 description: Interview the user relentlessly about a plan or design in a repo, writing resolved terms into CONTEXT.md and hard-to-reverse decisions into ADRs as you go.
 author: akmaru
 license: MIT
@@ -7,4 +7,5 @@ includes: auto
 dependencies:
   apm:
     - ../project-layout
+    - ../glossary
   mcp: []

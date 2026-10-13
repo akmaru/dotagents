@@ -34,6 +34,8 @@ marketplace:
     source: ./packages/project-layout
   - name: init-project
     source: ./packages/init-project
+  - name: glossary
+    source: ./packages/glossary
   - name: ontology
     source: ./packages/ontology
   - name: skill-creator
