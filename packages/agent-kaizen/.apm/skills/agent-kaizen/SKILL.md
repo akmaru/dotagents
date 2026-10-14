@@ -40,7 +40,7 @@ runner のエージェントは今のセッションを見られないので、I
    ```
 
    herdr の外、またはスクリプトが無いときは立ち上げず、Issue の URL を返すだけにする。1 つの kaizen は 1 つのセッションで扱う
-   （`docs/adr/0029-agent-kaizen-dedicated-session-and-blocked-reporting.md`）。
+   （`docs/adr/0030-agent-kaizen-dedicated-session-and-blocked-reporting.md`）。
 
 ## 専用セッション
 

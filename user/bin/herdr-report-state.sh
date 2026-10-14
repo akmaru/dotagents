@@ -7,7 +7,7 @@
 #
 # herdr が Claude Code に入れる hook は SessionStart だけで、回答待ちは通知されない。
 # `herdr pane report-agent --state blocked` で pane を blocked にすると、attention 順の並び
-# （agent_panel_sort = "priority"）と next_agent で拾える。設計は docs/adr/0029。
+# （agent_panel_sort = "priority"）と next_agent で拾える。設計は docs/adr/0030。
 #
 # herdr が生成するスクリプトは再インストールで上書きされるので、別ファイルとして持つ。
 # working は blocked を送った pane にだけ返す（ツールごとに呼ばれるので、印のファイルで足切りする）。
@@ -34,5 +34,6 @@ else
   mkdir -p "${mark_dir}" 2>/dev/null && : >"${mark}" 2>/dev/null
 fi
 
-"${HERDR}" pane report-agent --pane "${pane}" --state "${state}" >/dev/null 2>&1 || true
+# source は herdr 自身の hook（herdr-agent-state.sh）と同じ値にする
+"${HERDR}" pane report-agent --source herdr:claude --agent claude --state "${state}" "${pane}" >/dev/null 2>&1 || true
 exit 0

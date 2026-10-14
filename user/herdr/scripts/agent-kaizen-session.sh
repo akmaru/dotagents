@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# agent-kaizen の Issue 1 件を担当する専用の Claude Code セッションを、隣の pane に立ち上げる（docs/adr/0029）。
+# agent-kaizen の Issue 1 件を担当する専用の Claude Code セッションを、隣の pane に立ち上げる（docs/adr/0030）。
 # 専用セッションは Issue を見張り、ユーザーの番になると質問を表示し、答えの投稿を受け持つ。
 # agent-kaizen スキルが起票した直後に呼ぶ。元のセッションはフォーカスを奪われず、今の作業に戻る。
 #

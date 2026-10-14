@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# kaizen 専用セッションが、自分の Issue を見張る（docs/adr/0029）。Monitor ツールで起動する想定で、
+# kaizen 専用セッションが、自分の Issue を見張る（docs/adr/0030）。Monitor ツールで起動する想定で、
 # ユーザーの番になった（または終わった）ときだけ stdout に 1 行出す。
 #
 #   agent-kaizen-watch.sh <Issue 番号>

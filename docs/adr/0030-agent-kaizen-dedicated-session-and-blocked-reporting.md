@@ -47,8 +47,11 @@ herdr が Claude Code に入れる hook は `SessionStart` の 1 つだけであ
 Issue の状態ごとの出力（質問・実行中・回答済み・PR・merge）、専用セッションの起動（1 Issue 1 セッション、フォーカスを奪わない）、
 `install.sh` への登録、スキルの記述。
 
-実機の herdr で確かめていないこと: `herdr pane report-agent` の引数（`--pane` の指定）、herdr 自身の画面検出が blocked を
-上書きしないか、`agent start` の `--` 以降の文字列が初回プロンプトになるか、`Notification` の `matcher` 値。
+`herdr pane report-agent` の引数の形は herdr 0.8.2 の `--help` と突き合わせた
+（`--source <ID> --agent <LABEL> --state <STATUS> <PANE_ID>`。pane は名前の無い引数）。`pane split` と `agent start` の形も合っていた。
+
+実機の herdr で確かめていないこと: `--source herdr:claude`（herdr 自身の hook と同じ値）で送った blocked が herdr の
+画面検出とどう競合するか、herdr 自身の画面検出が blocked を上書きしないか、`agent start` の `--` 以降の文字列が初回プロンプトになるか、`Notification` の `matcher` 値。
 
 ## More Information
 

@@ -85,7 +85,7 @@ add_hook_once() {
 add_hook_once "UserPromptSubmit" "*"    "workflow-graph-state.sh"
 add_hook_once "PreToolUse"       "Bash|Workflow" "workflow-graph-guard.sh"
 
-# 回答待ちを herdr に blocked として報告する hook（docs/adr/0029）。herdr 自身の hook とは別ファイル。
+# 回答待ちを herdr に blocked として報告する hook（docs/adr/0030）。herdr 自身の hook とは別ファイル。
 # 報告の取り消し（working）は、どれかのツールが完了した時点で返す。
 ln -sfn "${USER_DIR}/bin/herdr-report-state.sh" "${HOME}/.local/bin/herdr-report-state.sh"
 add_hook_once "PreToolUse"   "AskUserQuestion"                      "herdr-report-state.sh blocked"

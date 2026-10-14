@@ -1,5 +1,5 @@
 """
-Validate the pieces that put "the user's turn" in front of the user (docs/adr/0029):
+Validate the pieces that put "the user's turn" in front of the user (docs/adr/0030):
 
 - user/bin/herdr-report-state.sh: reports blocked / working to herdr from Claude Code hooks
 - user/bin/agent-kaizen-watch.sh: a dedicated session's watcher over its own issue
@@ -45,12 +45,18 @@ class TestReportState:
         return log.read_text().splitlines() if log.exists() else []
 
     def test_blocked_is_reported_for_the_pane(self, tmp_path):
-        assert self._run(tmp_path, "blocked") == ["pane report-agent --pane p1 --state blocked"]
+        # herdr 0.8.2: report-agent [OPTIONS] --source <ID> --agent <LABEL> --state <STATUS> <PANE_ID>
+        assert self._run(tmp_path, "blocked") == [
+            "pane report-agent --source herdr:claude --agent claude --state blocked p1"
+        ]
 
     def test_working_is_sent_only_after_blocked(self, tmp_path):
         assert self._run(tmp_path, "working") == []
         self._run(tmp_path, "blocked")
-        assert self._run(tmp_path, "working")[-1] == "pane report-agent --pane p1 --state working"
+        assert (
+            self._run(tmp_path, "working")[-1]
+            == "pane report-agent --source herdr:claude --agent claude --state working p1"
+        )
         # the mark is consumed: the next tool completion is silent
         assert len(self._run(tmp_path, "working")) == 2
 
