@@ -90,10 +90,10 @@
       "source": "./packages/ontology"
     },
     {
-      "name": "agent-dx",
+      "name": "agent-kaizen",
       "description": "File an agent-experience pain point or wish as a GitHub issue on dotagents, for the autonomous improvement loop.",
       "version": "0.1.0",
-      "source": "./packages/agent-dx"
+      "source": "./packages/agent-kaizen"
     },
     {
       "name": "skill-creator",

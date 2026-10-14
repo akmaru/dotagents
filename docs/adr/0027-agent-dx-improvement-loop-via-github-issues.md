@@ -92,14 +92,14 @@ PR 作成までを自律で進める。人間は PR ごとに隔離した環境�
 
 ### Confirmation
 
-`tests/test_agent_dx.py` が次を確かめる（CI の `.github/workflows/test.yml` で走る）:
+`tests/test_agent_kaizen.py` が次を確かめる（CI の `.github/workflows/test.yml` で走る）:
 
-* `.github/workflows/agent-dx.yml` が、ラベルを付けた人とコメントした人の両方をリポジトリのオーナーに限っていること、
-  `CLAUDE_CODE_OAUTH_TOKEN` で認証し API キーを使わないこと、エージェントに `.github/agent-dx/INSTRUCTIONS.md` を読ませること
-* `.github/workflows/agent-dx-merge.yml` が、オーナーの approve かつ `claude/` ブランチのときだけ走り、`test` の結果を
+* `.github/workflows/agent-kaizen.yml` が、ラベルを付けた人とコメントした人の両方をリポジトリのオーナーに限っていること、
+  `CLAUDE_CODE_OAUTH_TOKEN` で認証し API キーを使わないこと、エージェントに `.github/agent-kaizen/INSTRUCTIONS.md` を読ませること
+* `.github/workflows/agent-kaizen-merge.yml` が、オーナーの approve かつ `claude/` ブランチのときだけ走り、`test` の結果を
   見てから merge すること
 * `INSTRUCTIONS.md` が merge と `.github/` の変更を禁じ、PR 本文に隔離環境での試し方を求めていること
-* 起票スキルが `akmaru/dotagents` に `agent-dx` ラベルで起票し、起票前に確認を取ること
+* 起票スキルが `akmaru/dotagents` に `agent-kaizen` ラベルで起票し、起票前に確認を取ること
 
 エージェントが実際に指示どおり振る舞うか（PR で止まるか、試し方を埋めるか）は、テストでは確かめられない。PR のレビューで確かめる。
 
@@ -174,8 +174,10 @@ PR 作成までを自律で進める。人間は PR ごとに隔離した環境�
 - 出典: [Claude Code GitHub Actions](https://code.claude.com/docs/en/github-actions)（OAuth トークンの対応プラン、
   write 権限のチェック）、[Automate work with routines](https://code.claude.com/docs/en/routines)（GitHub トリガーが
   対応するイベント）
+- 名前（2026-10-14 決定）: 起票スキル・ラベル・ワークフロー・指示のディレクトリをすべて `agent-kaizen` にした。
+  「課題」と「実現したいこと」の両方を含み、使った分だけ少しずつ良くしていくという意図に合うため。
+  候補は `friction`（課題しか指さない）/ `papercut`（さらに狭い）/ `wish`（課題の報告には軽い）/ `kaizen` だった。
+  実装の当初は仮に `agent-dx` としていたので、このファイル名と PR #48〜#52 には `agent-dx` が残る
 - 未決事項:
-  - 起票スキルの名前とラベルの名前。いまは仮に両方 `agent-dx` にしている（候補: `friction` / `papercut` / `wish` / `kaizen`。
-    「課題」と「実現したいこと」の両方を含む名前にしたい）
   - 試用専用の HOME で `/login` したログインが、普段のログインと別に保存されるか（ドキュメントに基づく。実機では未検証）。
     `HOME` を差し替えた環境で `user/install.sh` と `apm install -g` が動くことは確かめた（PR #51 の試用）

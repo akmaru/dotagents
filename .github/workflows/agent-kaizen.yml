@@ -1,6 +1,6 @@
-name: Agent DX
+name: Agent kaizen
 
-# エージェント利用体験の改善ループ（docs/adr/0027）。agent-dx ラベルの付いた Issue を Claude が PR まで進める。
+# エージェント利用体験の改善ループ（docs/adr/0027）。agent-kaizen ラベルの付いた Issue を Claude が PR まで進める。
 # 公開リポジトリなので、起動できるのはリポジトリのオーナーだけにする（ラベルを付けた人・コメントした人の両方で確かめる）。
 # 認証は個人の Max の OAuth トークン（`claude setup-token` で発行し、secret CLAUDE_CODE_OAUTH_TOKEN に登録する）。
 
@@ -11,19 +11,19 @@ on:
     types: [created]
 
 concurrency:
-  group: agent-dx-${{ github.event.issue.number }}
+  group: agent-kaizen-${{ github.event.issue.number }}
   cancel-in-progress: false
 
 jobs:
   claude:
     if: >-
       (github.event_name == 'issues'
-        && github.event.label.name == 'agent-dx'
+        && github.event.label.name == 'agent-kaizen'
         && github.event.sender.login == github.repository_owner)
       || (github.event_name == 'issue_comment'
         && contains(github.event.comment.body, '@claude')
         && github.event.comment.user.login == github.repository_owner
-        && (contains(github.event.issue.labels.*.name, 'agent-dx') || github.event.issue.pull_request))
+        && (contains(github.event.issue.labels.*.name, 'agent-kaizen') || github.event.issue.pull_request))
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -46,9 +46,9 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          label_trigger: agent-dx
+          label_trigger: agent-kaizen
           claude_args: >-
             --max-turns 80
             --add-dir /tmp
-            --append-system-prompt "Before doing anything, read .github/agent-dx/INSTRUCTIONS.md and follow it."
+            --append-system-prompt "Before doing anything, read .github/agent-kaizen/INSTRUCTIONS.md and follow it."
             --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git:*),Bash(gh issue:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(uv run pytest:*),Bash(uv run apm pack:*),Bash(ls:*),Bash(cat:*),Bash(jq:*)"
