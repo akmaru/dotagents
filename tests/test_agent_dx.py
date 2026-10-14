@@ -100,6 +100,14 @@ class TestMergeWorkflow:
         assert "github.event.review.user.login == github.repository_owner" in cond
         assert "startsWith(github.event.pull_request.head.ref, 'claude/')" in cond
 
+    def test_closes_linked_issues_after_merging(self, wf):
+        # PR #51: merged by GITHUB_TOKEN, `Closes #49` did not close the issue
+        job = only_job(wf)
+        script = "\n".join(s.get("run", "") for s in job["steps"])
+        assert "closingIssuesReferences" in script
+        assert script.index("gh pr merge") < script.index("gh issue close")
+        assert job["permissions"]["issues"] == "write"
+
     def test_checks_tests_before_merging(self, wf):
         script = "\n".join(s.get("run", "") for s in only_job(wf)["steps"])
         assert "gh pr checks" in script
@@ -132,6 +140,13 @@ class TestInstructions:
     def test_pr_body_has_a_trial_guide_in_an_isolated_home(self, body):
         assert re.search(r"HOME=\S+ \S*user/install\.sh", body)
         assert "Closes #" in body
+
+    def test_trial_home_is_reused_across_prs_and_keeps_its_own_login(self, body):
+        # A fresh HOME per PR is logged out, so every trial needed /login (found on PR #51).
+        # One fixed trial HOME needs /login once; CLAUDE_CONFIG_DIR keys the Keychain entry to it,
+        # so that login does not overwrite the everyday one.
+        assert "TRY_HOME=~/.claude-trial-home" in body
+        assert re.search(r'HOME="\$TRY_HOME" CLAUDE_CONFIG_DIR="\$TRY_HOME/\.claude" claude', body)
 
 
 class TestCaptureSkill:

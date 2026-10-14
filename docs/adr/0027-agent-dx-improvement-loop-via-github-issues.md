@@ -63,12 +63,16 @@ PR 作成までを自律で進める。人間は PR ごとに隔離した環境�
   質問と選択肢として Issue にコメントして止まる。人間が Issue 上で `@claude` を付けて答えると、続きから再開する。
   実装は `claude/` プレフィックスのブランチで行い、既存の CI（`.github/workflows/test.yml`）を通して PR を出す。
 - **試し方**: PR 本文の末尾に、隔離環境で試す手順を必ず付ける。`user/install.sh` は配布先を `${HOME}/.claude` と
-  直接書いているので、`HOME` ごと差し替えて隔離する:
+  直接書いているので、`HOME` ごと差し替えて隔離する。試用専用の HOME は 1 つに固定して PR をまたいで使い回し、
+  起動時に `CLAUDE_CONFIG_DIR` も明示する（2026-10-14 追記。PR ごとに HOME を作ると毎回ログインしていない状態になり、
+  `/login` が要った。`CLAUDE_CONFIG_DIR` を明示すると Keychain のエントリがそのディレクトリごとに分かれるので、
+  試用環境での `/login` が普段のログインを上書きしない）:
 
   ```bash
+  TRY_HOME=~/.claude-trial-home
   git worktree add /tmp/try-pr-N <branch>
-  HOME=/tmp/try-pr-N-home /tmp/try-pr-N/user/install.sh
-  HOME=/tmp/try-pr-N-home claude
+  HOME="$TRY_HOME" /tmp/try-pr-N/user/install.sh
+  HOME="$TRY_HOME" CLAUDE_CONFIG_DIR="$TRY_HOME/.claude" claude
   ```
 
 - **merge**: 人間が PR を approve すると merge される。approve 以外の経路では merge しない。merge 後に手元の checkout
@@ -173,4 +177,5 @@ PR 作成までを自律で進める。人間は PR ごとに隔離した環境�
 - 未決事項:
   - 起票スキルの名前とラベルの名前。いまは仮に両方 `agent-dx` にしている（候補: `friction` / `papercut` / `wish` / `kaizen`。
     「課題」と「実現したいこと」の両方を含む名前にしたい）
-  - `HOME` を差し替えた環境で `claude` のログイン（macOS の Keychain）と `apm install -g` が動くか（未検証）
+  - 試用専用の HOME で `/login` したログインが、普段のログインと別に保存されるか（ドキュメントに基づく。実機では未検証）。
+    `HOME` を差し替えた環境で `user/install.sh` と `apm install -g` が動くことは確かめた（PR #51 の試用）
