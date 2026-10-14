@@ -100,6 +100,14 @@ class TestMergeWorkflow:
         assert "github.event.review.user.login == github.repository_owner" in cond
         assert "startsWith(github.event.pull_request.head.ref, 'claude/')" in cond
 
+    def test_closes_linked_issues_after_merging(self, wf):
+        # PR #51: merged by GITHUB_TOKEN, `Closes #49` did not close the issue
+        job = only_job(wf)
+        script = "\n".join(s.get("run", "") for s in job["steps"])
+        assert "closingIssuesReferences" in script
+        assert script.index("gh pr merge") < script.index("gh issue close")
+        assert job["permissions"]["issues"] == "write"
+
     def test_checks_tests_before_merging(self, wf):
         script = "\n".join(s.get("run", "") for s in only_job(wf)["steps"])
         assert "gh pr checks" in script

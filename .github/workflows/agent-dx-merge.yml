@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write
       checks: read
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,3 +36,12 @@ jobs:
 
       - name: Merge
         run: gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
+
+      # GITHUB_TOKEN で merge すると `Closes #N` で Issue が閉じなかった（PR #51）ので、結び付いた Issue を明示的に閉じる
+      - name: Close linked issues
+        run: |
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json closingIssuesReferences \
+            --jq '.closingIssuesReferences[].number' |
+            while read -r n; do
+              gh issue close "$n" --repo "$GITHUB_REPOSITORY" --reason completed --comment "#${PR} を merge した"
+            done
