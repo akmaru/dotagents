@@ -49,5 +49,6 @@ jobs:
           label_trigger: agent-dx
           claude_args: >-
             --max-turns 80
+            --add-dir /tmp
             --append-system-prompt "Before doing anything, read .github/agent-dx/INSTRUCTIONS.md and follow it."
             --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git:*),Bash(gh issue:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(uv run pytest:*),Bash(uv run apm pack:*),Bash(ls:*),Bash(cat:*),Bash(jq:*)"
