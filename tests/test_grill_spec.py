@@ -1,8 +1,9 @@
 """
-Validate the grill-spec package: its 4 bundled skill files, the byte-identical
-CONTEXT-FORMAT.md copy from grill-with-docs, and the package manifest files.
+Validate the grill-spec package: its 3 bundled skill files, the glossary format taken
+from the glossary package (not a copy), and the package manifest files.
 
-See docs/adr/0022-grill-spec-separate-self-contained-package.md and
+See docs/adr/0022-grill-spec-separate-self-contained-package.md,
+docs/adr/0026-glossary-format-package-and-structure-in-glossary.md and
 packages/grill-spec/docs/internal/specs/0001-grill-spec.md (AC7).
 """
 
@@ -15,9 +16,7 @@ import yaml
 ROOT = Path(__file__).parent.parent
 PKG_DIR = ROOT / "packages" / "grill-spec"
 SKILL_DIR = PKG_DIR / ".apm" / "skills" / "grill-spec"
-GRILL_WITH_DOCS_CONTEXT_FORMAT = (
-    ROOT / "packages" / "grill-with-docs" / ".apm" / "skills" / "grill-with-docs" / "CONTEXT-FORMAT.md"
-)
+GLOSSARY_FORMAT = ROOT / "packages" / "glossary" / ".apm" / "skills" / "glossary" / "CONTEXT-FORMAT.md"
 
 
 def _frontmatter(skill_md: Path) -> dict:
@@ -45,23 +44,18 @@ class TestPackageFiles:
 
 
 class TestBundledSkillFiles:
-    @pytest.mark.parametrize(
-        "name", ["SKILL.md", "SPEC-FORMAT.md", "CONTEXT-FORMAT.md", "REFINEMENT.md"]
-    )
+    @pytest.mark.parametrize("name", ["SKILL.md", "SPEC-FORMAT.md", "REFINEMENT.md"])
     def test_file_exists(self, name):
         assert (SKILL_DIR / name).exists(), f"{name} not found in {SKILL_DIR}/"
 
-    def test_context_format_is_byte_identical_to_grill_with_docs(self):
-        assert GRILL_WITH_DOCS_CONTEXT_FORMAT.exists(), (
-            "packages/grill-with-docs/.apm/skills/grill-with-docs/CONTEXT-FORMAT.md must exist "
-            "to compare against"
-        )
-        ours = (SKILL_DIR / "CONTEXT-FORMAT.md").read_bytes()
-        theirs = GRILL_WITH_DOCS_CONTEXT_FORMAT.read_bytes()
-        assert ours == theirs, (
-            "grill-spec's CONTEXT-FORMAT.md must be a byte-identical copy of "
-            "grill-with-docs's CONTEXT-FORMAT.md (ADR 0022)"
-        )
+    def test_does_not_bundle_glossary_format(self):
+        # 用語集の書式は glossary パッケージだけが持つ（ADR 0026）
+        assert not (SKILL_DIR / "CONTEXT-FORMAT.md").exists()
+        assert GLOSSARY_FORMAT.exists()
+
+    def test_depends_on_glossary(self):
+        data = yaml.safe_load((PKG_DIR / "apm.yml").read_text())
+        assert data["dependencies"]["apm"] == ["../glossary"]
 
 
 class TestSkillMdFrontmatter:
@@ -77,7 +71,7 @@ class TestSkillMdFrontmatter:
 
 class TestSkillMdReferencesSiblingFiles:
     @pytest.mark.parametrize(
-        "name", ["SPEC-FORMAT.md", "REFINEMENT.md", "CONTEXT-FORMAT.md"]
+        "name", ["SPEC-FORMAT.md", "REFINEMENT.md", "CONTEXT-FORMAT.md", "`glossary`"]
     )
     def test_references(self, name):
         body = (SKILL_DIR / "SKILL.md").read_text()

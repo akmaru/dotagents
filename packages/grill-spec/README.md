@@ -12,8 +12,8 @@
 - `grill-with-docs`: 設計判断・実装方法を問い詰め、用語集（`CONTEXT.md`）と ADR に残す
 
 `grill-spec` が出す accepted の仕様書が、後段（設計判断 → ADR → 実装）の入力になる。用語集の書式は両スキル
-で共通で、`grill-spec` は `grill-with-docs` の `CONTEXT-FORMAT.md` を同梱している（下記「開発者向け」）。
-`grill-with-docs` 自体は変更しておらず、`grill-spec` は依存を持たない自己完結パッケージ。
+で共通で、どちらも `glossary` パッケージの `CONTEXT-FORMAT.md` を参照する。`grill-spec` が依存するのは
+`glossary` だけで、`grill-with-docs` を入れていない環境でも動く。
 
 ## インストール
 
@@ -50,10 +50,10 @@ apm install -g grill-spec@dotagents
 
 ## 開発者向け
 
-- `CONTEXT-FORMAT.md` は `grill-with-docs` の同名ファイルからの**バイト一致のコピー**。用語集の書式を変える
-  ときは `grill-with-docs` 側を直してからコピーし直す
+- 用語集の書式は `glossary` パッケージの `CONTEXT-FORMAT.md` だけにある（コピーは持たない。
+  [ADR 0026](../../docs/adr/0026-glossary-format-package-and-structure-in-glossary.md)）
 - 仕様書・台帳の書式は [SPEC-FORMAT.md](.apm/skills/grill-spec/SPEC-FORMAT.md)、リファインメントの手順は
   [REFINEMENT.md](.apm/skills/grill-spec/REFINEMENT.md) にある
 - 仕様と、このパッケージを `grill-with-docs` と分けた決定は
   [docs/internal/specs/0001-grill-spec.md](docs/internal/specs/0001-grill-spec.md) と
-  [ADR 0022](../../docs/adr/0022-grill-spec-separate-self-contained-package.md)
+  [ADR 0022](../../docs/adr/0022-grill-spec-separate-self-contained-package.md)（書式のコピーの部分は ADR 0026 で置き換えた）

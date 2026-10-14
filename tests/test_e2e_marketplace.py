@@ -59,12 +59,13 @@ def test_marketplace_add_then_install_deploys_skill(tmp_path):
     )
 
 
-# --- grill-spec: 同梱 4 ファイルの配備（プロジェクト / ユーザースコープ）と、Claude Code からの認識 ---
+# --- grill-spec: 同梱 3 ファイルの配備（プロジェクト / ユーザースコープ）と、Claude Code からの認識 ---
 # 仕様書 packages/grill-spec/docs/internal/specs/0001-grill-spec.md の AC8（apm install / apm install -g で
 # 導入できる）と AC9（/grill-spec で起動できる）を、実物の apm と claude で確かめる。
 
 GRILL_SPEC_SRC = ROOT / "packages" / "grill-spec" / ".apm" / "skills" / "grill-spec"
-GRILL_SPEC_FILES = ["SKILL.md", "SPEC-FORMAT.md", "CONTEXT-FORMAT.md", "REFINEMENT.md"]
+GRILL_SPEC_FILES = ["SKILL.md", "SPEC-FORMAT.md", "REFINEMENT.md"]
+GLOSSARY_FORMAT_SRC = ROOT / "packages" / "glossary" / ".apm" / "skills" / "glossary" / "CONTEXT-FORMAT.md"
 
 
 def _install_grill_spec(tmp_path, scope):
@@ -92,6 +93,15 @@ def test_grill_spec_deploys_all_bundled_files(tmp_path, scope):
         assert f.read_bytes() == (GRILL_SPEC_SRC / name).read_bytes(), f"{name} differs from source"
     # パッケージ内の仕様書（docs/internal/）はスキルの文脈に入れない
     assert sorted(p.name for p in deployed.iterdir()) == sorted(GRILL_SPEC_FILES)
+
+
+def test_grill_spec_from_local_marketplace_deploys_glossary_format_alongside(tmp_path):
+    """用語集の書式は grill-spec に同梱せず、依存の glossary が隣に入る（ADR 0026）。ローカルの marketplace は -g で
+    相対パスの依存を配置しないので（ADR 0025）、ここではプロジェクトスコープだけを確かめる。"""
+    _, _, deployed, install = _install_grill_spec(tmp_path, "project")
+    fmt = deployed.parent / "glossary" / "CONTEXT-FORMAT.md"
+    assert fmt.is_file(), f"glossary not deployed next to grill-spec:\n{install.stdout}"
+    assert fmt.read_bytes() == GLOSSARY_FORMAT_SRC.read_bytes()
 
 
 @pytest.mark.skipif(shutil.which("claude") is None, reason="claude CLI not on PATH")
@@ -181,3 +191,28 @@ def test_init_project_from_github_marketplace_pins_both_packages_to_one_commit(t
     deps = {d["name"]: d for d in yaml.safe_load(lock.read_text())["dependencies"]}
     assert deps["init-project"]["resolved_commit"] == commit
     assert deps["project-layout"]["resolved_commit"] == commit, "project-layout が別のコミットから入った"
+
+
+@pytest.mark.skipif(not REMOTE, reason="DOTAGENTS_E2E_REMOTE (<owner>/<repo>@<commit>) is not set")
+@pytest.mark.parametrize("pkg", ["grill-spec", "grill-with-docs", "ontology"])
+@pytest.mark.parametrize("scope", ["project", "user"])
+def test_glossary_users_from_github_marketplace_get_glossary_from_same_commit(tmp_path, pkg, scope):
+    """用語集を扱うパッケージは、glossary を同じコミットから隣に入れる（ADR 0026）。"""
+    repo, commit = REMOTE.split("@")
+    home = tmp_path / "home"
+    consumer = tmp_path / "consumer"
+    home.mkdir()
+    consumer.mkdir()
+    add = _apm(["marketplace", "add", repo, "--ref", commit], home)
+    assert add.returncode == 0, f"marketplace add failed:\n{add.stderr or add.stdout}"
+    args = ["install", f"{pkg}@dotagents", "--target", "claude"]
+    if scope == "user":
+        args.insert(1, "-g")
+    install = _apm(args, home, cwd=consumer)
+    assert install.returncode == 0, f"install failed:\n{install.stderr or install.stdout}"
+    base = home if scope == "user" else consumer
+    fmt = base / ".claude" / "skills" / "glossary" / "CONTEXT-FORMAT.md"
+    assert fmt.read_bytes() == GLOSSARY_FORMAT_SRC.read_bytes(), f"glossary not deployed:\n{install.stdout}"
+    lock = home / ".apm" / "apm.lock.yaml" if scope == "user" else consumer / "apm.lock.yaml"
+    deps = {d["name"]: d for d in yaml.safe_load(lock.read_text())["dependencies"]}
+    assert deps["glossary"]["resolved_commit"] == commit, "glossary が別のコミットから入った"

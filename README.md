@@ -13,6 +13,8 @@ Personal AI agent skills managed as an [APM](https://github.com/microsoft/apm) m
 | [madr-writer](packages/madr-writer/.apm/skills/madr-writer/SKILL.md) | Author Architecture Decision Records in MADR format |
 | [refine-design](packages/refine-design/.apm/skills/refine-design/SKILL.md) | Pressure-test and refine a design decision — alternatives, trade-offs, consistency |
 | [context-budget](packages/context-budget/.apm/skills/context-budget/SKILL.md) | Measure Claude Code context usage and reduce it with evidence (measurement lives in `user/bin/claude-context.py`) |
+| [glossary](packages/glossary/.apm/skills/glossary/SKILL.md) | The single source of the glossary format (`CONTEXT.md` / `CONTEXT-MAP.md`); every package that handles the glossary depends on it |
+| [ontology](packages/ontology/.apm/skills/ontology/SKILL.md) | Add structure to the glossary (kinds, is-a, disjointness/coverage, relations, axioms, cases); grill it, sync it, and verify it statically or with Alloy |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | Create new skills, improve existing skills, and measure skill performance |
 
 ## Usage

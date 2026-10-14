@@ -1,0 +1,9 @@
+name: glossary
+version: 0.1.0
+description: The glossary format (CONTEXT.md / CONTEXT-MAP.md) — term definitions, structure lines (kind, is-a, disjointness, coverage, overlap) and cross-term sections (relations, axioms, consequences, cases) — as a single reference skill.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []

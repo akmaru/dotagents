@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: amended by ADR-0026
 date: 2026-10-10
 decision-makers: akmaru
 ---

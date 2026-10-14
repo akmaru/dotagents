@@ -1,5 +1,5 @@
 name: project-layout
-version: 0.1.0
+version: 0.2.0
 description: The standard project layout (where README, AGENTS.md, ADRs, specs, the glossary and public docs live) and how to resolve each location, as a reference skill and a machine-readable layout.json.
 author: akmaru
 license: MIT
