@@ -12,7 +12,8 @@ main への merge は、そのままオーナーの全セッションの設定�
 - **merge しない**。`gh pr merge` は使わない。merge はオーナーが試して approve したときに別のワークフローが行う
 - **`.github/` 配下は変更しない**。このループ自身のワークフローと、この指示を書き換えないため
 - リポジトリの `CLAUDE.md` に従う（スキルの追加手順、ADR、`docs/adr/` の既存の決定との整合）
-- 機能を足すときはテストを先に書き、`uv run pytest` がすべて通ることを確かめてから PR を出す
+- 機能を足すときはテストを先に書き、`uv run pytest` がすべて通ることを確かめてから PR を出す。
+  ドキュメントだけの変更でも `uv run pytest` は実行し、PR 本文の「試し方」の節も省略しない（何を読めば変更を確かめられるかを書く）
 - 確かめていないことを確かめたと書かない
 
 ## 手順
@@ -25,7 +26,8 @@ main への merge は、そのままオーナーの全セッションの設定�
      形にする。オーナーが `@claude` を付けて答えると、あなたは続きから再開する
 3. `claude/` で始まるブランチで実装し、`uv run pytest` を通す。パッケージを足したり変えたりしたら `uv run apm pack` で
    `.claude-plugin/marketplace.json` を作り直す。設計上の決定を含むなら ADR を足す
-4. コミットして push し、`gh pr create` で PR を出す。本文は下の形にする
+4. コミットして push し、PR を出す。本文は下の形で `/tmp/pr-body.md` に書き、`gh pr create --body-file /tmp/pr-body.md` で渡す
+   （runner では承認を待てないので、作業ディレクトリと `/tmp` の外には書き込まない）
 5. Issue に PR の URL をコメントする
 
 ## PR の本文

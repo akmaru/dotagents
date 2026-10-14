@@ -75,6 +75,12 @@ class TestRunWorkflow:
         assert str(INSTRUCTIONS.relative_to(ROOT)) in args
         assert "--max-turns" in args
 
+    def test_can_write_the_pr_body_outside_the_checkout(self, wf):
+        # Issue #49: writing the PR body to /tmp waited for an approval nobody can give on the runner,
+        # so the agent stopped before `gh pr create`
+        args = action_step(only_job(wf))["with"]["claude_args"]
+        assert "--add-dir /tmp" in args
+
     def test_has_a_timeout(self, wf):
         assert only_job(wf)["timeout-minutes"] <= 120
 
@@ -114,6 +120,14 @@ class TestInstructions:
 
     def test_asks_questions_on_the_issue_when_design_is_needed(self, body):
         assert "gh issue comment" in body
+
+    def test_writes_the_pr_body_to_a_file_under_tmp(self, body):
+        assert "gh pr create" in body
+        assert re.search(r"--body-file /tmp/\S+", body)
+
+    def test_runs_tests_and_keeps_the_trial_guide_even_for_docs_only_changes(self, body):
+        # Issue #49: the agent skipped both because the change was documentation only
+        assert "ドキュメントだけの変更でも" in body
 
     def test_pr_body_has_a_trial_guide_in_an_isolated_home(self, body):
         assert re.search(r"HOME=\S+ \S*user/install\.sh", body)
