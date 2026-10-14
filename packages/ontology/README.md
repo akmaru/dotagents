@@ -8,6 +8,9 @@
 - **関係と多重度**: 両方向の多重度（one / lone / some / set）
 - **公理・帰結・事例**: 正しいと定める命題、そこから導かれるはずの命題、起こりうる／起こりえない具体例
 - **言っていないこと**: 兄弟の語が排他か重なりうるか、網羅されるかを書き漏らすと `lint` が警告する
+- **公理の書き方**: 公理は規範文の 4 つの文型（定義・十分条件・必要条件・禁止）で書き（[NORMATIVE.md](.apm/skills/ontology/NORMATIVE.md)）、十分条件・必要条件には
+  外側の扱い（否定・未決定・対象外）を添える。定義に別の公理が条件を足す食い違い（C1）、網羅していない場合分け
+  （C2）、閉包の書き漏れ（C3）、依存と根拠の参照切れ（C4）を検査する
 
 書式は `glossary` パッケージの `CONTEXT-FORMAT.md` が唯一の正本で、このパッケージは持たない。
 
@@ -56,7 +59,8 @@ python3 $ONTO verify CONTEXT.md                         # lint +（alloy なら�
 python3 $ONTO scan CONTEXT.md docs/internal/specs src   # 仕様・実装とのずれ
 ```
 
-例: [examples/order/CONTEXT.md](.apm/skills/ontology/examples/order/CONTEXT.md)（`verify` がすべて通る）。
+例: [examples/order/CONTEXT.md](.apm/skills/ontology/examples/order/CONTEXT.md)（`verify` がすべて通る）と、その書き直し前の
+[examples/order-before/CONTEXT.md](.apm/skills/ontology/examples/order-before/CONTEXT.md)（C1〜C4 と、Alloy の反例・充足不能が出る）。
 
 ## 他のスキルとの住み分け
 

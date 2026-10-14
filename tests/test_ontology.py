@@ -19,6 +19,7 @@ ROOT = Path(__file__).parent.parent
 PKG_DIR = ROOT / "packages" / "ontology"
 SKILL_DIR = PKG_DIR / ".apm" / "skills" / "ontology"
 EXAMPLE = SKILL_DIR / "examples" / "order" / "CONTEXT.md"
+BEFORE = SKILL_DIR / "examples" / "order-before" / "CONTEXT.md"
 
 _spec = importlib.util.spec_from_file_location("ontology_tool", SKILL_DIR / "scripts" / "ontology.py")
 onto = importlib.util.module_from_spec(_spec)
@@ -76,7 +77,8 @@ class TestPackageFiles:
         data = yaml.safe_load((ROOT / "apm.yml").read_text())
         assert {"name": "ontology", "source": "./packages/ontology"} in data["marketplace"]["packages"]
 
-    @pytest.mark.parametrize("name", ["GRILL.md", "ALLOY.md", "scripts/ontology.py", "examples/order/CONTEXT.md"])
+    @pytest.mark.parametrize("name", ["GRILL.md", "ALLOY.md", "NORMATIVE.md", "scripts/ontology.py", "examples/order/CONTEXT.md",
+                                      "examples/order-before/CONTEXT.md"])
     def test_skill_references_bundled_file(self, name):
         assert (SKILL_DIR / name).exists()
         assert name in (SKILL_DIR / "SKILL.md").read_text()
@@ -96,7 +98,13 @@ class TestParse:
         assert t["顧客"].avoid == ["購入者", "クライアント"]
         assert t["顧客"].kind == "role" and t["顧客"].lst("is-a") == ["当事者"]
         assert t["注文"].groups("partition") == [["下書きの注文", "確定した注文", "取り消した注文"]]
-        assert len(g.relations) == 2 and [a.ident for a in g.section("axioms")] == ["AX1", "AX2"]
+        assert len(g.relations) == 2 and [a.ident for a in g.section("axioms")] == ["AX1", "AX2", "AX3", "AX4"]
+        assert [r.closure for r in g.relations] == ["closed", "closed"]
+        ax = {a.ident: a for a in g.section("axioms")}
+        assert ax["AX2"].form == "necessary" and ax["AX2"].closure == "negated"
+        assert ax["AX3"].form == "definition" and ax["AX3"].lst("depends") == ["注文", "AX2"]
+        assert [r[0] for r in ax["AX3"].table] == ["注文", "下書きの注文", "確定した注文", "取り消した注文"]
+        assert ax["AX4"].status == "retired" and ax["AX4"].get("merged-into") == "AX3"
 
     def test_english_labels(self, tmp_path):
         p = tmp_path / "CONTEXT.md"
@@ -167,7 +175,7 @@ class TestLint:
         assert "KIND" in errs and "UNSTRUCTURED-REF" in errs
 
     def test_avoided_word_in_statement(self, example):
-        g = example(("[[発送]] の対象は必ず", "[[購入]] の対象は必ず"))
+        g = example(("[[注文]] が [[発送]] の対象であるのは", "[[購入]] が [[発送]] の対象であるのは"))
         assert codes(onto.lint(g), "error") == ["AVOID"]
 
     def test_avoided_word_as_parent(self, example):
@@ -175,7 +183,7 @@ class TestLint:
         assert any("使わない語" in f.msg for f in onto.lint(g) if f.code == "REF")
 
     def test_undefined_reference(self, example):
-        g = example(("[[発送]] の対象は必ず", "[[配送業者]] の対象は必ず"))
+        g = example(("[[注文]] が [[発送]] の対象であるのは", "[[配送業者]] が [[発送]] の対象であるのは"))
         assert "REF" in codes(onto.lint(g), "error")
 
     def test_role_needs_parent(self, example):
@@ -199,6 +207,103 @@ class TestLint:
         p.write_text("# X\n\n## 用語\n\n**注文（Order）**:\n顧客の申し込み。\n")
         f = onto.lint(onto.parse(p))
         assert codes(f, "error") == [] and codes(f, "warning") == [] and "UNSTRUCTURED" in codes(f)
+
+
+class TestNormativeAxioms:
+    """公理の文型・主語・閉包・場合分け・依存（C1〜C4）の静的な検査。"""
+
+    def test_before_example_findings(self):
+        f = onto.lint(onto.parse(BEFORE))
+        errs = [x for x in f if x.level == "error"]
+        c1 = [x.msg for x in errs if x.code == "C1"]
+        assert any("AX4" in m and "AX3" in m for m in c1) and any("AX5" in m and "AX3" in m for m in c1)
+        assert any("取り消した注文" in x.msg for x in errs if x.code == "C2")
+        assert {m for x in errs if x.code == "C3" for m in ("AX2", "AX5") if m in x.msg} == {"AX2", "AX5"}
+        assert sum(1 for x in f if x.code == "C3" and x.level == "warning") == 2  # R1・R2 の closure
+        assert any("できる" in x.msg for x in f if x.code == "MODAL")
+        assert not any(x.code in onto.BLOCKING for x in errs), "C1〜C4 は Alloy の検証を止めない"
+
+    def test_form_is_required(self, example):
+        g = example(("- form: 定義\n- subject: 顧客\n", "- subject: 顧客\n"))
+        assert "FORM" in codes(onto.lint(g), "error")
+
+    def test_statement_must_follow_form(self, example):
+        g = example(("その当事者が [[注文]] を 1 件以上出している場合であり、かつその場合に限る",
+                     "その当事者が [[注文]] を 1 件以上出している場合"))
+        assert "FORM-TEXT" in codes(onto.lint(g), "warning")
+
+    def test_sufficient_with_negated_closure_is_a_definition(self, example):
+        g = example(("- form: 必要条件\n- subject: 発送\n- statement: [[注文]] が [[発送]] の対象であるのは、[[確定した注文]] の場合に限る",
+                     "- form: 十分条件\n- subject: 発送\n- statement: [[注文]] が [[確定した注文]] ならば、[[発送]] の対象である"))
+        assert any("定義と同じ" in x.msg for x in onto.lint(g) if x.code == "FORM")
+
+    def test_undecided_closure_needs_question(self, example):
+        g = example(("- closure: 否定\n", "- closure: 未決定\n"))
+        assert any("未決事項" in x.msg for x in onto.lint(g) if x.code == "C3")
+
+    def test_subject_must_exist(self, example):
+        g = example(("- subject: 顧客\n", "- subject: 会員\n"))
+        assert "SUBJECT" in codes(onto.lint(g), "error")
+
+    def test_rule_added_to_definition(self, example):
+        g = example(("## 帰結", "### AX5: 法人は顧客でない\n- form: 禁止\n- subject: 顧客\n"
+                                "- statement: [[法人]] は [[顧客]] であってはならない\n- alloy: `no Organization & Customer`\n\n## 帰結"))
+        assert any("AX5" in x.msg and "AX1" in x.msg for x in onto.lint(g) if x.code == "C1")
+
+    def test_rule_referenced_from_definition_is_not_c1(self, example):
+        g = example(("## 帰結", "### AX5: 法人は顧客でない\n- form: 禁止\n- subject: 顧客\n"
+                                "- statement: [[法人]] は [[顧客]] であってはならない\n\n## 帰結"),
+                    ("- alloy: `Customer = places.Order`\n", "- depends: AX5\n- alloy: `Customer = places.Order`\n"))
+        assert "C1" not in codes(onto.lint(g))
+
+    def test_scattered_rules_without_definition(self, example):
+        g = example(("## 帰結", "### AX5: 発送はひとつ\n- form: 禁止\n- subject: 発送\n"
+                                "- statement: [[下書きの注文]] は [[発送]] の対象であってはならない\n\n## 帰結"))
+        assert "SCATTERED" in codes(onto.lint(g), "warning")
+
+    def test_case_table_must_match_partition(self, example):
+        g = example(("| 取り消した注文 | なし |\n", ""))
+        assert any("取り消した注文" in x.msg for x in onto.lint(g) if x.code == "C2")
+
+    def test_case_table_domain_narrows_rows(self, example):
+        g = example(("| 取り消した注文 | なし |\n", ""),
+                    ("- depends: 注文、AX2\n", "- depends: 注文、AX2\n- domain: 下書きの注文、確定した注文\n"))
+        assert "C2" not in codes(onto.lint(g))
+
+    def test_case_table_key_must_be_exhaustive(self, example):
+        g = example(("_分割_: 下書きの注文、確定した注文、取り消した注文\n", "_排他な下位_: 下書きの注文、確定した注文、取り消した注文\n"))
+        assert any("網羅を宣言していない" in x.msg for x in onto.lint(g) if x.code == "C2")
+
+    def test_grounds_must_exist(self, example):
+        g = example(("- grounds: AX1\n", "- grounds: AX9\n"))
+        assert "C4-REF" in codes(onto.lint(g), "error")
+
+    def test_grounds_label_must_exist(self, example):
+        g = example(("- grounds: AX1\n", "- grounds: AX1(b)\n"),
+                    ("- alloy: `Customer = places.Order`\n", "- conditions:\n  - (a) 注文を 1 件以上出している\n- alloy: `Customer = places.Order`\n"))
+        msgs = [x.msg for x in onto.lint(g) if x.code == "C4-REF"]
+        assert len(msgs) == 1 and "(b)" in msgs[0]
+        assert [c[0] for c in next(a for a in g.section("axioms") if a.ident == "AX1").conditions] == ["a"]
+
+    def test_grounds_must_not_point_to_retired(self, example):
+        g = example(("- grounds: AX3、AX2\n- alloy: `no CancellableOrder", "- grounds: AX4\n- alloy: `no CancellableOrder"))
+        assert any("retired" in x.msg for x in onto.lint(g) if x.code == "C4-REF")
+
+    def test_retired_needs_existing_target(self, example):
+        g = example(("- merged-into: AX3\n", "- merged-into: AX9\n"))
+        assert "RETIRED" in codes(onto.lint(g), "error")
+
+    def test_depends_cycle(self, example):
+        g = example(("- form: 必要条件\n- subject: 発送\n", "- form: 必要条件\n- subject: 発送\n- depends: AX3\n"))
+        assert "C4-CYCLE" in codes(onto.lint(g), "error")
+
+    def test_unused_axiom(self, example):
+        g = example(("- grounds: AX1\n", ""))
+        assert any("AX1" in x.msg for x in onto.lint(g) if x.code == "C4-UNUSED")
+
+    def test_relation_closure_value(self, example):
+        g = example(("| set | one | closed |", "| set | one | sometimes |"))
+        assert "FIELD" in codes(onto.lint(g), "error")
 
 
 class TestScan:
@@ -241,13 +346,13 @@ class TestAlloyVerify:
     def test_example_passes(self):
         findings, _ = onto.verify_alloy(onto.parse(EXAMPLE))
         assert codes(findings, "error") == [] and codes(findings, "warning") == []
-        assert codes(findings).count("OK") >= 18
+        assert codes(findings).count("OK") >= 23
 
     def test_missing_axiom_gives_counterexample(self, example):
         g = example(("- alloy: `Shipment.target in PlacedOrder`\n", ""))
         errs = [f for f in onto.verify_alloy(g)[0] if f.level == "error"]
-        assert sorted(codes(errs)) == ["CHECK-FAIL", "TOO-LOOSE"]
-        assert "CancelledOrder" in next(f.msg for f in errs if f.code == "CHECK-FAIL")
+        assert set(codes(errs)) == {"CHECK-FAIL", "TOO-LOOSE"}
+        assert any("CancelledOrder" in f.msg for f in errs if f.code == "CHECK-FAIL")
 
     def test_conflict_reports_minimal_core(self, example):
         g = example(("## 帰結", "### AX3: 顧客は個人に限る\n- status: assumed\n- statement: [[顧客]] は [[個人]]\n"
@@ -257,6 +362,19 @@ class TestAlloyVerify:
         for f in errs:
             assert "AX_AX3" in f.msg and "partition1_disj_Party" in f.msg
             assert "AX_AX1" not in f.msg  # 極小の組だけを出す
+
+    def test_before_example_conflict_is_shown_by_alloy(self):
+        findings, _ = onto.verify_alloy(onto.parse(BEFORE))
+        c1 = [x for x in findings if x.code == "C1-ALLOY"]
+        bad = next(x for x in c1 if x.level == "error")
+        assert "AX4" in bad.msg and "CancellableOrder" in bad.msg  # 発送された確定した注文が、AX3 では取り消せる
+        assert any(x.level == "info" and "AX5" in x.msg for x in c1)  # AX5 は AX3 から導かれる（重複）
+        # AX3 と AX4 を合わせると、発送そのものが起こりえなくなる
+        assert any(x.code == "UNSAT" and "発送" in x.msg and "AX_AX4" in x.msg for x in findings)
+
+    def test_verify_runs_alloy_despite_c1_errors(self, capsys):
+        assert onto.main(["verify", str(BEFORE)]) == 1
+        assert "C1-ALLOY" in capsys.readouterr().out
 
     def test_bad_formula_is_reported(self, example):
         g = example(("`Shipment.target in PlacedOrder`", "`Shipment.target in Placed`"))

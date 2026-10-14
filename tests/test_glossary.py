@@ -58,7 +58,9 @@ class TestFormat:
     @pytest.mark.parametrize(
         "word",
         ["_使わない_", "_種別_", "_上位_", "_分割_", "_排他な下位_", "_網羅する下位_", "_重なりうる下位_",
-         "_網羅_", "_排他_", "_重なりうる_", "_状態_", "_コード_", "_ID_", "CONTEXT-MAP.md"],
+         "_網羅_", "_排他_", "_重なりうる_", "_状態_", "_コード_", "_ID_", "CONTEXT-MAP.md",
+         "`form`", "`subject`", "`closure`", "`depends`", "`grounds`", "`conditions`", "`domain`", "`merged-into`",
+         "`retired`", "`closed`"],
     )
     def test_defines(self, word):
         assert word in FORMAT.read_text()
@@ -104,3 +106,23 @@ def test_glossary_users_depend_on_glossary_directly(pkg):
 def test_glossary_users_refer_to_glossary_skill(pkg):
     skill = pkg / ".apm" / "skills" / pkg.name / "SKILL.md"
     assert "`glossary`" in skill.read_text(), "書式は glossary スキルを参照させる"
+
+
+def test_normative_vocabulary_is_shared_by_writing_rules_format_and_parser():
+    """規範文の文型と閉包の語が、ontology の NORMATIVE.md・用語集の書式・ontology のスクリプトでそろっている。"""
+    import importlib.util
+    import sys
+
+    path = PACKAGES / "ontology/.apm/skills/ontology/scripts/ontology.py"
+    spec = importlib.util.spec_from_file_location("ontology_for_vocab_test", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    writing = (PACKAGES / "ontology/.apm/skills/ontology/NORMATIVE.md").read_text() + FORMAT.read_text()
+    fmt = FORMAT.read_text()
+    for word in ("定義", "十分条件", "必要条件", "禁止"):
+        assert word in mod.FORMS and word in writing and f"`{word}`" in fmt, word
+    for word in ("否定", "未決定", "対象外"):
+        assert word in mod.CLOSURES and word in writing and f"`{word}`" in fmt, word
+    for word in ("しなければならない", "してはならない", "してもよい"):
+        assert word in writing

@@ -13,9 +13,11 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
   `glossary/CONTEXT-FORMAT.md`）。構造の行・関係・公理・帰結・事例・未決事項・対象外の書き方はすべてここにある。
   用語集に書く前に読む
 - **置き場**: `project-layout` スキルの「置き場の決め方」で決める。複数コンテキストなら `CONTEXT.md` ごとに扱う
+- **規範文の書き方**（公理の `statement` と、仕様の規則を述べる文）: [NORMATIVE.md](./NORMATIVE.md)
 - **問い詰め方**: [GRILL.md](./GRILL.md)
 - **Alloy への翻訳と結果の読み方**: [ALLOY.md](./ALLOY.md)
-- **例**: [examples/order/CONTEXT.md](./examples/order/CONTEXT.md)
+- **例**: [examples/order/CONTEXT.md](./examples/order/CONTEXT.md)（`verify` がすべて通る）と、その書き直し前の
+  [examples/order-before/CONTEXT.md](./examples/order-before/CONTEXT.md)（下の C1〜C4 がすべて出る）
 
 ## 道具
 
@@ -23,7 +25,7 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
 
 | コマンド | 何をするか |
 |---|---|
-| `python3 $ONTO lint <CONTEXT.md>` | 構造の静的検査（未定義の参照、上位の循環、排他と上位・下位の矛盾、兄弟の関係と網羅の書き漏れ、定義と上位のずれ、使わない語の使用） |
+| `python3 $ONTO lint <CONTEXT.md>` | 構造の静的検査（未定義の参照、上位の循環、排他と上位・下位の矛盾、兄弟の関係と網羅の書き漏れ、定義と上位のずれ、使わない語の使用）と、公理の検査（下の C1〜C4、文型と様相の語） |
 | `python3 $ONTO verify <CONTEXT.md>` | lint に加え、`verification: alloy` なら Alloy で無矛盾性・帰結・事例を検証する |
 | `python3 $ONTO scan <CONTEXT.md> <仕様や実装のパス>...` | 仕様・実装とのずれ（使わない語の使用、`_コード_` の識別子の消失、用語集に無い概念の候補） |
 | `python3 $ONTO alloy <CONTEXT.md> -o model.als` | 生成した Alloy モデルを見る（Alloy Analyzer の GUI で開いて探索できる） |
@@ -40,6 +42,24 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
 
 途中で切り替えてよい。一度だけ別の方式で回すなら `verify --mode alloy` のように上書きする。
 
+## 公理の検査（C1〜C4）
+
+公理の書き方（文型・主語・閉包・場合分けの表・依存と根拠・廃止）は `CONTEXT-FORMAT.md` の「公理」にある。
+`lint` はそれを次のように検査する。
+
+| 指摘 | 何か | 直し方 |
+|---|---|---|
+| `C1` | `定義` で定めた対象に、定義から `depends` で参照されていない別の公理が条件を足している | 条件を定義の中に書くか、定義の `depends` にその公理を入れる。重複なら `retired` にして吸収する |
+| `C2` | 場合分けの表のキーが網羅を宣言していない、または表の行が網羅の組と一致しない | キーの語に `_分割_` / `_網羅する下位_` を書く。足りない行を足す。当てはまらない行は `domain` で外し、理由を `depends` に書く |
+| `C3` | 十分条件・必要条件に `closure` が無い。関係に `closure`（closed / open）が無い | 文が決めていない場合を 否定 / 未決定 / 対象外 で書く。事実の閉じ方は関係の行に書く |
+| `C4-*` | `depends` / `grounds` の参照先が無い・廃止済み・条件のラベルが無い、依存の循環、どこからも使われない公理 | 参照を直す。使われない公理は、帰結や事例の `grounds` から参照するか、要らないなら廃止する |
+| `SCATTERED` | 定義の無い対象の規則が、複数の公理に分かれている | その対象を主語にした 1 つの公理にまとめ、場合分けは表にする |
+| `FORM` / `FORM-TEXT` / `MODAL` | `form` が無い・文型と statement が食い違う・「できる」「だけ」などを使っている | [NORMATIVE.md](./NORMATIVE.md) に従って書き直す |
+
+Alloy 方式では、`C1` の組ごとに「条件を足した公理を外したモデルで、その公理が成り立つか」も調べる。反例が
+あれば、定義の上では許されるのにその公理が禁じる状況が具体的に出る（`C1-ALLOY`）。反例が無ければ、その公理は
+定義から導かれる重複である。`C1`〜`C4` はモデルを壊さないので、これらの error があっても Alloy の検証は走る。
+
 ## 始め方
 
 - **用語集が無い** → 先に `grill-with-docs` か `grill-spec` で語を決めるよう勧めて止まる
@@ -53,8 +73,9 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
 
 - `AskUserQuestion` で 1 ラウンドにまとめて出す（1 回最大 4 問、残りは同じラウンドで続けて出す）。推奨する
   選択肢を先頭に置き、ラベルに推奨の印を付ける。他の問いの答えに依る問いは次のラウンドに回す
-- フロンティアは `lint` / `verify` の指摘から作る。error を先に、次に `UNSTATED`（言っていないこと）と `GENUS`
-  （定義と上位のずれ）、次に `UNSTRUCTURED`（構造が未記述の語）、`_状態_` が `open` / `assumed` の語と未決事項
+- フロンティアは `lint` / `verify` の指摘から作る。error を先に（`C1` と `C1-ALLOY` は反例を言葉に直して聞く）、
+  次に `UNSTATED`（言っていないこと）・`GENUS`（定義と上位のずれ）・`C3`（閉包の書き漏れ）、次に `UNSTRUCTURED`
+  （構造が未記述の語）、`_状態_` が `open` / `assumed` の語と未決事項
 - 問いには必ず具体例を添える（「田中商事が注文を出したら、田中商事は顧客か？」）。抽象的な「X と Y は排他ですか」
   だけでは聞かない
 - コードや仕様書を読めば分かることは自分で調べ、採否だけを聞く
@@ -66,7 +87,9 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
 - 開発者が具体例で答えたら、それを**事例**（`expect: possible` / `impossible`）として残す。事例は構造の回帰
   テストになる
 - 「X なら当然 Y のはず」という答えは**帰結**として残す。公理と区別する（帰結は公理から導かれるべきもので、
-  導かれなければ公理が足りないか、見込みが誤り）
+  導かれなければ公理が足りないか、見込みが誤り）。帰結と事例には、使った公理を `grounds` に書く
+- 開発者が規則を言ったら、[GRILL.md](./GRILL.md) の「公理の文型と閉包」で、定義か十分条件か必要条件か禁止かと、
+  外側の扱いを聞いてから書く。同じ対象の規則が既にあれば、新しい公理を足さずにその公理に条件や表の行として入れる
 - 決めきれないものは `_状態_: assumed`（暫定で採る）か `open`（採らない）にし、未決事項に `related:` 付きで書く
 - 意図的に扱わないことは「対象外」に書く
 
@@ -103,6 +126,8 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
 - markdown 方式では、帰結と事例を 1 つずつ、どの公理・上位・排他から導けるか（導けないか）を平文で示す
 
 ## 構造のある用語集を持つリポジトリで説明を書くとき
+
+- 条件・制約・許可・禁止を述べる文（規範文）は [NORMATIVE.md](./NORMATIVE.md) の文型・様相の語・閉包で書く
 
 - 用語集の語は、定義どおりの意味でだけ使う。上位の語と下位の語を言い換えない（「注文」と言ったら下書きも
   含む。確定したものだけなら「確定した注文」と書く）
