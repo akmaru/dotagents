@@ -33,6 +33,30 @@ runner のエージェントは今のセッションを見られないので、I
 6. Issue の URL をユーザーに返す。エージェントが着手したら Issue に進捗のコメントが付くこと、設計が要る場合は
    Issue で質問されること（`@claude` を付けて答えると再開する）を一言添える
 
+7. herdr の中なら（`HERDR_PANE_ID` がある）、その Issue 専用のセッションを立ち上げて、元のセッションは今の作業に戻る
+
+   ```bash
+   ~/.config/herdr/scripts/agent-kaizen-session.sh <Issue 番号>
+   ```
+
+   herdr の外、またはスクリプトが無いときは立ち上げず、Issue の URL を返すだけにする。1 つの kaizen は 1 つのセッションで扱う
+   （`docs/adr/0029-agent-kaizen-dedicated-session-and-blocked-reporting.md`）。
+
+## 専用セッション
+
+プロンプトに「agent-kaizen スキルの『専用セッション』の節に従い、Issue #N を担当して」とあるときは、このセッションは
+その Issue 1 件だけを担当する。ほかの作業は引き受けない。
+
+1. Monitor ツールで `agent-kaizen-watch.sh <N>` をバックグラウンドで起動する。出力が 1 行出るたびにそれがユーザーの番の知らせになる
+2. **質問**（エージェントが Issue に書いて止まった）: Issue の最新コメントを `gh issue view <N> --repo akmaru/dotagents --comments`
+   で読み、質問を `AskUserQuestion` でユーザーに出す。`AskUserQuestion` で止まると、hook が herdr に blocked を報告する
+3. **答えの投稿**: ユーザーの答えをコメント本文に整え、**本文を見せて確認を取ってから**
+   `gh issue comment <N> --repo akmaru/dotagents --body-file <ファイル>` で投稿する。本文の先頭に `@claude` を含める
+   （改善ループが再開する条件）。公開リポジトリなので、「手順」3 の「公開してよい内容にする」を守る。確認なしでは投稿しない
+4. **PR が出た**: PR の URL と、本文の「試し方」「確かめていないこと」をユーザーに伝える。試して approve するのはユーザー。
+   直してほしい点があれば、2.〜3. と同じ手順で `@claude` 付きコメントにする
+5. **完了**（merge された・Issue が閉じられた）: その旨をユーザーに伝え、監視を止めてセッションを終える
+
 ## 本文の形
 
 ```markdown
