@@ -115,3 +115,13 @@ key = "prefix+alt+o"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.pick-file"
 description = "open file from agent output"
+
+# フォーカス中の pane の直近の出力に出た用語集（CONTEXT.md）の語と定義を並べる
+# マウスオーバーはターミナルで検出できないため、キーで開く popup にする（docs/adr/0029）
+[[keys.command]]
+key = "prefix+alt+t"
+type = "popup"
+command = "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH exec $HOME/.config/herdr/scripts/glossary-popup.py"
+description = "glossary of terms in pane output"
+width = "70%"
+height = "70%"
