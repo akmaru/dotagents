@@ -37,6 +37,33 @@ KINDS = {"kind", "subkind", "role", "phase", "relator", "event", "value"}
 STATUSES = {"confirmed", "assumed", "open"}
 MULTS = {"one", "lone", "some", "set"}
 ACTIVE = {"confirmed", "assumed"}  # 制約として採用する状態
+ITEM_STATUSES = STATUSES | {"retired"}  # 公理・帰結・事例は廃止（ID を残して吸収先を書く）もある
+
+# 公理の文型（規範文の 4 つの文型と同じ）。英語の用語集の値も受ける
+FORMS = {
+    "定義": "definition", "definition": "definition",
+    "十分条件": "sufficient", "sufficient": "sufficient",
+    "必要条件": "necessary", "necessary": "necessary",
+    "禁止": "prohibition", "prohibition": "prohibition",
+}
+# 閉包（文が決めていない場合の扱い）
+CLOSURES = {
+    "否定": "negated", "negated": "negated",
+    "未決定": "undecided", "undecided": "undecided",
+    "対象外": "out-of-scope", "out-of-scope": "out-of-scope",
+}
+RELATION_CLOSURES = {"closed", "open"}
+# 規範文で使わない語（権利と自動適用のどちらにも読める様相、かかる位置で意味が変わる「だけ」）
+AMBIGUOUS_MODALS = ["できる", "受けられる", "可能", "だけ"]
+# form ごとの文型（日本語の statement だけ確かめる）
+FORM_PATTERNS = {
+    "definition": (re.compile(r"であるのは.*であり、?かつその場合に限る"), "Y であるのは X の場合であり、かつその場合に限る"),
+    "necessary": (re.compile(r"であるのは.*の場合に限る"), "Y であるのは X の場合に限る"),
+    "sufficient": (re.compile(r"ならば"), "X ならば Y"),
+    "prohibition": (re.compile(r"てはならない"), "X は Y であってはならない"),
+}
+CJK_RE = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
+REF_ITEM_RE = re.compile(r"^(?P<id>[^()（）]+?)\s*(?:[（(](?P<label>[a-z])[)）])?$")
 
 # 構造の行のラベル（日本語 / English）→ 内部のキー
 LABELS = {
@@ -149,6 +176,8 @@ class Item:
     fields: dict = field(default_factory=dict)
     alloy: str | None = None
     body: str = ""
+    conditions: list = field(default_factory=list)  # [(ラベル, 本文), ...]
+    table: list = field(default_factory=list)       # 場合分けの表 [[セル, ...], ...]（1 行目は見出し）
 
     def get(self, key, default=None):
         v = self.fields.get(key, default)
@@ -160,6 +189,18 @@ class Item:
     @property
     def ident(self):
         return re.split(r"[:：]", self.title, maxsplit=1)[0].strip()
+
+    @property
+    def status(self):
+        return self.get("status", "confirmed")
+
+    @property
+    def form(self):
+        return FORMS.get(self.get("form", ""))
+
+    @property
+    def closure(self):
+        return CLOSURES.get(self.get("closure", ""))
 
 
 @dataclass
@@ -173,6 +214,7 @@ class Relation:
     inverse: str
     status: str
     meaning: str
+    closure: str = ""
 
 
 @dataclass
@@ -294,6 +336,7 @@ def parse(path: Path) -> Glossary:
                 inverse=row.get("inverse", "set").strip("`") or "set",
                 status=row.get("status", "confirmed") or "confirmed",
                 meaning=row.get("meaning", ""),
+                closure=row.get("closure", "").strip("`"),
             ))
             continue
         if section in ("axioms", "checks", "scenarios"):
@@ -312,11 +355,22 @@ def parse(path: Path) -> Glossary:
                 else:
                     cur.fields[key], last_key = val, key
                 continue
+            m = re.match(r"^\s{2,}-\s+[（(]([a-z])[)）]\s*(.*)$", ln)
+            if m and last_key == "conditions":
+                cur.conditions.append((m.group(1), m.group(2).strip()))
+                continue
             if ln.startswith("  ") and ln.strip() and last_key:
                 cur.fields[last_key] += " " + ln.strip()
                 continue
+            if ln.strip().startswith("|"):
+                cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+                if not all(re.fullmatch(r":?-{2,}:?", c) for c in cells if c):
+                    cur.table.append(cells)
+                last_key = None
+                continue
             if ln.strip():
                 cur.body += ln + "\n"
+                last_key = None
             continue
         if section in ("questions", "nongoals"):
             m = re.match(r"^\s*-\s+(.*)$", ln)
@@ -430,6 +484,82 @@ def declared_overlaps(g, idx):
         for a, b in sibling_facts(t, idx)[2]:
             pairs.add(frozenset((a.name, b.name)))
     return pairs
+
+
+# ---------------------------------------------------------------- axioms: subjects, dependencies, definitions
+
+def active_axioms(g):
+    return [a for a in g.section("axioms") if a.status in ACTIVE]
+
+
+def item_index(g):
+    return {it.ident: it for sec in ("axioms", "checks", "scenarios") for it in g.section(sec)}
+
+
+def resolve_ref(g, idx, ref):
+    """depends / grounds の 1 項目を引く。('item', Item, label) / ('term', Term) / ('relation', Relation) / None"""
+    m = REF_ITEM_RE.match(ref.strip())
+    items = item_index(g)
+    if m and m.group("id").strip() in items:
+        return ("item", items[m.group("id").strip()], m.group("label"))
+    t = idx.resolve(ref)
+    if t:
+        return ("term", t)
+    for r in g.relations:
+        if ref.strip() in (r.id, r.name):
+            return ("relation", r)
+    return None
+
+
+def depends_closure(g, ax):
+    """ax が depends でたどれる公理の ID（推移的）。"""
+    items = item_index(g)
+    seen, stack = set(), [ax]
+    while stack:
+        cur = stack.pop()
+        for d in cur.lst("depends"):
+            m = REF_ITEM_RE.match(d)
+            did = m.group("id").strip() if m else d
+            if did in items and did not in seen:
+                seen.add(did)
+                stack.append(items[did])
+    return seen
+
+
+def subject_key(g, idx, ax):
+    """subject を語の名前か関係の name にそろえる。"""
+    subj = ax.get("subject", "")
+    t = idx.resolve(subj)
+    if t:
+        return t.name
+    for r in g.relations:
+        if subj in (r.id, r.name):
+            return r.name
+    return None
+
+
+def definition_conflicts(g, idx=None):
+    """C1: 定義された対象に、定義から参照されていない別の公理が条件を足している組 (定義, その公理)。"""
+    idx = idx or Index(g)
+    out = []
+    axs = active_axioms(g)
+    for d in axs:
+        if d.form != "definition":
+            continue
+        key = subject_key(g, idx, d)
+        if not key:
+            continue
+        deps = depends_closure(g, d)
+        for o in axs:
+            if o is not d and subject_key(g, idx, o) == key and o.ident not in deps:
+                out.append((d, o))
+    return out
+
+
+# lint の error のうち、これがあると Alloy のモデルを作れない（または意味を持たない）もの。
+# C1〜C4 や文型の指摘はモデルを壊さないので、Alloy の検証は続けて走らせる。
+BLOCKING = {"META", "EMPTY", "DUP", "REF", "UNSTRUCTURED-REF", "KIND", "STATUS", "ISA", "IDENT",
+            "CYCLE", "GENSET", "FIELD", "MULT", "EXPECT"}
 
 
 # ---------------------------------------------------------------- lint
@@ -570,6 +700,10 @@ def lint(g: Glossary) -> list:
                 F.append(Finding("error", "MULT", f"関係 {tag}: {nm} は {'/'.join(sorted(MULTS))}（'{mv}'）", r.line))
         if not r.meaning:
             F.append(Finding("warning", "MEANING", f"関係 {tag}: meaning が無い", r.line))
+        if not r.closure:
+            F.append(Finding("warning", "C3", f"関係 {tag}: closure（closed / open）が無い。事実の一覧が閉じているかを関係の行に書く", r.line))
+        elif r.closure not in RELATION_CLOSURES:
+            F.append(Finding("error", "FIELD", f"関係 {tag}: closure は closed / open（'{r.closure}'）", r.line))
         if r.name in names:
             F.append(Finding("error", "DUP", f"関係名 '{r.name}' が重複", r.line))
         names[r.name] = r
@@ -579,22 +713,113 @@ def lint(g: Glossary) -> list:
             F.append(Finding("error", "IDENT", f"関係 {tag}: name '{r.name}' は Alloy の識別子にできない", r.line))
         check_text_refs(r.meaning, f"関係 {tag}", "meaning", r.line)
 
+    items = item_index(g)
+    used_by_others = set()  # ほかの項目の depends / grounds から参照された項目の ID
     for sec, label in (("axioms", "公理"), ("checks", "帰結"), ("scenarios", "事例")):
         seen = set()
         for it in g.section(sec):
+            owner = f"{label} {it.ident}"
             if it.ident in seen:
                 F.append(Finding("error", "DUP", f"{label} の ID '{it.ident}' が重複", it.line))
             seen.add(it.ident)
-            st = it.get("status", "confirmed")
-            if st not in STATUSES:
-                F.append(Finding("error", "STATUS", f"{label} {it.ident}: status が不正（'{st}'）", it.line))
+            st = it.status
+            if st not in ITEM_STATUSES:
+                F.append(Finding("error", "STATUS", f"{owner}: status が不正（'{st}'）", it.line))
+            if st == "retired":
+                tgt = it.get("merged-into")
+                if not tgt:
+                    F.append(Finding("warning", "RETIRED", f"{owner}: retired なら merged-into に吸収先を書く", it.line))
+                elif tgt not in items or items[tgt].status == "retired":
+                    F.append(Finding("error", "RETIRED", f"{owner}: merged-into の '{tgt}' が無いか、それも retired", it.line))
+                continue
             if not it.get("statement"):
-                F.append(Finding("error", "STMT", f"{label} {it.ident}: statement（自然言語の命題）が無い", it.line))
-            check_text_refs(it.get("statement"), f"{label} {it.ident}", "statement", it.line)
+                F.append(Finding("error", "STMT", f"{owner}: statement（自然言語の命題）が無い", it.line))
+            check_text_refs(it.get("statement"), owner, "statement", it.line)
             if sec == "scenarios" and it.get("expect") not in ("possible", "impossible"):
                 F.append(Finding("error", "EXPECT", f"事例 {it.ident}: expect は possible|impossible", it.line))
             if mode == "alloy" and st in ACTIVE and not it.alloy:
-                F.append(Finding("warning", "NOALLOY", f"{label} {it.ident}: alloy 式が無いので機械検証されない", it.line))
+                F.append(Finding("warning", "NOALLOY", f"{owner}: alloy 式が無いので機械検証されない", it.line))
+            # C4: depends / grounds の参照
+            for key in ("depends", "grounds"):
+                for ref in it.lst(key):
+                    hit = resolve_ref(g, idx, ref)
+                    if not hit:
+                        F.append(Finding("error", "C4-REF", f"{owner}: {key} の '{ref}' が見つからない（公理の ID・語・関係の id）", it.line))
+                        continue
+                    if hit[0] == "item":
+                        tgt, lbl = hit[1], hit[2]
+                        used_by_others.add(tgt.ident)
+                        if tgt.status == "retired":
+                            F.append(Finding("error", "C4-REF", f"{owner}: {key} の '{ref}' は retired（→ {tgt.get('merged-into') or '吸収先が未記入'}）", it.line))
+                        if lbl and lbl not in {c[0] for c in tgt.conditions}:
+                            F.append(Finding("error", "C4-REF", f"{owner}: {key} の '{ref}' の条件 ({lbl}) が {tgt.ident} の conditions に無い", it.line))
+                    elif hit[0] == "term":
+                        referenced.add(hit[1].name)
+            if sec != "axioms":
+                continue
+            # 文型・主語・閉包
+            if not it.form:
+                F.append(Finding("error", "FORM", f"{owner}: form は 定義 / 十分条件 / 必要条件 / 禁止 のいずれか（'{it.get('form', '')}'）", it.line))
+            subj = it.get("subject")
+            if not subj:
+                F.append(Finding("error", "SUBJECT", f"{owner}: subject（制約される語か関係）が無い", it.line))
+            elif not subject_key(g, idx, it):
+                F.append(Finding("error", "SUBJECT", f"{owner}: subject の '{subj}' が語にも関係にも無い", it.line))
+            else:
+                t = idx.resolve(subj)
+                if t:
+                    referenced.add(t.name)
+            if it.form in ("sufficient", "necessary"):
+                if not it.get("closure"):
+                    F.append(Finding("error", "C3", f"{owner}: {it.get('form')}には closure（否定 / 未決定 / 対象外）が要る。文が決めていない場合の扱いを書く", it.line))
+                elif not it.closure:
+                    F.append(Finding("error", "FIELD", f"{owner}: closure は 否定 / 未決定 / 対象外（'{it.get('closure')}'）", it.line))
+                elif it.form == "sufficient" and it.closure == "negated":
+                    F.append(Finding("warning", "FORM", f"{owner}: 十分条件で外側が否定なら定義と同じ。定義の文型で書き直す", it.line))
+                elif it.closure == "undecided" and not any(it.ident in q.body for q in g.section("questions")):
+                    F.append(Finding("warning", "C3", f"{owner}: closure が未決定なのに、未決事項から {it.ident} を参照していない", it.line))
+                elif it.closure == "out-of-scope" and not g.section("nongoals"):
+                    F.append(Finding("warning", "C3", f"{owner}: closure が対象外なのに、対象外の節が空", it.line))
+            stmt = it.get("statement", "")
+            if it.form and CJK_RE.search(stmt):
+                pat, shape = FORM_PATTERNS[it.form]
+                if not pat.search(stmt) or (it.form == "necessary" and FORM_PATTERNS["definition"][0].search(stmt)):
+                    F.append(Finding("warning", "FORM-TEXT", f"{owner}: statement が {it.get('form')}の文型（{shape}）になっていない", it.line))
+                bad = [w for w in AMBIGUOUS_MODALS if w in stmt]
+                if bad:
+                    F.append(Finding("warning", "MODAL", f"{owner}: statement に {'・'.join(bad)} がある。しなければならない / してはならない / してもよい か、文型で書く", it.line))
+            # C2: 場合分けの表
+            if it.table:
+                check_cases(g, idx, it, owner, F, referenced)
+
+    # C1: 定義された対象に、ほかの公理が条件を足していないか
+    defs = {}
+    for d in active_axioms(g):
+        if d.form == "definition" and subject_key(g, idx, d):
+            defs.setdefault(subject_key(g, idx, d), []).append(d)
+    for key, ds in defs.items():
+        if len(ds) > 1:
+            F.append(Finding("error", "C1", f"{key} を定義する公理が複数ある（{', '.join(d.ident for d in ds)}）。1 つにまとめる", ds[1].line))
+    for d, o in definition_conflicts(g, idx):
+        F.append(Finding("error", "C1", f"公理 {o.ident} が、{d.ident} で定義した {subject_key(g, idx, d)} に条件を足している。"
+                                        f"{d.ident} の中に条件として書くか、{d.ident} の depends に {o.ident} を入れる", o.line))
+    # 1 つの対象の規則が散らばっていないか（定義が無い対象）
+    by_subject = {}
+    for a in active_axioms(g):
+        k = subject_key(g, idx, a)
+        if k and k not in defs:
+            by_subject.setdefault(k, []).append(a)
+    for k, axs in by_subject.items():
+        if len(axs) > 1:
+            F.append(Finding("warning", "SCATTERED", f"{k} の規則が {', '.join(a.ident for a in axs)} に分かれている。{k} を主語にした 1 つの公理にまとめ、場合分けは表にする", axs[1].line))
+    # C4: 依存の循環と、どこからも使われない公理
+    for a in active_axioms(g):
+        if a.ident in depends_closure(g, a):
+            F.append(Finding("error", "C4-CYCLE", f"公理 {a.ident}: depends が循環している", a.line))
+    if any(it.lst("grounds") for sec in ("checks", "scenarios") for it in g.section(sec)):
+        for a in active_axioms(g):
+            if a.ident not in used_by_others:
+                F.append(Finding("warning", "C4-UNUSED", f"公理 {a.ident}: どの depends / grounds からも参照されていない", a.line))
 
     for t in structured:
         if t.name not in referenced and t.name not in ch:
@@ -603,8 +828,49 @@ def lint(g: Glossary) -> list:
     if bare:
         F.append(Finding("info", "UNSTRUCTURED", f"構造が未記述の語（{len(bare)}/{len(g.terms)}）: {', '.join(bare)}"))
     if structured and not g.section("nongoals"):
-        F.append(Finding("info", "NONGOALS", "「対象外」が空。言っていないことの境界を書くと誤読が減る"))
+        lvl = "warning" if g.section("axioms") else "info"
+        F.append(Finding(lvl, "NONGOALS", "「対象外」が空。スコープの外側（言っていないこと）を書く"))
     return F
+
+
+def check_cases(g, idx, it, owner, F, referenced):
+    """C2: 場合分けの表のキーが網羅を宣言しており、行がその組とちょうど一致するか。"""
+    header, rows = it.table[0], it.table[1:]
+    key = idx.resolve(header[0]) if header else None
+    if not key:
+        F.append(Finding("error", "C2", f"{owner}: 場合分けの表の 1 列目の見出し '{header[0] if header else ''}' が語ではない", it.line))
+        return
+    referenced.add(key.name)
+    groups = []
+    for k in COVERING_SETS:
+        for grp in key.groups(k):
+            groups.append({m.name for m in (idx.resolve(x) for x in grp) if m})
+    if not groups:
+        F.append(Finding("error", "C2", f"{owner}: 表のキー {key.name} が網羅を宣言していない（_分割_ か _網羅する下位_ を書く）", it.line))
+        return
+    names = []
+    for r in rows:
+        t = idx.resolve(r[0]) if r else None
+        if not t:
+            F.append(Finding("error", "C2", f"{owner}: 表の行 '{r[0] if r else ''}' が語ではない", it.line))
+            return
+        names.append(t.name)
+    got = set(names)
+    if len(got) != len(names):
+        F.append(Finding("error", "C2", f"{owner}: 表の行が重複している", it.line))
+    domain = {t.name for t in (idx.resolve(x) for x in it.lst("domain")) if t}
+    want = [grp & domain if domain else grp for grp in groups]
+    if got in want:
+        return
+    best = min(want, key=lambda w: len(w ^ got))
+    missing, extra = sorted(best - got), sorted(got - best)
+    msg = f"{owner}: 表の行が {key.name} の網羅の組と一致しない。"
+    if missing:
+        msg += f"足りない行: {', '.join(missing)}。"
+    if extra:
+        msg += f"組に無い行: {', '.join(extra)}。"
+    msg += "当てはまらない行があるなら domain に当てはまる語を並べ、理由を depends に書く"
+    F.append(Finding("error", "C2", msg, it.line))
 
 
 # ---------------------------------------------------------------- scan (drift)
@@ -908,7 +1174,34 @@ def verify_alloy(g: Glossary, explain=True, keep=None):
                 msg += ("。衝突している制約:\n" + "\n".join(f"      - {l}: {comments[l]}" for l in core)) if core \
                     else "（_上位_ と、最上位の語どうしが排他という前提だけで矛盾している）"
             F.append(Finding(c.severity, "UNSAT", msg, c.line))
+    F += alloy_definition_conflicts(g, jar, work)
     return F, work
+
+
+def alloy_definition_conflicts(g, jar, work):
+    """C1 を Alloy で確かめる。定義に条件を足している公理 O を外したモデルで、O が成り立つかを check する。
+    反例があれば、定義（かつその場合に限る）の上では許されるのに O が禁じる状況がある＝食い違い。
+    反例が無ければ、O は定義から導かれる（重複）。"""
+    F = []
+    for d, o in definition_conflicts(g):
+        if not (d.alloy and o.alloy):
+            continue
+        src, *_ = generate_alloy(g, exclude={f"AX_{_cid(o.ident)}"})
+        name = f"c1_{_cid(o.ident)}"
+        src += f"assert {name} {{\n  {o.alloy}\n}}\ncheck {name} for {o.get('scope') or g.scope}\n"
+        try:
+            res = run_alloy(jar, src, work / "c1", command=name)
+        except AlloyError as e:
+            F.append(Finding("error", "ALLOY-SYNTAX", f"C1 の検査モデルが読めない: {e}", o.line))
+            continue
+        if res.get(name):
+            F.append(Finding("error", "C1-ALLOY",
+                             f"{d.ident} の定義の上では許されるのに、{o.ident} が禁じる状況がある（{o.ident} を外したモデルの反例）:\n"
+                             f"{instance_text(jar, src, work / 'c1', name)}", o.line))
+        else:
+            F.append(Finding("info", "C1-ALLOY",
+                             f"{o.ident} は {d.ident} の定義から導かれる（重複）。{o.ident} を retired にして {d.ident} に吸収するか、帰結に移す", o.line))
+    return F
 
 
 # ---------------------------------------------------------------- CLI
@@ -964,8 +1257,9 @@ def main(argv=None):
         return 0
     findings = lint(g)
     if (a.mode or g.mode) == "alloy":
-        if any(f.level == "error" for f in findings):
-            findings.append(Finding("error", "SKIP", "lint の error があるので Alloy の検証は走らせていない"))
+        blocking = sorted({f.code for f in findings if f.level == "error" and f.code in BLOCKING})
+        if blocking:
+            findings.append(Finding("error", "SKIP", f"モデルを作れない lint の error（{', '.join(blocking)}）があるので Alloy の検証は走らせていない"))
         else:
             fs, work = verify_alloy(g, explain=not a.no_explain, keep=a.keep)
             findings += fs

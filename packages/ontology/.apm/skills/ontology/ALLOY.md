@@ -17,7 +17,7 @@
 | `_排他_: Y` | `no X & Y` | `disj_X_Y` |
 | 関係 | from の sig の field `name: set To` | — |
 | `mult` / `inverse` | `all x: From \| m x.name` / `all y: To \| m name.y` | `mult_R1` / `inv_R1` |
-| 公理 | `fact AX_<ID> { 式 }` | `AX_<ID>` |
+| 公理（`status` が confirmed / assumed） | `fact AX_<ID> { 式 }` | `AX_<ID>` |
 | 帰結 | `assert` + `check` | — |
 | 事例 | `pred` + `run` | — |
 
@@ -31,6 +31,20 @@
 | `overlap_A_B` | 実例あり | 重なりうると書いた A と B が実際に重なりうる |
 | `check_<ID>` | 反例なし | 帰結が公理から導かれる |
 | `case_<ID>` | possible なら実例あり、impossible なら実例なし | 事例の期待どおりか |
+
+### 定義に条件を足した公理の検査（C1）
+
+`lint` の `C1` が見つけた組（定義 D と、D の対象に条件を足した公理 O）ごとに、O の fact を外したモデルで
+`check c1_<O> { O の式 }` を走らせる。
+
+- **反例がある**（`C1-ALLOY` の error）: D の「かつその場合に限る」の上では許されるのに、O が禁じる状況がある。
+  2 つの公理を両方入れたモデルでは、その状況が黙って消えている（D の定義が実際には変わっている）。反例を
+  言葉に直し、条件を D に入れるか、O を取り下げるかを聞く
+- **反例が無い**（`C1-ALLOY` の info）: O は D とほかの公理から導かれる。O は `retired` にして D に吸収するか、
+  帰結に移す
+
+関係の `closure`（closed / open）と公理の `closure`（否定 / 未決定 / 対象外）は、Alloy のモデルを変えない。
+Alloy は書いた事実だけを持つ閉じた世界で探すので、これらは `lint` が書き漏れを見るだけである。
 
 ## 式の書き方
 
@@ -63,6 +77,7 @@
 | `UNSAT`（consistency のため） | 公理系全体が矛盾していて、他の検査が意味を持たない | consistency を先に直す |
 | `CHECK-FAIL`（反例つき） | 帰結が成り立たない状況を作れる | 反例を言葉に直す。足りない公理を足すか、帰結の見込みを取り下げる |
 | `TOO-LOOSE`（実例つき） | impossible のはずの事例が起こりうる | 禁じる公理を足す |
+| `C1-ALLOY`（error・反例つき） | 定義の上では許されるのに、定義に条件を足した公理が禁じる状況がある | 条件を定義の中に入れるか、その公理を取り下げる |
 | `ALLOY-SYNTAX` | `alloy:` の式が読めない（名前の誤りなど） | 生成モデルで名前を確かめて式を直す |
 
 反例・実例の読み方: `Order$3` は注文の 3 番目の実例、`Shipment<:target={Shipment$0->Order$3}` は「発送 0 が
