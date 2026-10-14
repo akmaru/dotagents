@@ -1,0 +1,9 @@
+name: agent-dx
+version: 0.1.0
+description: File an agent-experience pain point or wish as a GitHub issue on dotagents, for the autonomous improvement loop.
+author: akmaru
+license: MIT
+includes: auto
+dependencies:
+  apm: []
+  mcp: []

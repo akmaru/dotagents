@@ -88,10 +88,16 @@ PR 作成までを自律で進める。人間は PR ごとに隔離した環境�
 
 ### Confirmation
 
-現時点で、この決定が守られているかを自動で確かめるチェックは無い。実装時に次を足す予定（未実装）:
+`tests/test_agent_dx.py` が次を確かめる（CI の `.github/workflows/test.yml` で走る）:
 
-* ワークフローの定義で、merge のステップが `pull_request_review` の `approved` でしか走らないことをレビューで確認する
-* PR テンプレートに「試し方」の節を置き、エージェントが埋めたかを人間がレビューで確認する
+* `.github/workflows/agent-dx.yml` が、ラベルを付けた人とコメントした人の両方をリポジトリのオーナーに限っていること、
+  `CLAUDE_CODE_OAUTH_TOKEN` で認証し API キーを使わないこと、エージェントに `.github/agent-dx/INSTRUCTIONS.md` を読ませること
+* `.github/workflows/agent-dx-merge.yml` が、オーナーの approve かつ `claude/` ブランチのときだけ走り、`test` の結果を
+  見てから merge すること
+* `INSTRUCTIONS.md` が merge と `.github/` の変更を禁じ、PR 本文に隔離環境での試し方を求めていること
+* 起票スキルが `akmaru/dotagents` に `agent-dx` ラベルで起票し、起票前に確認を取ること
+
+エージェントが実際に指示どおり振る舞うか（PR で止まるか、試し方を埋めるか）は、テストでは確かめられない。PR のレビューで確かめる。
 
 ## Pros and Cons of the Options
 
@@ -165,6 +171,6 @@ PR 作成までを自律で進める。人間は PR ごとに隔離した環境�
   write 権限のチェック）、[Automate work with routines](https://code.claude.com/docs/en/routines)（GitHub トリガーが
   対応するイベント）
 - 未決事項:
-  - 起票スキルの名前（候補: `friction` / `papercut` / `wish` / `kaizen`。「課題」と「実現したいこと」の両方を含む名前にしたい）
-  - 専用ラベルの名前
+  - 起票スキルの名前とラベルの名前。いまは仮に両方 `agent-dx` にしている（候補: `friction` / `papercut` / `wish` / `kaizen`。
+    「課題」と「実現したいこと」の両方を含む名前にしたい）
   - `HOME` を差し替えた環境で `claude` のログイン（macOS の Keychain）と `apm install -g` が動くか（未検証）
