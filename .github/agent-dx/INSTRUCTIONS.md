@@ -41,14 +41,18 @@ Closes #<Issue の番号>
 
 ## 試し方
 
-普段の `~/.claude` を書き換えずに、隔離した HOME で試す。
+普段の `~/.claude` を書き換えずに、試用専用の HOME で試す。試用専用の HOME は PR をまたいで使い回すので、
+`/login` は最初の 1 回だけでよい（`CLAUDE_CONFIG_DIR` を付けると、ログインは普段のものと別に保存される）。
 
 ```bash
+TRY_HOME=~/.claude-trial-home
 git fetch origin <ブランチ>
 git worktree add /tmp/try-pr-<番号> origin/<ブランチ>
-mkdir -p /tmp/try-pr-<番号>-home
-HOME=/tmp/try-pr-<番号>-home /tmp/try-pr-<番号>/user/install.sh
-HOME=/tmp/try-pr-<番号>-home claude
+mkdir -p "$TRY_HOME"
+HOME="$TRY_HOME" /tmp/try-pr-<番号>/user/install.sh
+HOME="$TRY_HOME" CLAUDE_CONFIG_DIR="$TRY_HOME/.claude" claude
+# 試し終わったら
+git worktree remove /tmp/try-pr-<番号>
 ```
 
 <この PR で何を試せば変更を確かめられるか。具体的な操作と、期待する結果>
