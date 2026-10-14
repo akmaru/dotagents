@@ -13,6 +13,7 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
   `glossary/CONTEXT-FORMAT.md`）。構造の行・関係・公理・帰結・事例・未決事項・対象外の書き方はすべてここにある。
   用語集に書く前に読む
 - **置き場**: `project-layout` スキルの「置き場の決め方」で決める。複数コンテキストなら `CONTEXT.md` ごとに扱う
+- **規範文の書き方**（公理の `statement` と、仕様の規則を述べる文）: [NORMATIVE.md](./NORMATIVE.md)
 - **問い詰め方**: [GRILL.md](./GRILL.md)
 - **Alloy への翻訳と結果の読み方**: [ALLOY.md](./ALLOY.md)
 - **例**: [examples/order/CONTEXT.md](./examples/order/CONTEXT.md)（`verify` がすべて通る）と、その書き直し前の
@@ -53,7 +54,7 @@ compatibility: Designed for Claude Code. scripts/ontology.py は Python 3.10+ �
 | `C3` | 十分条件・必要条件に `closure` が無い。関係に `closure`（closed / open）が無い | 文が決めていない場合を 否定 / 未決定 / 対象外 で書く。事実の閉じ方は関係の行に書く |
 | `C4-*` | `depends` / `grounds` の参照先が無い・廃止済み・条件のラベルが無い、依存の循環、どこからも使われない公理 | 参照を直す。使われない公理は、帰結や事例の `grounds` から参照するか、要らないなら廃止する |
 | `SCATTERED` | 定義の無い対象の規則が、複数の公理に分かれている | その対象を主語にした 1 つの公理にまとめ、場合分けは表にする |
-| `FORM` / `FORM-TEXT` / `MODAL` | `form` が無い・文型と statement が食い違う・「できる」「だけ」などを使っている | `CONTEXT-FORMAT.md` の文型で書き直す |
+| `FORM` / `FORM-TEXT` / `MODAL` | `form` が無い・文型と statement が食い違う・「できる」「だけ」などを使っている | [NORMATIVE.md](./NORMATIVE.md) に従って書き直す |
 
 Alloy 方式では、`C1` の組ごとに「条件を足した公理を外したモデルで、その公理が成り立つか」も調べる。反例が
 あれば、定義の上では許されるのにその公理が禁じる状況が具体的に出る（`C1-ALLOY`）。反例が無ければ、その公理は
@@ -125,6 +126,8 @@ Alloy 方式では、`C1` の組ごとに「条件を足した公理を外した
 - markdown 方式では、帰結と事例を 1 つずつ、どの公理・上位・排他から導けるか（導けないか）を平文で示す
 
 ## 構造のある用語集を持つリポジトリで説明を書くとき
+
+- 条件・制約・許可・禁止を述べる文（規範文）は [NORMATIVE.md](./NORMATIVE.md) の文型・様相の語・閉包で書く
 
 - 用語集の語は、定義どおりの意味でだけ使う。上位の語と下位の語を言い換えない（「注文」と言ったら下書きも
   含む。確定したものだけなら「確定した注文」と書く）

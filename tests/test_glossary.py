@@ -109,7 +109,7 @@ def test_glossary_users_refer_to_glossary_skill(pkg):
 
 
 def test_normative_vocabulary_is_shared_by_writing_rules_format_and_parser():
-    """規範文の文型と閉包の語が、clear-writing・用語集の書式・ontology のスクリプトでそろっている。"""
+    """規範文の文型と閉包の語が、ontology の NORMATIVE.md・用語集の書式・ontology のスクリプトでそろっている。"""
     import importlib.util
     import sys
 
@@ -118,7 +118,7 @@ def test_normative_vocabulary_is_shared_by_writing_rules_format_and_parser():
     mod = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
-    writing = (PACKAGES / "clear-writing/.apm/skills/clear-writing/SKILL.md").read_text()
+    writing = (PACKAGES / "ontology/.apm/skills/ontology/NORMATIVE.md").read_text() + FORMAT.read_text()
     fmt = FORMAT.read_text()
     for word in ("定義", "十分条件", "必要条件", "禁止"):
         assert word in mod.FORMS and word in writing and f"`{word}`" in fmt, word

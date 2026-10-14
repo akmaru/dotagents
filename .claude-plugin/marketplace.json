@@ -62,7 +62,7 @@
     {
       "name": "clear-writing",
       "description": "Write reports, docs, and replies so readers can follow the logic without rereading.",
-      "version": "1.1.0",
+      "version": "1.0.0",
       "source": "./packages/clear-writing"
     },
     {

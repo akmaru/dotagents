@@ -77,7 +77,7 @@ class TestPackageFiles:
         data = yaml.safe_load((ROOT / "apm.yml").read_text())
         assert {"name": "ontology", "source": "./packages/ontology"} in data["marketplace"]["packages"]
 
-    @pytest.mark.parametrize("name", ["GRILL.md", "ALLOY.md", "scripts/ontology.py", "examples/order/CONTEXT.md",
+    @pytest.mark.parametrize("name", ["GRILL.md", "ALLOY.md", "NORMATIVE.md", "scripts/ontology.py", "examples/order/CONTEXT.md",
                                       "examples/order-before/CONTEXT.md"])
     def test_skill_references_bundled_file(self, name):
         assert (SKILL_DIR / name).exists()
