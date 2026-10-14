@@ -91,15 +91,45 @@ def pane_output(pane):
         return raw
 
 
+def claude_session_cwds(pane):
+    """pane で Claude Code が動いていれば、そのセッションの記録に残る cwd を新しい順に重複なく。
+
+    Claude Code の中で作業ディレクトリを移しても pane の cwd は起動時のままなので、
+    用語集を探す起点にはセッションの記録の cwd を使う。記録の cwd もツールの実行ごとに
+    起動時の場所へ戻ることがあるので、最後の 1 つではなく訪れた cwd をすべて返す。
+    """
+    herdr = os.environ.get("HERDR_BIN_PATH", "herdr")
+    try:
+        raw = subprocess.run([herdr, "pane", "get", pane], capture_output=True, text=True, check=True).stdout
+        session = json.loads(raw)["result"]["pane"]["agent_session"]
+    except (subprocess.CalledProcessError, ValueError, KeyError, TypeError):
+        return []
+    if session.get("source") != "herdr:claude" or not session.get("value"):
+        return []
+    cwds = []
+    # herdr のサーバは CLAUDE_CONFIG_DIR を持たないことがあるので、プロファイルの置き場を順に見る（ADR 0028）
+    config_dirs = [os.environ.get("CLAUDE_CONFIG_DIR"), "~/.claude", "~/.claude-work"]
+    for config_dir in filter(None, config_dirs):
+        for transcript in Path(config_dir).expanduser().glob(f"projects/*/{session['value']}.jsonl"):
+            for line in reversed(transcript.read_text(errors="replace").splitlines()):
+                try:
+                    cwd = json.loads(line).get("cwd")
+                except ValueError:
+                    continue
+                if cwd:
+                    cwds.append(Path(cwd))
+    return list(dict.fromkeys(cwds))
+
+
 def main():
     pane = os.environ.get("HERDR_ACTIVE_PANE_ID", "")
     if not pane:
         print("フォーカス中の pane を特定できない")
         return 1
-    cwd = Path(os.environ.get("HERDR_ACTIVE_PANE_CWD") or Path.cwd())
-    glossaries = find_glossaries(cwd)
+    cwds = claude_session_cwds(pane) or [Path(os.environ.get("HERDR_ACTIVE_PANE_CWD") or Path.cwd())]
+    glossaries = list(dict.fromkeys(g for cwd in cwds for g in find_glossaries(cwd)))
     if not glossaries:
-        print(f"{cwd} から上に CONTEXT.md / CONTEXT-MAP.md が見つからない")
+        print(f"{', '.join(map(str, cwds))} から上に CONTEXT.md / CONTEXT-MAP.md が見つからない")
         return 1
     hits = lookup(pane_output(pane), glossaries)
     if not hits:
