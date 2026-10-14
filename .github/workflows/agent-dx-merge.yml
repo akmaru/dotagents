@@ -1,0 +1,37 @@
+name: Agent DX merge
+
+# 改善ループ（docs/adr/0027）の PR は、オーナーが試して approve したときだけ merge する。
+# main への merge はそのまま ~/.claude への配布になる（docs/adr/0004）ので、approve 以外の経路では merge しない。
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  merge:
+    if: >-
+      github.event.review.state == 'approved'
+      && github.event.review.user.login == github.repository_owner
+      && startsWith(github.event.pull_request.head.ref, 'claude/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      # test.yml の test ジョブが通っていなければ merge しない。このジョブ自身も checks に出るので、
+      # 全体を待つのではなく test だけを見る
+      - name: Require passing tests
+        run: |
+          state=$(gh pr checks "$PR" --repo "$GITHUB_REPOSITORY" --json name,state \
+            --jq '[.[] | select(.name == "test")][0].state // "MISSING"')
+          if [ "$state" != "SUCCESS" ]; then
+            echo "test の状態が ${state} のため merge しません。test が通った後に approve し直してください" >&2
+            exit 1
+          fi
+
+      - name: Merge
+        run: gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
