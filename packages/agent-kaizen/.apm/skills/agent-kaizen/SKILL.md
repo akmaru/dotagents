@@ -1,11 +1,11 @@
 ---
-name: agent-dx
-description: エージェントを使っていて感じた利用体験の課題（引っかかり・やり直し・面倒）や実現したいことを、今のセッションの文脈を添えて akmaru/dotagents の GitHub Issue に agent-dx ラベル付きで起票する。起票された Issue は GitHub Actions のエージェントが PR まで進める。ユーザーが「/agent-dx」と打ったとき、エージェントの使い勝手への不満や改善の要望を dotagents に起票したい・残したいと言ったときに使う。
+name: agent-kaizen
+description: エージェントを使っていて感じた利用体験の課題（引っかかり・やり直し・面倒）や実現したいことを、今のセッションの文脈を添えて akmaru/dotagents の GitHub Issue に agent-kaizen ラベル付きで起票する。起票された Issue は GitHub Actions のエージェントが PR まで進める。ユーザーが「/agent-kaizen」と打ったとき、エージェントの使い勝手への不満や改善の要望を dotagents に起票したい・残したいと言ったときに使う。
 ---
 
 ## 何をするか
 
-ユーザーの一言を、エージェントがそのまま着手できる Issue にして `akmaru/dotagents` に起票する。`agent-dx` ラベルを付けると、
+ユーザーの一言を、エージェントがそのまま着手できる Issue にして `akmaru/dotagents` に起票する。`agent-kaizen` ラベルを付けると、
 GitHub Actions のエージェントがトリアージ・設計・実装を進めて PR を出す（`docs/adr/0027-agent-dx-improvement-loop-via-github-issues.md`）。
 runner のエージェントは今のセッションを見られないので、Issue の本文だけで状況が分かるように書く。
 
@@ -27,7 +27,7 @@ runner のエージェントは今のセッションを見られないので、I
 5. **起票する**。本文はファイルに書いてから渡す（引用符の崩れを避けるため）
 
    ```bash
-   gh issue create --repo akmaru/dotagents --label agent-dx --title "<タイトル>" --body-file <本文のファイル>
+   gh issue create --repo akmaru/dotagents --label agent-kaizen --title "<タイトル>" --body-file <本文のファイル>
    ```
 
 6. Issue の URL をユーザーに返す。エージェントが着手したら Issue に進捗のコメントが付くこと、設計が要る場合は
@@ -51,7 +51,7 @@ runner のエージェントは今のセッションを見られないので、I
 
 ## 起票元
 
-`agent-dx` スキルで、作業中のセッションから起票した。
+`agent-kaizen` スキルで、作業中のセッションから起票した。
 ```
 
 ## しないこと

@@ -1,6 +1,6 @@
-# agent-dx: 改善ループのエージェントへの指示
+# agent-kaizen: 改善ループのエージェントへの指示
 
-あなたは GitHub Actions の runner で動いている。`agent-dx` ラベルの付いた Issue は、リポジトリのオーナーが
+あなたは GitHub Actions の runner で動いている。`agent-kaizen` ラベルの付いた Issue は、リポジトリのオーナーが
 エージェント利用体験の課題か、実現したいことを書いたもの。これを PR まで進めるのがあなたの仕事。
 設計の経緯は `docs/adr/0027-agent-dx-improvement-loop-via-github-issues.md`。
 

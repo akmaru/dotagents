@@ -1,4 +1,4 @@
-name: Agent DX merge
+name: Agent kaizen merge
 
 # 改善ループ（docs/adr/0027）の PR は、オーナーが試して approve したときだけ merge する。
 # main への merge はそのまま ~/.claude への配布になる（docs/adr/0004）ので、approve 以外の経路では merge しない。

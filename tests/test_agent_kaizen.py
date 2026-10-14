@@ -1,11 +1,11 @@
 """
 Validate the agent-experience improvement loop (docs/adr/0027):
 
-- packages/agent-dx: the skill that files an issue on akmaru/dotagents with the loop's label
-- .github/workflows/agent-dx.yml: runs Claude on labeled issues and on @claude comments, only for the repo owner,
+- packages/agent-kaizen: the skill that files an issue on akmaru/dotagents with the loop's label
+- .github/workflows/agent-kaizen.yml: runs Claude on labeled issues and on @claude comments, only for the repo owner,
   authenticated with the personal subscription's OAuth token
-- .github/workflows/agent-dx-merge.yml: merges a claude/ PR only when the repo owner approves it and the tests passed
-- .github/agent-dx/INSTRUCTIONS.md: what the agent does on the runner (stop at a PR, never merge, add a trial guide)
+- .github/workflows/agent-kaizen-merge.yml: merges a claude/ PR only when the repo owner approves it and the tests passed
+- .github/agent-kaizen/INSTRUCTIONS.md: what the agent does on the runner (stop at a PR, never merge, add a trial guide)
 
 The repo is public, so who can start a run and who can merge are the parts that must not regress.
 """
@@ -17,11 +17,11 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).parent.parent
-LABEL = "agent-dx"
-SKILL = ROOT / "packages" / "agent-dx" / ".apm" / "skills" / "agent-dx" / "SKILL.md"
-RUN_WORKFLOW = ROOT / ".github" / "workflows" / "agent-dx.yml"
-MERGE_WORKFLOW = ROOT / ".github" / "workflows" / "agent-dx-merge.yml"
-INSTRUCTIONS = ROOT / ".github" / "agent-dx" / "INSTRUCTIONS.md"
+LABEL = "agent-kaizen"
+SKILL = ROOT / "packages" / "agent-kaizen" / ".apm" / "skills" / "agent-kaizen" / "SKILL.md"
+RUN_WORKFLOW = ROOT / ".github" / "workflows" / "agent-kaizen.yml"
+MERGE_WORKFLOW = ROOT / ".github" / "workflows" / "agent-kaizen-merge.yml"
+INSTRUCTIONS = ROOT / ".github" / "agent-kaizen" / "INSTRUCTIONS.md"
 
 
 def load_workflow(path):
@@ -168,4 +168,4 @@ class TestCaptureSkill:
     def test_is_listed_in_the_marketplace(self):
         manifest = yaml.safe_load((ROOT / "apm.yml").read_text())
         names = [p["name"] for p in manifest["marketplace"]["packages"]]
-        assert "agent-dx" in names
+        assert "agent-kaizen" in names

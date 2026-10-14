@@ -74,7 +74,7 @@ compatibility: Designed for Claude Code  # 必要な場合のみ
 | [init-project](packages/init-project/.apm/skills/init-project/SKILL.md) | リポジトリを標準構成（[ADR 0024](docs/adr/0024-new-project-standard-layout.md)）と突き合わせ、無いファイルだけを作る。`project-layout` に依存 |
 | [glossary](packages/glossary/.apm/skills/glossary/SKILL.md) | 用語集（`CONTEXT.md` / `CONTEXT-MAP.md`）の書式だけを持つ参照用スキル。書式の唯一の正本で、用語集を扱うパッケージはすべてここに直接依存する（[ADR 0026](docs/adr/0026-glossary-format-package-and-structure-in-glossary.md)） |
 | [ontology](packages/ontology/.apm/skills/ontology/SKILL.md) | 用語集に語の構造（種別・上位・排他と網羅・関係の多重度・公理・帰結・事例）を書き足し、grill・同期・検証する。検証は Markdown の静的検査か Alloy を選べる。`project-layout` と `glossary` に依存 |
-| [agent-dx](packages/agent-dx/.apm/skills/agent-dx/SKILL.md) | エージェント利用体験の課題・要望を dotagents の GitHub Issue に起票し、GitHub Actions のエージェントが PR まで進める改善ループの入口（[ADR 0027](docs/adr/0027-agent-dx-improvement-loop-via-github-issues.md)。名前は仮） |
+| [agent-kaizen](packages/agent-kaizen/.apm/skills/agent-kaizen/SKILL.md) | エージェント利用体験の課題・要望を dotagents の GitHub Issue に起票し、GitHub Actions のエージェントが PR まで進める改善ループの入口（[ADR 0027](docs/adr/0027-agent-dx-improvement-loop-via-github-issues.md)） |
 
 ## 役割（サブエージェント）
 
