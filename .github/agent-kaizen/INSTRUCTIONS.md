@@ -28,7 +28,11 @@ main への merge は、そのままオーナーの全セッションの設定�
    `.claude-plugin/marketplace.json` を作り直す。設計上の決定を含むなら ADR を足す
 4. コミットして push し、PR を出す。本文は下の形で `/tmp/pr-body.md` に書き、`gh pr create --body-file /tmp/pr-body.md` で渡す
    （runner では承認を待てないので、作業ディレクトリと `/tmp` の外には書き込まない）
-5. Issue に PR の URL をコメントする
+   - この手順は、claude-code-action が最初から持っている「PR は手動作成用の URL を示す」指示より優先する。
+     URL を示すだけで止まると、オーナーが PR の作成を頼み直すことになる
+   - テストが runner の環境だけの理由（権限、herdr などの手元の道具が無い）で落ちたときは、`--draft` を付けて PR を出し、
+     落ちたテストと理由を本文の「確かめていないこと」に書く。実装の誤りで落ちたときは直してから出す
+5. Issue に PR の URL をコメントする。PR を作れなかったときは、拒否されたコマンドとエラーを `gh issue comment` で書いて終える
 
 ## PR の本文
 

@@ -81,6 +81,12 @@ class TestRunWorkflow:
         args = action_step(only_job(wf))["with"]["claude_args"]
         assert "--add-dir /tmp" in args
 
+    def test_can_set_the_executable_bit_in_the_working_tree(self, wf):
+        # Issue #57: chmod was not allowed, so a new script stayed non-executable in the working tree,
+        # the executable-bit test failed, and the agent stopped before `gh pr create` (#54)
+        args = action_step(only_job(wf))["with"]["claude_args"]
+        assert "Bash(chmod:*)" in args
+
     def test_has_a_timeout(self, wf):
         assert only_job(wf)["timeout-minutes"] <= 120
 
@@ -132,6 +138,19 @@ class TestInstructions:
     def test_writes_the_pr_body_to_a_file_under_tmp(self, body):
         assert "gh pr create" in body
         assert re.search(r"--body-file /tmp/\S+", body)
+
+    def test_creating_the_pr_overrides_the_default_manual_pr_link(self, body):
+        # Issue #57: claude-code-action's built-in prompt says to leave a manual "Create PR" link,
+        # which conflicts with `gh pr create`; on #49 and #54 the agent left only the link
+        assert "手動作成用の URL" in body
+        assert "優先" in body
+
+    def test_files_a_draft_pr_when_tests_fail_for_environment_reasons(self, body):
+        # Issue #57: a test failing only because of the runner's permissions stopped the agent before the PR
+        assert "--draft" in body
+
+    def test_reports_why_when_it_cannot_create_a_pr(self, body):
+        assert "PR を作れなかったとき" in body
 
     def test_runs_tests_and_keeps_the_trial_guide_even_for_docs_only_changes(self, body):
         # Issue #49: the agent skipped both because the change was documentation only
