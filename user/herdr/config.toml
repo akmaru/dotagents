@@ -125,3 +125,20 @@ command = "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH exec $HOME/.config/herdr/
 description = "glossary of terms in pane output"
 width = "70%"
 height = "70%"
+
+# フォーカス中のエージェントのセッションを流れ図（zoetrope の zoe）で開く
+# setup-keys は config を書き換えるが、この config は dotagents への symlink なので手で書く。
+# overlay のキーはプラグインが勧める prefix+shift+z のまま
+[[keys.command]]
+key = "prefix+shift+z"
+type = "plugin_action"
+command = "furkankly.zoetrope.open"
+description = "zoetrope: session graph (overlay)"
+
+# 同じ図を隣に分割して開き、閉じるまで残す。
+# エージェントの横に開く道具なので alt 層に置く
+[[keys.command]]
+key = "prefix+alt+z"
+type = "plugin_action"
+command = "furkankly.zoetrope.open-split"
+description = "zoetrope: session graph (split)"
