@@ -163,6 +163,9 @@ HERDR_PLUGINS=(
   "persiyanov/herdr-reviewr@4c090225af706bf3aaa24b39fea890a72994f40f"
   # nvim をサイドバーで開き、エージェントの出力からファイルを拾う
   "ChmaraX/herdr-nvim@e652ebf7b3d6713992e68a30aec588822e69fae5"
+  # エージェントのセッションを流れ図で開く。本体の zoe が無ければ cargo でビルドする。
+  # プラグインはリポジトリのサブディレクトリにあるので owner/repo/subdir で指す
+  "furkankly/zoetrope/herdr-plugin@b1f31dd26bd4e9e513885e39edb78d0850a5d1fe"
 )
 
 if [ "${DOTAGENTS_SKIP_HERDR_PLUGINS:-}" != "1" ] && command -v herdr >/dev/null 2>&1; then

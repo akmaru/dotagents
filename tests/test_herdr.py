@@ -95,7 +95,10 @@ def test_plugins_are_pinned_to_a_full_commit():
     assert plugins, "配布するプラグインが 1 つ以上あること"
     for entry in plugins:
         repo, _, ref = entry.partition("@")
-        assert re.fullmatch(r"[\w.-]+/[\w.-]+", repo), f"{entry} は owner/repo 形式"
+        # zoetrope のようにリポジトリのサブディレクトリにあるプラグインは owner/repo/subdir で指す
+        assert re.fullmatch(r"[\w.-]+/[\w.-]+(/[\w.-]+)*", repo), (
+            f"{entry} は owner/repo または owner/repo/subdir 形式"
+        )
         assert re.fullmatch(r"[0-9a-f]{40}", ref), (
             f"{entry} の ref は 40 桁のコミット SHA である必要がある"
         )
