@@ -21,6 +21,7 @@ delivery = "herdr"
 kitty_graphics = true
 
 [keys]
+# キーを足す・変えるときの決まり（修飾キーの層・例外・足す前の確認）は user/rules/herdr-keys.md
 # prefix はデフォルトの ctrl+b から ctrl+q に変更
 prefix = "ctrl+q"
 
