@@ -61,6 +61,19 @@ def test_marketplace_packages_match_directories(apm):
     )
 
 
+def test_marketplace_names_match_package_names(apm):
+    # source のディレクトリが一致しても、marketplace 側の name だけがずれると
+    # `apm install <name>@dotagents` の名前と SKILL.md の名前が食い違う
+    for p in apm["marketplace"]["packages"]:
+        source = p.get("source")
+        if not (isinstance(source, str) and source.startswith("./packages/")):
+            continue
+        package = yaml.safe_load((ROOT / source[2:] / "apm.yml").read_text())
+        assert p["name"] == package["name"], (
+            f"marketplace entry '{p['name']}' must match package name '{package['name']}' ({source})"
+        )
+
+
 def _package_apm_files():
     if not PACKAGES_DIR.exists():
         return []
