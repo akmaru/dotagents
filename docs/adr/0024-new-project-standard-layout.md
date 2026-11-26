@@ -9,8 +9,7 @@ decision-makers: akmaru
 ## Context and Problem Statement
 
 dotagents のスキルは、それぞれが前提にするファイルを別々に書いていた。madr-writer・grill-with-docs・refine-design と
-役割 designer・critic は ADR の置き場を `docs/adr/` に決め打ちし、外部の adr-skill は `docs/decisions/` を既定にし、
-grill-spec の仕様書（feature/grill-spec ブランチ）は `docs/internal/{specs,adr}/` を提案していた。新規プロジェクトを
+役割 designer・critic は ADR の置き場を `docs/adr/` に決め打ちし、grill-spec の仕様書（feature/grill-spec ブランチ）は `docs/internal/{specs,adr}/` を提案していた。新規プロジェクトを
 作るときに「あるべきファイル / ディレクトリ」を 1 つに定め、存在を確かめて無ければ作るスキルを用意したい。決めることは
 3 つある。(1) 標準のツリー。(2) その規定をどこに持たせ、既存スキルがどう従うか。(3) 公開リポジトリ向けなど、
 プロジェクトによって要否が分かれるファイルをどう選ぶか。

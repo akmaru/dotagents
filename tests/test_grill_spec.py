@@ -79,8 +79,9 @@ class TestSkillMdReferencesSiblingFiles:
 
 
 class TestSpecFormat:
-    @pytest.fixture
-    def body(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def body(cls):
         return (SKILL_DIR / "SPEC-FORMAT.md").read_text()
 
     @pytest.mark.parametrize(
@@ -115,8 +116,9 @@ class TestSpecFormat:
 
 
 class TestRefinement:
-    @pytest.fixture
-    def body(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def body(cls):
         return (SKILL_DIR / "REFINEMENT.md").read_text()
 
     def test_mentions_general_purpose_subagent(self, body):
@@ -158,16 +160,19 @@ def test_skill_md_resumes_a_refinement_left_running():
 class TestReviewFindings:
     """PR #45 の機械レビューで、テストが見ていなかった指示の漏れが見つかった分（review-v1 の #1〜#9）。"""
 
-    @pytest.fixture
-    def skill(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def skill(cls):
         return (SKILL_DIR / "SKILL.md").read_text()
 
-    @pytest.fixture
-    def refinement(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def refinement(cls):
         return (SKILL_DIR / "REFINEMENT.md").read_text()
 
-    @pytest.fixture
-    def spec_format(self):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def spec_format(cls):
         return (SKILL_DIR / "SPEC-FORMAT.md").read_text()
 
     @pytest.mark.parametrize("section", ["この版で触ったファイル", "振り分けた発言", "足した用語", "この版で作った issue"])
